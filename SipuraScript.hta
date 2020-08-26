@@ -1,0 +1,90 @@
+SPA Web wizzard: <input type=button value="Read SPA Web" onclick="Reader()">
+ -> <b>Config checker</b> -> 
+<input type=button value="Set SPA Web" onclick="Writer()"><br>
+<form>
+<input type=button value=LoadConfig onclick="LoadFile()">
+ -> <b>Config checker</b> -> 
+<input type=button value=SaveConfig onclick="SaveFile()">
+<textarea rows=30 cols=145 name=configuration>
+</textarea>
+</form>
+<script>
+var W=window.open("http://www.voipfan.net/emulators/spa-3102/voice/admin/advanced/");
+var fso = new ActiveXObject("Scripting.FileSystemObject");
+
+function Reader() {
+f=W.document.forms[0]; 
+b=""; 
+for(a=0;a<f.length;a++) { 
+if(f[a].value || 1) { 
+if(f[a].tagName!="INPUT" || 
+(f[a].tagName=="INPUT" && f[a].type=="text")) { 
+b+=f[a].parentElement.previousSibling.innerText.replace(": ","("+f[a].name+"):");
+}
+b+="="; 
+if(f[a].tagName=="SELECT") { 
+b+=f[a].options[f[a].selectedIndex].text; 
+b+="("+f[a].options[f[a].selectedIndex].value+")"; 
+} else { 
+b+=f[a].value; 
+} 
+b+="\r\n"; 
+}} 
+document.forms[0].configuration.value=b; 
+}
+function Writer() {
+f=W.document.forms[0]; 
+b=document.forms[0].configuration.value;
+b=b.replace(/^[^(]+/gm,"").replace(/\r/g,"\r\n").split("\r\n");
+for(a=0;a<b.length-1;a++) {
+n=b[a].match(/\(([^\(\)]+)\):=/);
+v=b[a].substr(n.lastIndex);
+n=n[1];
+if(f[n]) {
+	el=f[n];
+} else {
+if(f[a].name==n) {
+	el=f[a];
+} else {
+	c=a;
+	do {
+		while((c<f.length) && (f[c].name != n)) c++;
+		if((c<f.length) && (f[c].name == n)) {
+			el=f[c];
+			break;
+		} else c=0;
+	} while((f[c].name != n) && !c)
+}}
+if((el.tagName=="SELECT") && v.match(/[^(]+\([^)]+\)/)) {
+	v=v.substr(v.indexOf("(")+1);
+	v=v.substr(0,v.length-1);
+	c=0;
+	do {
+		if(el.options[c].value == v) {
+			el.selectedIndex = c;
+			break;
+		}
+		c++;
+	} while(c<el.options.length);
+} else {
+	el.value=v
+}
+} 
+}
+
+function SaveFile() {
+f=W.document.forms[0]; 
+b=document.forms[0].configuration.value;
+f=fso.OpenTextFile(prompt("FileName ?","SipuraSettings.txt"),2,true,-2);
+f.Write(b);
+f.close();
+}
+
+function LoadFile() {
+f=W.document.forms[0];
+f=fso.OpenTextFile(prompt("FileName ?","SipuraSettings.txt"),1,false,-2);
+b=f.ReadAll();
+f.close();
+document.forms[0].configuration.value=b;
+}
+</script>

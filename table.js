@@ -1,5 +1,4 @@
-// http://www.javascripttoolbox.com/lib/table/index.php
-/**
+﻿/**
  * Copyright (c)2005-2009 Matt Kruse (javascripttoolbox.com)
  * 
  * Dual licensed under the MIT and GPL licenses. 
@@ -16,7 +15,7 @@
  * Functions for interactive Tables
  *
  * Copyright (c) 2007 Matt Kruse (javascripttoolbox.com)
- * Dual licensed under the MIT and GPL licenses. 
+ * Dual licensed under the MIT and GPL licenses.
  *
  * @version 0.981
  *
@@ -50,7 +49,7 @@ var Sort = (function(){
 	sort.numeric_converter = function(separator) {
 		return function(val) {
 			if (typeof(val)=="string") {
-				val = parseFloat(val.replace(/^[^\d\.]*([\d., ]+).*/g,"$1").replace(new RegExp("[^\\\d"+separator+"]","g"),'').replace(/,/,'.')) || 0;
+				val = parseFloat(val.replace(/^[^\d\.+-]*([+-\d., ]+).*/g,"$1").replace(new RegExp("[^\\\d"+separator+"+-]","g"),'').replace(/,/,'.')) || 0;
 			}
 			return val || 0;
 		};
@@ -106,14 +105,9 @@ var Sort = (function(){
 		,{ re:/(.*\d{4}.*\d+:\d+\d+.*)/, f:function(x){ var d=new Date(x[1]); if(d){return d.getTime();} } }
 	];
 	sort.date.convert = function(val) {
-		var m,v, f = sort.date.formats;
-		for (var i=0,L=f.length; i<L; i++) {
-			if (m=val.match(f[i].re)) {
-				v=f[i].f(m);
-				if (typeof(v)!="undefined") { return v; }
-			}
-		}
-		return 9999999999999; // So non-parsed dates will be last, not first
+		var reorder = val.split('.');
+		reorder = reorder[2] + reorder[1] + reorder[0];
+		return reorder;
 	};
 
 	return sort;
@@ -225,7 +219,7 @@ var Table = (function(){
 
 		AutoSortClassName:"table-autosort",
 		AutoSortColumnPrefix:"table-autosort:",
-		AutoSortTitle:"Click to sort",
+		AutoSortTitle:"Klikněte pro třídění",
 		SortedAscendingClassName:"table-sorted-asc",
 		SortedDescendingClassName:"table-sorted-desc",
 		SortableClassName:"table-sortable",
@@ -237,7 +231,7 @@ var Table = (function(){
 		FilterableClassName:"table-filterable",
 		FilteredRowcountPrefix:"table-filtered-rowcount:",
 		RowcountPrefix:"table-rowcount:",
-		FilterAllLabel:"Filter: All",
+		FilterAllLabel:"Filtr: Vše",
 
 		AutoPageSizePrefix:"table-autopage:",
 		AutoPageJumpPrefix:"table-page:",
@@ -594,12 +588,29 @@ var Table = (function(){
 		}
 		else {
 			// Allow for passing a select list in as the filter, since this is common design
-			if (filters.nodeName=="SELECT" && filters.type=="select-one" && filters.selectedIndex>-1) {
-				filters={ 'filter':filters.options[filters.selectedIndex].value };
+			if (filters.nodeName == "SELECT") {
+				// Allow for passing a select list in as the filter, since this is common design
+				if (filters.type == "select-one" && filters.selectedIndex > -1) {
+					if (filters.selectedIndex == 1 && filters.options[1].text == "Multi")
+						o.multiple = "multiple";
+					else
+						filters = { 'filter': filters.options[filters.selectedIndex].value };
+				}
+				if (filters.type == "select-multiple" && filters.selectedIndex > -1) {
+					var filterList = "/"
+					for (var i = 0; i < filters.options.length; i++) if (filters.options[i].selected)
+						filterList += "(" + filters.options[i].value.replace(/\*/g, "\\*") + ")|"
+					filterList = filterList.substr(0, filterList.length - 1) + "/";
+					if (filterList != "/()/")
+						filters = { 'filter': filterList };
+				}
 			}
 			// Also allow for a regular input
-			if (filters.nodeName=="INPUT" && filters.type=="text") {
+			if (filters.nodeName=="INPUT" && filters.type=="text" && filters.value) {
 				filters={ 'filter':"/^"+filters.value+"/" };
+			}
+			if (filters.nodeName == 'INPUT' && filters.type == 'radio' && filters.checked) {
+				filters = { filter: '/.*' + filters.value + '.*/' };
 			}
 			// Force filters to be an array
 			if (typeof(filters)=="object" && !filters.length) {
@@ -612,8 +623,13 @@ var Table = (function(){
 				if (typeof(filter.filter)=="string") {
 					// If a filter string is like "/expr/" then turn it into a Regex
 					if (filter.filter.match(/^\/(.*)\/$/)) {
-						filter.filter = new RegExp(RegExp.$1);
-						filter.filter.regex=true;
+						try {
+							filter.filter = new RegExp(RegExp.$1);
+							filter.filter.regex=true;
+						} catch (error) {
+							filter.filter = null;
+							filters.splice(i,1);
+						}
 					}
 					// If filter string is like "function (x) { ... }" then turn it into a function
 					else if (filter.filter.match(/^function\s*\(([^\)]*)\)\s*\{(.*)}\s*$/)) {
@@ -967,12 +983,13 @@ var Table = (function(){
 						func.insert(cell,colValues);
 					}
 					else {
-						var sel = '<select onchange="Table.filter(this,this)" onclick="Table.cancelBubble(event)" class="'+table.AutoFilterClassName+'"><option value="">'+table.FilterAllLabel+'</option>';
+						var sel = '<select onchange="Table.filter(this,this)" onclick="Table.cancelBubble(event)" class="'+table.AutoFilterClassName+'"><option value="">'+table.FilterAllLabel+'</option><option>Multi</option>';
 						for (var i=0; i<colValues.length; i++) {
 							sel += '<option value="'+colValues[i]+'">'+colValues[i]+'</option>';
 						}
 						sel += '</select>';
-						cell.innerHTML += "<br>"+sel;
+						var place = cell; while(place && (place.nodeName != 'DIV' || (place.lastElementChild && place.lastElementChild.nodeName != 'BR'))) place = place.lastElementChild;
+						if(place) place.innerHTML += sel;
 					}
 				}
 			}
