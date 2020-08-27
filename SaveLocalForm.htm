@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <style>
+    form {
+      background-color:#F0FFF0;
+      padding: 10px;
+    }
+  </style>
+  <script>
+var myForm, formData;
+function setup(frm) {
+  myForm = frm;
+  resetForm();
+  formData = getFormData(myForm[0]);
+}
+
+function resetForm() {
+  for (var a = 0; a < myForm.length; a++) {
+    var o = myForm[a];
+    if (o.checked) {
+      o.checked = false;
+    } else if (o.tagName == "SELECT") {
+      var o = o.options;
+      o.selectedIndex = -1;
+      //for (var b = o.length; b; b--) o[b - 1].selected = false;
+    }
+  }
+  previewData(o);
+}
+
+function previewData(i) {
+  var values = getFormData(i);
+
+  // show JSON read
+  document.getElementById("saving").innerText = JSON.stringify(values, null, 1)
+    .replace(/\n "/g, '\n')
+    .replace(/\n*[\{\}]\n*/g, '')
+    .replace(/,\n/g, '\n')
+    .replace(/([^"]+)":/g, '$1:');
+
+  return values;
+}
+
+function saveForm(i) {
+  var values = previewData(i);
+
+  const answer = 'Yes will load them by file button'
+  if (prompt('Clear data now ?', answer) == 'Yes will load them by file button') {
+    resetForm();
+    setFormData(myForm, formData);
+  }
+
+  return downloadObjectAsJson(values, "test");
+}
+
+function loadBack(t) {
+  var f = t.files[0];
+
+  var reader = new FileReader();
+  // Closure to capture the file information.
+  reader.onload = (function (theFile) {
+    return function (e) {
+      var json = JSON.parse(e.target.result);
+      setFormData(myForm, json);
+      previewData(myForm[0]);
+      return;
+    }
+  })(f);
+
+  // Read in the image file as a data URL.
+  reader.readAsText(f);
+}
+
+function setFormData(frm, values) {
+  for (var v in values) {
+    var el = frm[v],
+      val = values[v];
+    if (el.constructor == HTMLCollection) {
+      // case "radio":
+      //    values[el.name].checked = val;
+      // break;
+      for (var p = 0; p < el.length; p++) {
+        el[p].checked = (el[p].value === val);
+      }
+    } else switch (el.type) {
+      case "checkbox":
+        el.checked = val;
+        break;
+      case 'select-one':
+        if (val < 0) el.selectedIndex = val;
+        else {
+          for (var o = 0; o < el.options.length; o++) {
+            if (el.options[o].value == val) el.selectedIndex = o;
+          }
+        }
+        break;
+      case 'select-multiple':
+        for (var o = 0; o < el.options.length; o++) {
+          el.options[o].selected = (val.indexOf(el.options[o].value) > -1);
+        }
+        break;
+      default:
+        el.value = val;
+    }
+  }
+}
+
+function getFormData(i) {
+  var frm = i.form;
+  var values = {};
+  for (var a = 0; a < frm.length; a++) {
+    var el = frm[a];
+    switch (el.type) {
+      case "checkbox":
+        if (el.checked) values[el.name] = el.checked;
+        break;
+      case "radio":
+        if (el.checked) values[el.name] = el.value;
+        //else if (values[el.name] === undefined) values[el.name] = false;
+        break;
+      case 'select-one':
+        if (el.selectedIndex > 0) values[el.name] = el.options[el.selectedIndex].value;
+        break;
+      case 'select-multiple':
+        values[el.name] = [];
+        for (var i = 0; i < el.options.length; i++) {
+          if (el.options[i].selected) values[el.name].push(el.options[i].value);
+        }
+        if (!values[el.name].length) delete values[el.name];
+        break;
+      case 'fieldset':
+        break;
+      case 'button':
+        break;
+      case 'submit':
+        break;
+      case 'reset':
+        break;
+      case 'file':
+        break;
+      case undefined:
+        break;
+      default:
+        values[el.name] = el.value;
+    }
+  }
+  return values;
+}
+
+function downloadObjectAsJson(exportObj, exportName) {
+  if (navigator.msSaveBlob) { // IE10+
+    var blob = new Blob([JSON.stringify(exportObj, null, 1)], {
+      type: 'application/json'
+    });
+    return navigator.msSaveBlob(blob, exportName + ".json");
+  }
+  var dataStr = "data:application/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 1));
+  var downloadAnchorNode = document.getElementsByName('_saveAnchor')[0];
+  downloadAnchorNode.setAttribute("href", dataStr);
+  downloadAnchorNode.setAttribute("download", exportName + ".json");
+  downloadAnchorNode.click();
+  downloadAnchorNode.remove();
+}
+  </script>
+</head>
+
+<body onload="setup(document.Demo)">
+  <p>Form has explicit <b>RESET</b> if page refreshed.<br>
+  unselected radio/checkbox are not sent same as submit now</p>
+  <!-- form elements from https://www.fincher.org/tips/web/SimpleForm.shtml -->
+  <form name="Demo" onchange="previewData(this[0])">
+    First Name: <input type="text" name="FirstName" /><br />
+    <textarea name="comments"></textarea><br />
+    Password:<input type="password" name="mypassword" value="start" /> „start“ as test value you can get from
+    server<br />
+    <input type="radio" name="title" value="mr" />Mr.<br />
+    <input type="radio" name="title" value="ms" />Ms.<br />
+    <input type="radio" name="title" value="decline" />decline<br />
+    <fieldset style="margin: 1em; text-align: center;">
+      <legend>Select a Hero</legend>
+      <input type="radio" name="hero" value="Agamemnon" /> Agamemnon
+      <input type="radio" name="hero" value="Achilles" /> Achilles
+      <input type="radio" name="hero" value="Hector" /> Hector
+    </fieldset>
+    <input type="checkbox" name="mail" />Mail me more info<br />
+    <input type="checkbox" name="e-mail" />E-Mail me more info<br />
+    <select name="countries">
+      <option>Argentina</option>
+      <option>Albania</option>
+      <option>Afganistain</option>
+      <option>Aruba</option>
+    </select>
+    <select name="menuitems">
+      <optgroup id="opt1" label="food">
+        <option>Hamburgers</option>
+        <option>Hotdogs</option>
+      </optgroup>
+      <optgroup id="opt2" label="drinks">
+        <option>Coke</option>
+        <option>Pepsi</option>
+        <option>Water</option>
+      </optgroup>
+    </select>
+    <select name="computerbrands" multiple="multiple">
+      <option value="DELL">DELL</option>
+      <option value="IBM">IBM</option>
+      <option value="HP">HP</option>
+      <option value="Compaq">Compaq</option>
+      <option value="Sony">Sony</option>
+    </select>
+    <select name="countries2" size="4">
+      <option value="0">Argentina</option>
+      <option value="1">Albania</option>
+      <option value="2">Afganistain</option>
+      <option value="3">Aruba</option>
+      <option value="4">Arabia</option>
+    </select>
+    <input type="hidden" name="computerType" value="hidden DELL" />
+    <input type="submit" name="submitbutton" value="Submit" />
+  </form>
+  <b>Current data</b>
+  <div id="saving"></div>
+  <hr>
+  <a name="_saveAnchor"><input type="button" value="Save current data JSON" onclick="saveForm(document.Demo[0])"></a><br>
+  Load JSON data <input type="file" name="formFile" onchange="loadBack(this)" />
+</body>
+
+</html>
