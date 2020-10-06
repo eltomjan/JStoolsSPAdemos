@@ -37,7 +37,7 @@ init();
 xhttp.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/kraj-okres-nakazeni-vyleceni-umrti.min.json", true);
 xhttp.send();
 
-var doNotShow = 'Praha,Karviná,Brno,Plzeň,Ostrava,Olomouc,Frýdek-Místek';
+var doNotShow = 'Praha,Karviná,Brno-město,Ostrava-město,Olomouc,Frýdek-Místek';
 var byDay = {};
 var datumy = [];
 function init() {
@@ -74,7 +74,7 @@ function init() {
         data2[0].push(parseInt(i));
         data2Rel[0].push(parseInt(i));
         var niceLegend = Object.keys(data[i]).sort();
-        var start = doNotShow.split(',');
+        var start = doNotShow ? doNotShow.split(',') : [];
         for(var j in start) niceLegend[niceLegend.indexOf(start[j])] = undefined;
         niceLegend = start.concat(niceLegend);
         for(var j in niceLegend) {
@@ -120,9 +120,9 @@ function createChart(data, title, inside, labels, doNotShow) {
 	let zoomedOpts = {
         "width":1280,"height":600,title:title,"axes":[{},{"size":60,"space":15}],"series":[{}]
 	};
-	const colors = ["#000","#800000","#f00","#ff4500","#006400","#808000","#ffa500","#ffd700","#0f0","#b8860b","#d2691e","#daa520","#228b22","#6b8e23","#a52a2a","#a0522d","#adff2f","#32cd32","#9acd32","#dc143c","#cd853f","#ff6347","#cd5c5c","#ea7e5d","#f4a460","#bdb76b","#191970","#ffa07a","#000080","#800080","#008080","#808080","#f08080","#4b0082","#c71585","#deb887","#8b008b","#d2b48c","#f0e68c","#bc8f8f","#90ee90","#ff1493","#db7093","#98fb98","#663399","#789","#5f9ea0","#20b2aa","#66cdaa","#ff69b4","#c0c0c0","#ffb6c1","#9932cc","#48d1cc","#0000cd","#00ced1","#9400d3","#ba55d3","#da70d6","#9370db","#dda0dd","#b0c4de","#8a2be2","#87ceeb","#6495ed","#7b68ee","#ee82ee","#00f","#f0f","#1e90ff","#00bfff","#0ff","#FF0040"];
+	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#FF0000"];
     for(let l in labels) {
-        if (doNotShow.indexOf(labels[l]) < 0) zoomedOpts.series.push({label:labels[l], stroke: colors[l]});
+        if (!doNotShow || doNotShow.indexOf(labels[l]) < 0) zoomedOpts.series.push({label:labels[l], stroke: colors[l]});
         else zoomedOpts.series.push({label:labels[l], stroke: colors[l], show:false});
     }
     if (data[data.length-1][0] !== 0) zoomedOpts.series[zoomedOpts.series.length-1].width = 2;
@@ -292,83 +292,83 @@ function sortByCol() {
 
 }
 var places={
-CZ0201:{okres:"CZ020",mesto:"Benešov",obyvatel:52916,km2:330.42},
-CZ0202:{okres:"CZ020",mesto:"Beroun",obyvatel:44451,km2:106.62},
-CZ0641:{okres:"CZ064",mesto:"Blansko",obyvatel:55274,km2:205.91},
-CZ0642:{okres:"CZ0642",mesto:"Brno",obyvatel:461161,km2:468},
-CZ0643:{cast:"CZ0642",mesto:"Brno-venkov"},
-CZ0801:{okres:"CZ080",mesto:"Bruntál",obyvatel:62085,km2:341.69},
-CZ0644:{okres:"CZ064",mesto:"Břeclav",obyvatel:57995,km2:347.7},
-CZ0511:{okres:"CZ051",mesto:"Česká Lípa",obyvatel:81807,km2:551.93},
-CZ0311:{okres:"CZ031",mesto:"České Budějovice",obyvatel:130269,km2:475.53},
-CZ0312:{okres:"CZ031",mesto:"Český Krumlov",obyvatel:33101,km2:325.71},
-CZ0421:{okres:"CZ042",mesto:"Děčín",obyvatel:110086,km2:450.06},
-CZ0321:{okres:"CZ032",mesto:"Domažlice",obyvatel:34453,km2:324.13},
-CZ0802:{okres:"CZ080",mesto:"Frýdek-Místek",obyvatel:113973,km2:191.29},
-CZ0631:{okres:"CZ063",mesto:"Havlíčkův Brod",obyvatel:55923,km2:306.17},
-CZ0645:{okres:"CZ064",mesto:"Hodonín",obyvatel:69936,km2:288.19},
-CZ0521:{okres:"CZ052",mesto:"Hradec Králové",obyvatel:116407,km2:222.08},
-CZ0411:{okres:"CZ041",mesto:"Cheb",obyvatel:76027,km2:480.74},
-CZ0422:{okres:"CZ042",mesto:"Chomutov",obyvatel:104604,km2:249.84},
-CZ0531:{okres:"CZ053",mesto:"Chrudim",obyvatel:64943,km2:303.17},
-CZ0512:{okres:"CZ051",mesto:"Jablonec nad Nisou",obyvatel:72208,km2:128.44},
-CZ0711:{okres:"CZ071",mesto:"Jeseník",obyvatel:20073,km2:220.6},
-CZ0522:{okres:"CZ052",mesto:"Jičín",obyvatel:47447,km2:202.95},
-CZ0632:{okres:"CZ063",mesto:"Jihlava",obyvatel:71119,km2:271.62},
-CZ0313:{okres:"CZ031",mesto:"Jindřichův Hradec",obyvatel:59016,km2:597.3},
-CZ0412:{okres:"CZ041",mesto:"Karlovy Vary",obyvatel:93038,km2:606.94},
-CZ0803:{okres:"CZ080",mesto:"Karviná",obyvatel:211651,km2:208.75},
-CZ0203:{okres:"CZ020",mesto:"Kladno",obyvatel:107353,km2:143.78},
-CZ0322:{okres:"CZ032",mesto:"Klatovy",obyvatel:57596,km2:676.42},
-CZ0204:{okres:"CZ020",mesto:"Kolín",obyvatel:49810,km2:119.66},
-CZ0721:{okres:"CZ072",mesto:"Kroměříž",obyvatel:65651,km2:225.13},
-CZ0205:{okres:"CZ020",mesto:"Kutná Hora",obyvatel:38954,km2:101.4},
-CZ0513:{okres:"CZ051",mesto:"Liberec",obyvatel:146165,km2:444.26},
-CZ0423:{okres:"CZ042",mesto:"Litoměřice",obyvatel:71975,km2:287.43},
-CZ0424:{okres:"CZ042",mesto:"Louny",obyvatel:53653,km2:302.01},
-CZ0206:{okres:"CZ020",mesto:"Mělník",obyvatel:63095,km2:128.93},
-CZ0207:{okres:"CZ020",mesto:"Mladá Boleslav",obyvatel:82454,km2:249.26},
-CZ0425:{okres:"CZ042",mesto:"Most",obyvatel:100928,km2:217.12},
-CZ0523:{okres:"CZ052",mesto:"Náchod",obyvatel:77257,km2:288.86},
-CZ0804:{okres:"CZ080",mesto:"Nový Jičín",obyvatel:97636,km2:319.24},
-CZ0208:{okres:"CZ020",mesto:"Nymburk",obyvatel:59123,km2:176.47},
-CZ0712:{okres:"CZ071",mesto:"Olomouc",obyvatel:145119,km2:334.07},
-CZ0805:{okres:"CZ080",mesto:"Opava",obyvatel:95230,km2:324.09},
-CZ0806:{okres:"CZ0806",mesto:"Ostrava",obyvatel:306149,km2:259.64},
-CZ0532:{okres:"CZ053",mesto:"Pardubice",obyvatel:123116,km2:227.43},
-CZ0633:{okres:"CZ063",mesto:"Pelhřimov",obyvatel:45565,km2:384.4},
-CZ0314:{okres:"CZ031",mesto:"Písek",obyvatel:46373,km2:214.65},
-CZ0323:{okres:"CZ032",mesto:"Plzeň",obyvatel:241197,km2:708.29},
-CZ0324:{cast:"CZ0323",mesto:"Plzeň-jih"},
-CZ0325:{cast:"CZ0323",mesto:"Plzeň-sever"},
-CZ0100:{okres:"CZ010",mesto:"Praha",obyvatel:1457162,km2:747.33},
-CZ0209:{cast:"CZ0100",mesto:"Praha-východ"},
-CZ020A:{cast:"CZ0100",mesto:"Praha-západ"},
-CZ0315:{okres:"CZ031",mesto:"Prachatice",obyvatel:27814,km2:283.15},
-CZ0713:{okres:"CZ071",mesto:"Prostějov",obyvatel:53620,km2:100.93},
-CZ0714:{okres:"CZ071",mesto:"Přerov",obyvatel:78587,km2:226.77},
-CZ020B:{okres:"CZ020",mesto:"Příbram",obyvatel:62424,km2:326.32},
-CZ020C:{okres:"CZ020",mesto:"Rakovník",obyvatel:22979,km2:69.41},
-CZ0326:{okres:"CZ032",mesto:"Rokycany",obyvatel:25381,km2:110.74},
-CZ0524:{okres:"CZ052",mesto:"Rychnov nad Kněžnou",obyvatel:43951,km2:249.96},
-CZ0514:{okres:"CZ051",mesto:"Semily",obyvatel:41990,km2:207.84},
-CZ0413:{okres:"CZ041",mesto:"Sokolov",obyvatel:72007,km2:389.63},
-CZ0316:{okres:"CZ031",mesto:"Strakonice",obyvatel:43099,km2:235.46},
-CZ0533:{okres:"CZ053",mesto:"Svitavy",obyvatel:51857,km2:189.97},
-CZ0715:{okres:"CZ071",mesto:"Šumperk",obyvatel:59500,km2:282.99},
-CZ0317:{okres:"CZ031",mesto:"Tábor",obyvatel:71332,km2:283.03},
-CZ0327:{okres:"CZ032",mesto:"Tachov",obyvatel:36013,km2:441.05},
-CZ0426:{okres:"CZ042",mesto:"Teplice",obyvatel:106497,km2:234.9},
-CZ0525:{okres:"CZ052",mesto:"Trutnov",obyvatel:80021,km2:393.4},
-CZ0634:{okres:"CZ063",mesto:"Třebíč",obyvatel:57530,km2:218.13},
-CZ0722:{okres:"CZ072",mesto:"Uherské Hradiště",obyvatel:66899,km2:219.5},
-CZ0427:{okres:"CZ042",mesto:"Ústí nad Labem",obyvatel:102966,km2:130.4},
-CZ0534:{okres:"CZ053",mesto:"Ústí nad Orlicí",obyvatel:81659,km2:263.68},
-CZ0723:{okres:"CZ072",mesto:"Vsetín",obyvatel:75460,km2:230.91},
-CZ0646:{okres:"CZ064",mesto:"Vyškov",obyvatel:42833,km2:141.09},
-CZ0724:{okres:"CZ072",mesto:"Zlín",obyvatel:133413,km2:352.01},
-CZ0647:{okres:"CZ064",mesto:"Znojmo",obyvatel:46985,km2:175.22},
-CZ0635:{okres:"CZ063",mesto:"Žďár nad Sázavou",obyvatel:56918,km2:253.72}
+CZ0201:{okres:"CZ020",mesto:"Benešov",obyvatel:99414,km2:1475},
+CZ0202:{okres:"CZ020",mesto:"Beroun",obyvatel:95058,km2:662},
+CZ0641:{okres:"CZ064",mesto:"Blansko",obyvatel:109136,km2:862},
+CZ0642:{okres:"CZ0642",mesto:"Brno-město",obyvatel:381346,km2:230},
+CZ0643:{okres:"CZ0642",mesto:"Brno-venkov",obyvatel:224642,km2:1499},
+CZ0801:{okres:"CZ080",mesto:"Bruntál",obyvatel:91597,km2:1537},
+CZ0644:{okres:"CZ064",mesto:"Břeclav",obyvatel:116291,km2:1038},
+CZ0511:{okres:"CZ051",mesto:"Česká Lípa",obyvatel:103300,km2:1073},
+CZ0311:{okres:"CZ031",mesto:"České Budějovice",obyvatel:195903,km2:1639},
+CZ0312:{okres:"CZ031",mesto:"Český Krumlov",obyvatel:61556,km2:1616},
+CZ0421:{okres:"CZ042",mesto:"Děčín",obyvatel:129542,km2:909},
+CZ0321:{okres:"CZ032",mesto:"Domažlice",obyvatel:62062,km2:1124},
+CZ0802:{okres:"CZ080",mesto:"Frýdek-Místek",obyvatel:214660,km2:1208},
+CZ0631:{okres:"CZ063",mesto:"Havlíčkův Brod",obyvatel:94915,km2:1265},
+CZ0645:{okres:"CZ064",mesto:"Hodonín",obyvatel:153943,km2:1099},
+CZ0521:{okres:"CZ052",mesto:"Hradec Králové",obyvatel:164283,km2:892},
+CZ0411:{okres:"CZ041",mesto:"Cheb",obyvatel:91634,km2:1046},
+CZ0422:{okres:"CZ042",mesto:"Chomutov",obyvatel:124946,km2:935},
+CZ0531:{okres:"CZ053",mesto:"Chrudim",obyvatel:104613,km2:993},
+CZ0512:{okres:"CZ051",mesto:"Jablonec nad Nisou",obyvatel:90667,km2:402},
+CZ0711:{okres:"CZ071",mesto:"Jeseník",obyvatel:37968,km2:719},
+CZ0522:{okres:"CZ052",mesto:"Jičín",obyvatel:80045,km2:887},
+CZ0632:{okres:"CZ063",mesto:"Jihlava",obyvatel:113628,km2:1199},
+CZ0313:{okres:"CZ031",mesto:"Jindřichův Hradec",obyvatel:90692,km2:1944},
+CZ0412:{okres:"CZ041",mesto:"Karlovy Vary",obyvatel:114818,km2:1515},
+CZ0803:{okres:"CZ080",mesto:"Karviná",obyvatel:246324,km2:356},
+CZ0203:{okres:"CZ020",mesto:"Kladno",obyvatel:166483,km2:720},
+CZ0322:{okres:"CZ032",mesto:"Klatovy",obyvatel:86405,km2:1946},
+CZ0204:{okres:"CZ020",mesto:"Kolín",obyvatel:102623,km2:744},
+CZ0721:{okres:"CZ072",mesto:"Kroměříž",obyvatel:105343,km2:796},
+CZ0205:{okres:"CZ020",mesto:"Kutná Hora",obyvatel:75828,km2:917},
+CZ0513:{okres:"CZ051",mesto:"Liberec",obyvatel:175626,km2:989},
+CZ0423:{okres:"CZ042",mesto:"Litoměřice",obyvatel:119668,km2:1032},
+CZ0424:{okres:"CZ042",mesto:"Louny",obyvatel:86691,km2:1118},
+CZ0206:{okres:"CZ020",mesto:"Mělník",obyvatel:109302,km2:701},
+CZ0207:{okres:"CZ020",mesto:"Mladá Boleslav",obyvatel:130365,km2:1023},
+CZ0425:{okres:"CZ042",mesto:"Most",obyvatel:111708,km2:467},
+CZ0523:{okres:"CZ052",mesto:"Náchod",obyvatel:109958,km2:852},
+CZ0804:{okres:"CZ080",mesto:"Nový Jičín",obyvatel:151577,km2:882},
+CZ0208:{okres:"CZ020",mesto:"Nymburk",obyvatel:100886,km2:850},
+CZ0712:{okres:"CZ071",mesto:"Olomouc",obyvatel:235472,km2:1620},
+CZ0805:{okres:"CZ080",mesto:"Opava",obyvatel:176236,km2:1113},
+CZ0806:{okres:"CZ0806",mesto:"Ostrava-město",obyvatel:320145,km2:332},
+CZ0532:{okres:"CZ053",mesto:"Pardubice",obyvatel:175441,km2:880},
+CZ0633:{okres:"CZ063",mesto:"Pelhřimov",obyvatel:72302,km2:1290},
+CZ0314:{okres:"CZ031",mesto:"Písek",obyvatel:71587,km2:1127},
+CZ0323:{okres:"CZ032",mesto:"Plzeň-město",obyvatel:194280,km2:261},
+CZ0324:{okres:"CZ0323",mesto:"Plzeň-jih",obyvatel:63488,km2:990},
+CZ0325:{okres:"CZ0323",mesto:"Plzeň-sever",obyvatel:79979,km2:1287},
+CZ0100:{okres:"CZ010",mesto:"Praha",obyvatel:1324277,km2:496},
+CZ0209:{okres:"CZ0100",mesto:"Praha-východ",obyvatel:185178,km2:755},
+CZ020A:{okres:"CZ0100",mesto:"Praha-západ",obyvatel:149338,km2:580},
+CZ0315:{okres:"CZ031",mesto:"Prachatice",obyvatel:50978,km2:1375},
+CZ0713:{okres:"CZ071",mesto:"Prostějov",obyvatel:108646,km2:770},
+CZ0714:{okres:"CZ071",mesto:"Přerov",obyvatel:129512,km2:845},
+CZ020B:{okres:"CZ020",mesto:"Příbram",obyvatel:115104,km2:1693},
+CZ020C:{okres:"CZ020",mesto:"Rakovník",obyvatel:55562,km2:896},
+CZ0326:{okres:"CZ032",mesto:"Rokycany",obyvatel:49349,km2:575},
+CZ0524:{okres:"CZ052",mesto:"Rychnov nad Kněžnou",obyvatel:79383,km2:982},
+CZ0514:{okres:"CZ051",mesto:"Semily",obyvatel:74097,km2:699},
+CZ0413:{okres:"CZ041",mesto:"Sokolov",obyvatel:88212,km2:754},
+CZ0316:{okres:"CZ031",mesto:"Strakonice",obyvatel:70772,km2:1032},
+CZ0533:{okres:"CZ053",mesto:"Svitavy",obyvatel:104333,km2:1379},
+CZ0715:{okres:"CZ071",mesto:"Šumperk",obyvatel:120417,km2:1313},
+CZ0317:{okres:"CZ031",mesto:"Tábor",obyvatel:102595,km2:1326},
+CZ0327:{okres:"CZ032",mesto:"Tachov",obyvatel:54336,km2:1378},
+CZ0426:{okres:"CZ042",mesto:"Teplice",obyvatel:129072,km2:469},
+CZ0525:{okres:"CZ052",mesto:"Trutnov",obyvatel:117978,km2:1147},
+CZ0634:{okres:"CZ063",mesto:"Třebíč",obyvatel:110810,km2:1463},
+CZ0722:{okres:"CZ072",mesto:"Uherské Hradiště",obyvatel:142226,km2:991},
+CZ0427:{okres:"CZ042",mesto:"Ústí nad Labem",obyvatel:119338,km2:405},
+CZ0534:{okres:"CZ053",mesto:"Ústí nad Orlicí",obyvatel:138275,km2:1267},
+CZ0723:{okres:"CZ072",mesto:"Vsetín",obyvatel:143334,km2:1143},
+CZ0646:{okres:"CZ064",mesto:"Vyškov",obyvatel:92280,km2:876},
+CZ0724:{okres:"CZ072",mesto:"Zlín",obyvatel:191652,km2:1034},
+CZ0647:{okres:"CZ064",mesto:"Znojmo",obyvatel:114351,km2:1590},
+CZ0635:{okres:"CZ063",mesto:"Žďár nad Sázavou",obyvatel:118158,km2:1579}
 }
 /**
 * Copyright (c) 2020, Leon Sorokin
