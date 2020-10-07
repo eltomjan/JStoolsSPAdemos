@@ -53,12 +53,14 @@ var doNotShow = 'Praha,Karviná,Brno-město,Ostrava-město,Olomouc,Frýdek-Míst
 var byDay = {};
 var datumy = [];
 var lastDetailsDate;
+var sumPerDay = {};
 function init() {
     var dataRel = {}, data = {}, dataDestRel, dataDest, okrSizes = {};
     for(var i=0;i<cvd.data.length;i++) {
         var o = cvd.data[i];
         if (byDay[o.datum] === undefined) {
             byDay[o.datum] = {};
+            sumPerDay[o.datum] = 0;
             datumy.push(o.datum);
             dataDestRel = (dataRel[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
             dataDest = (data[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
@@ -71,6 +73,7 @@ function init() {
             vylecenych: o.kumulativni_pocet_vylecenych,
             umrti: o.kumulativni_pocet_umrti
         }
+        sumPerDay[o.datum] += o.kumulativni_pocet_nakazenych;
         var okr = places[keys[0]].cast || keys[0];
         var base = places[okr].obyvatel / 1000;
         okr = places[okr].mesto;
@@ -84,7 +87,10 @@ function init() {
     createDays(datumy);
     lastDetailsDate = datumy.pop();
     var tab = document.getElementsByTagName("TABLE")[0];
-    document.getElementById('report').innerHTML = 'Souhrná data k <b>' + latest.data[latest.data.length-1].datum +
+    var lastObj = latest.data;
+    lastObj = lastObj[lastObj.length-1];
+    tab.rows[0].cells[1].innerText = lastObj.datum.substr(5) + '\n' + lastObj.kumulativni_pocet_nakazenych + '\nOkres';
+    document.getElementById('report').innerHTML = 'Souhrná data k <b>' + lastObj.datum +
     '</b> detailní k <b>' + lastDetailsDate;
     var data2Rel = [[]], data2 = [[]], labels = [];
     for(var i in data) {
@@ -155,6 +161,12 @@ function createTab() {
     var days = o.options;
     var from2 = [day, Math.max(day+1, days.length-1)];
     var src = [byDay[days[day].text]];
+    var dayStr = days[day].text;
+    var sumInfo;
+    for(var i=0;i<latest.data.length;i++) if (latest.data[i].datum == dayStr) sumInfo = latest.data[i].kumulativni_pocet_nakazenych;
+    if (day) tab.rows[0].cells[1].innerText = dayStr.substr(5) + ' ' +
+    sumInfo + ' vs ' +
+    sumPerDay[dayStr] + '\n\nOkres';
     var tabData = {};
     var d = days[day].text.split('-');
     var m = days[parseInt((days.length + day) / 2)].text;
@@ -2287,7 +2299,7 @@ return uPlot;
 Data do <select onchange="createTab()"></select> <span id=report></span>
 <table border="1" cellspacing="0" cellpadding="5" onclick="sortByCol()">
     <TR><TD></TD>
-            <TH>Okres</TH><TH style="vertical-align: top">
+            <TH></TH><TH style="vertical-align: top">
                 <DIV style="position: relative; left:15px"><span style="position: absolute; background-color: #FF8080; padding: 5px">Pozitivních</span></DIV>
                 </TH><TH><HR>100000</TH><TH><HR>km<sup>2</sup></TH><TH><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
                 <TH><span style="background-color: black; color: white; padding: 5px">┼</span><HR>km<sup>2</sup></TH>
