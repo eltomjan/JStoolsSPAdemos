@@ -2,6 +2,7 @@
 <head>
 <title>COVID-19</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="Pragma" content="no-cache">
 <style>
 .uplot, .uplot *, .uplot *::before, .uplot *::after {box-sizing: border-box;}.uplot {font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";line-height: 1.5;width: max-content;}.u-title {text-align: center;font-size: 18px;font-weight: bold;}.u-wrap {position: relative;user-select: none;}.u-over, .u-under {position: absolute;overflow: hidden;}.uplot canvas {display: block;position: relative;width: 100%;height: 100%;}.u-legend {font-size: 14px;margin: auto;text-align: center;}.u-inline {display: block;}.u-inline * {display: inline-block;}.u-inline tr {margin-right: 16px;}.u-legend th {font-weight: 600;}.u-legend th > * {vertical-align: middle;display: inline-block;}.u-legend .u-marker {width: 1em;height: 1em;margin-right: 4px;border: 2px solid transparent;}.u-inline.u-live th::after {content: ":";vertical-align: middle;}.u-inline:not(.u-live) .u-value {display: none;}.u-series > * {padding: 4px;}.u-series th {cursor: pointer;}.u-legend .u-off > * {opacity: 0.3;}.u-select {background: rgba(0,0,0,0.07);position: absolute;pointer-events: none;}.u-select.u-off {display: none;}.u-cursor-x, .u-cursor-y {position: absolute;left: 0;top: 0;pointer-events: none;will-change: transform;z-index: 100;}.u-cursor-x {height: 100%;border-right: 1px dashed #607D8B;}.u-cursor-y {width: 100%;border-bottom: 1px dashed #607D8B;}.u-cursor-pt {position: absolute;top: 0;left: 0;border-radius: 50%;filter: brightness(85%);pointer-events: none;will-change: transform;z-index: 100;}
 TH {
@@ -28,18 +29,30 @@ width: 1280px;
 }
 </style>
 <script>
-var cvd,xhttp = new XMLHttpRequest();
+var cvd,xhttp = new XMLHttpRequest(), loadNo = 0;
 xhttp.onreadystatechange = function() {
 if (this.readyState == 4 && this.status == 200) {
 cvd = JSON.parse(this.responseText);
-init();
+loadNo++;
+if (loadNo++ > 1) init();
 }};
 xhttp.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/kraj-okres-nakazeni-vyleceni-umrti.min.json", true);
 xhttp.send();
 
+var latest, xhttp2 = new XMLHttpRequest();
+xhttp2.onreadystatechange = function() {
+if (this.readyState == 4 && this.status == 200) {
+latest = JSON.parse(this.responseText);
+loadNo++;
+if (loadNo++ > 1) init();
+}};
+xhttp2.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakaza.json", true);
+xhttp2.send();
+
 var doNotShow = 'Praha,Karviná,Brno-město,Ostrava-město,Olomouc,Frýdek-Místek';
 var byDay = {};
 var datumy = [];
+var lastDetailsDate;
 function init() {
     var dataRel = {}, data = {}, dataDestRel, dataDest, okrSizes = {};
     for(var i=0;i<cvd.data.length;i++) {
@@ -69,6 +82,10 @@ function init() {
         }
     }
     createDays(datumy);
+    lastDetailsDate = datumy.pop();
+    var tab = document.getElementsByTagName("TABLE")[0];
+    document.getElementById('report').innerHTML = 'Souhrná data k <b>' + latest.data[latest.data.length-1].datum +
+    '</b> detailní k <b>' + lastDetailsDate;
     var data2Rel = [[]], data2 = [[]], labels = [];
     for(var i in data) {
         data2[0].push(parseInt(i));
@@ -112,7 +129,7 @@ function init() {
     var no = data3.length-1;
     for(var i=0;i<sum.length;i++) sum[i] /= no;
     data3.push(sum);
-    createChart(data3,"Průběhy promoření do aktuálního stavu ("+datumy.pop()+" = 100%)",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), '');
+    createChart(data3,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), '');
     createChart(data2Rel,"‰ nakažených obyvatel",document.body.lastElementChild, labels, '');
     createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nezvoleny",document.body.lastElementChild, labels, doNotShow);
 }
@@ -139,6 +156,17 @@ function createTab() {
     var from2 = [day, Math.max(day+1, days.length-1)];
     var src = [byDay[days[day].text]];
     var tabData = {};
+    var d = days[day].text.split('-');
+    var m = days[parseInt((days.length + day) / 2)].text;
+    var sums = [];
+    sums.push(sumDay(src[0]));
+    sums.push(sumDay(byDay[m]));
+    m = m.split('-')
+    var selDate = new Date(d[0], d[1], d[2]);
+    var half = getDaysBetweenDates(new Date(m[0], m[1], m[2]), selDate);
+    var vsichni = 0;
+    for(var i in places) vsichni += places[i].obyvatel;
+    m = m.join('-'); d = d.join('-');
     for(var mst in src[0]) {
         var okr = places[mst].cast || mst;
         o = tabData[places[okr].mesto];
@@ -149,26 +177,28 @@ function createTab() {
             break;
         }
         j -= day;
-        if (o === undefined) {
-            o = tabData[places[okr].mesto] = [
-                src[0][mst].nakazenych - src[0][mst].vylecenych,
-                places[okr].obyvatel,
-                places[okr].km2,
-                src[0][mst].umrti,
-                0,
-                src[0][mst].nakazenych,
-                dayMin,
-                j
-            ]
-        } else {
-            o[0] += src[0][mst].nakazenych - src[0][mst].vylecenych;
-            o[3] += src[0][mst].umrti;
-
-            o[5] += src[0][mst].nakazenych;
-            o[6] = Math.min(o[6], dayMin);
-            o[7] = Math.max(o[7], j);
-        }
+        o = tabData[places[okr].mesto] = [
+            src[0][mst].nakazenych - src[0][mst].vylecenych,
+            places[okr].obyvatel,
+            places[okr].km2,
+            src[0][mst].umrti,
+            0,
+            src[0][mst].nakazenych,
+            dayMin,
+            j
+        ]
     }
+    var current = latest.data[latest.data.length-1];
+    var mlt = [sums[0] / sums[1], current.kumulativni_pocet_nakazenych / sums[0]];
+    m = current.datum.split('-');
+    d = days[1].text.split('-');
+    var emptyDays = getDaysBetweenDates(new Date(d[0], d[1], d[2]), new Date(m[0], m[1], m[2]));
+    var base = [Math.exp(Math.log(mlt[0])/half), Math.exp(Math.log(mlt[1])/emptyDays)];
+    var remains = [(Math.log(vsichni / sums[0]) / Math.log(base[0])), (Math.log(vsichni / current.kumulativni_pocet_nakazenych) / Math.log(base[1]))]
+    document.getElementById('report').innerText = day < 1 ? '' : ' za polovinu období (' + half + ' dní) přibylo ' + mlt[0].toFixed(3) + 'x nakažených (na ' + sums[0] + '), denní koeficient ' +
+    base[0].toFixed(4) + ' => zbývá ' + remains[0].toFixed(0) + ' dní do 100% promoření (' + new Date(selDate.getTime() + 864e5 * remains[0]).toLocaleDateString() + ').\n' +
+    'Do nejnovějších dat (' + current.datum + ') přibylo ' + mlt[1].toFixed(3) + 'x (na ' + current.kumulativni_pocet_nakazenych + '), koef ' + base[1].toFixed(4) +
+    ' => zbývá ' + remains[1].toFixed(0) + ' dní do 100% promoření (' + new Date(selDate.getTime() + 864e5 * remains[1]).toLocaleDateString() + ')';
     for(var o in tabData) {
         tabData[o][4] = tabData[o][3] / tabData[o][2];
         var diff = tabData[o][5] - tabData[o][6];
@@ -202,6 +232,13 @@ function createTab() {
         }
         i++;
     }
+}
+function sumDay(data) {
+    var res = 0;
+    for(var i in data) {
+        res += data[i].nakazenych;
+    }
+    return res;
 }
 function fillRow(row, rowData)
 {
@@ -289,7 +326,18 @@ function sortByCol() {
         }
         return s;
     }
+}
+function getDaysBetweenDates(d0, d1) {
+    // Copy dates so don't mess them up
+    var x0 = new Date(d0);
+    var x1 = new Date(d1);
 
+    // Set to noon - avoid DST errors
+    x0.setHours(12,0,0);
+    x1.setHours(12,0,0);
+
+    // Round to remove daylight saving errors
+    return Math.round( (x1 - x0) / 864e5 );
 }
 var places={
 CZ0201:{okres:"CZ020",mesto:"Benešov",obyvatel:99414,km2:1475},
@@ -2236,7 +2284,7 @@ return uPlot;
 </script>
 </head>
 <body>
-Data z <select onchange="createTab()"></select>
+Data do <select onchange="createTab()"></select> <span id=report></span>
 <table border="1" cellspacing="0" cellpadding="5" onclick="sortByCol()">
     <TR><TD></TD>
             <TH>Okres</TH><TH style="vertical-align: top">
