@@ -223,6 +223,8 @@ function createTab() {
             tabData[o][7] = diff / days;
         }
         tabData[o].push(diff / tabData[o][1] * 1000);
+        if (tabData[o][3]) tabData[o].push((tabData[o][5] - tabData[o][0]) / tabData[o][3]);
+        else tabData[o].push(':-) ' + ((tabData[o][5] - tabData[o][0]) / tabData[o][1] * 1000).toFixed(2) + '‰');
         tabData[o].push(tabData[o][1]);
         tabData[o].push(tabData[o][2]);
         tabData[o][1] = tabData[o][0] / tabData[o][1] * 100000;
@@ -325,8 +327,21 @@ function sortByCol() {
             if (collNo === 'D') return czen(b[0]) > czen(a[0]) ? 1 : -1;
             return czen(a[0]) > czen(b[0]) ? 1 : -1;
         }
-        if (collNo < 0) return parseFloat(b[-collNo]) - parseFloat(a[-collNo]);
-        else return parseFloat(a[collNo]) - parseFloat(b[collNo]);
+        if (collNo < 0) {
+            if (isNaN(a[-collNo])) {
+                if (isNaN(b[-collNo])) return 0;
+                return -1;
+            }
+            if (isNaN(b[-collNo])) return 0;
+            return parseFloat(b[-collNo]) - parseFloat(a[-collNo]);
+        } else {
+            if (isNaN(b[collNo])) {
+                if (isNaN(a[collNo])) return 0;
+                return -1;
+            }
+            if (isNaN(a[collNo])) return 0;
+            return parseFloat(a[collNo]) - parseFloat(b[collNo]);
+        }
     }
     function czen(s) {
         var c = 'AÁBCČDĎEÉĚFGHÇÍJKLMNŇOÓPQRŘSŠTŤUÚŮVWXYÝZŽ[\]^_`aábcčdďeéěfghüíjklmnňoópqrřsštťuúůvwxyýzž{|}~';
@@ -2307,6 +2322,7 @@ Data do <select onchange="createTab()"></select> <span id=report></span>
                 <TH>Dnů</TH>
                 <TH title="Nakažených / dnů">Prům.<BR>denní<BR>nárůst</TH>
                 <TH title="Nakažených / 1000 obyvatel">-"- ‰<HR>obyvatel</TH>
+                <TH>Vyléčení<HR><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
         <TH>Obyvatel</TH><TH>km<sup>2</sup></TH>
     </TR>
 </table>
