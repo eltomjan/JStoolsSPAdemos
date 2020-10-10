@@ -14,6 +14,8 @@ TH {
 user-select: none;
 vertical-align: bottom;
 cursor: hand;
+position: relative;
+background-color: white;
 }
 TH.up {
 background-color: lightgreen;
@@ -25,7 +27,9 @@ TD {
 text-align: right;
 }
 .u-legend {
-width: 1280px;
+width: 98vw;
+min-height: 174;
+user-select: none;
 }
 </style>
 <script>
@@ -48,8 +52,7 @@ if (loadNo++ > 1) init();
 }};
 xhttp2.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakaza.json", true);
 xhttp2.send();
-
-var doNotShow = 'Praha,Karviná,Brno-město,Ostrava-město,Olomouc,Frýdek-Místek';
+var doNotShow = 'Praha';
 var byDay = {};
 var datumy = [];
 var lastDetailsDate;
@@ -89,8 +92,8 @@ function init() {
     var tab = document.getElementsByTagName("TABLE")[0];
     var lastObj = latest.data;
     lastObj = lastObj[lastObj.length-1];
-    tab.rows[0].cells[1].innerText = lastObj.datum.substr(5) + '\n' + lastObj.kumulativni_pocet_nakazenych + '\nOkres';
     document.getElementById('report').innerHTML = 'Souhrná data k <b>' + lastObj.datum +
+    ' (' + lastObj.kumulativni_pocet_nakazenych + ') ' +
     '</b> detailní k <b>' + lastDetailsDate;
     var data2Rel = [[]], data2 = [[]], labels = [];
     for(var i in data) {
@@ -137,7 +140,7 @@ function init() {
     data3.push(sum);
     createChart(data3,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), '');
     createChart(data2Rel,"‰ nakažených obyvatel",document.body.lastElementChild, labels, '');
-    createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nezvoleny",document.body.lastElementChild, labels, doNotShow);
+    createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nezvolena",document.body.lastElementChild, labels, doNotShow);
 }
 function createChart(data, title, inside, labels, doNotShow) {
 	let zoomedOpts = {
@@ -164,9 +167,9 @@ function createTab() {
     var dayStr = days[day].text;
     var sumInfo;
     for(var i=0;i<latest.data.length;i++) if (latest.data[i].datum == dayStr) sumInfo = latest.data[i].kumulativni_pocet_nakazenych;
-    if (day) tab.rows[0].cells[1].innerText = dayStr.substr(5) + ' ' +
+    if (day) tab.rows[0].cells[1].innerHTML = dayStr.substr(5) + ' ' +
     sumInfo + ' vs ' +
-    sumPerDay[dayStr] + '\n\nOkres';
+    sumPerDay[dayStr] + '<hr>Okres';
     var tabData = {};
     var d = days[day].text.split('-');
     var m = days[parseInt((days.length + day) / 2)].text;
@@ -183,7 +186,7 @@ function createTab() {
         var okr = places[mst].cast || mst;
         o = tabData[places[okr].mesto];
         var dayMin = 0;
-        for(var j=days.length-1;j>=day;j--) {
+        for(var j=days.length-1;j>day;j--) {
             if (!byDay[days[j].text][mst].nakazenych) continue;
             dayMin = byDay[days[j].text][mst].nakazenych;
             break;
@@ -265,10 +268,10 @@ function fillRow(row, rowData)
 }
 function updateRow(row, rowData)
 {
-    for(var i=0;i<rowData.length;i++) {
-        var o = row.cells[i+1];
-        if (isNaN(rowData[i])) o.innerText = rowData[i];
-        else o.innerText = rowData[i].toFixed(2).replace(".00","");
+    for(var i=1;i<rowData.length;i++) {
+        var o = row.cells[i];
+        if (isNaN(rowData[i-1])) o.innerText = rowData[i-1];
+        else o.innerText = rowData[i-1].toFixed(2).replace(".00","");
     }
 }
 function createDays(dt) {
@@ -286,7 +289,10 @@ function createDays(dt) {
 function sortByCol() {
     var coll = event.srcElement;
     if (coll.tagName != 'TH') {
-        while('TH|TR'.indexOf(coll.tagName)) coll = coll.parentElement;
+        while('TH|TR'.indexOf(coll.tagName)) {
+            coll = coll.parentElement;
+            if (!coll) return;
+        }
     if (coll.tagName != 'TH') return;
         while(coll.nextElementSibling.offsetLeft < event.clientX) coll = coll.nextElementSibling;
     }
@@ -365,6 +371,18 @@ function getDaysBetweenDates(d0, d1) {
 
     // Round to remove daylight saving errors
     return Math.round( (x1 - x0) / 864e5 );
+}
+var tabScroll,timeoutObj;
+
+function scrollMe2() {
+    clearTimeout(timeoutObj);
+    t=tabScroll.firstElementChild;
+    for(var d=tabScroll.scrollTop,d=d+(d?-2:0)+"px",b=0;b<1;b++)
+        for(var c=t.rows[b],e=t.rows[b].cells.length,f=0;f<e;f++) c.cells[f].style.top=d
+}
+function scrollMe(d) {
+    tabScroll=d;
+    timeoutObj=window.setTimeout(scrollMe2,100); // optional slowdown
 }
 var places={
 CZ0201:{okres:"CZ020",mesto:"Benešov",obyvatel:99414,km2:1475},
@@ -525,7 +543,7 @@ var ceil = M.ceil;
 var min = M.min;
 var max = M.max;
 var pow = M.pow;
-var log10 = M.log10;
+var log10 = M.log10 || M.log;
 var PI = M.PI;
 var inf = Infinity;
 function incrRound (num, incr) {
@@ -1166,34 +1184,30 @@ var legendRows = [];
 var legendCols;
 var multiValLegend = false;
 if (showLegend) {
-legendEl = placeTag('table', LEGEND, root);
+legendEl = placeTag('div', LEGEND, root);
 var getMultiVals = series[1] ? series[1].values : null;
 multiValLegend = getMultiVals != null;
-if (multiValLegend) {
-var head = placeTag('tr', LEGEND_THEAD, legendEl);
-placeTag('th', null, head);
-legendCols = getMultiVals(self, 1, 0);
-for (var key in legendCols) { placeTag('th', LEGEND_LABEL, head).textContent = key; }} else {
 legendCols = { _: 0 };
 addClass(legendEl, LEGEND_INLINE);
 legend.live && addClass(legendEl, LEGEND_LIVE);
-}}
+}
 function initLegendRow (s, i) {
 if (i == 0 && (multiValLegend || !legend.live)) { return null; }
 var _row = [];
-var row = placeTag('tr', LEGEND_SERIES, legendEl, legendEl.childNodes[i]);
+var row = placeTag('div', LEGEND_SERIES, legendEl, legendEl.childNodes[i]);
 addClass(row, s.class);
-if (!s.show) { addClass(row, OFF); }
-var label = placeTag('th', null, row);
-var indic = placeDiv(LEGEND_MARKER, label);
-s.width && (indic.style.borderColor = s.stroke);
-indic.style.backgroundColor = s.fill;
-var text = placeDiv(LEGEND_LABEL, label);
-text.textContent = s.label;
+row.style.minWidth = 80;
+if (s.scale !== "x") {
+var label = placeTag('div', null, row);
+s.width && (label.style.color = s.stroke);
+label.style.backgroundColor = s.fill;
+if (!s.show) { addClass(label, OFF); }}
 if (i > 0) {
 on('click', label, function (e) {
 if (cursor.locked) { return; }
-filtMouse(e) && setSeries(series.indexOf(s), { show: !s.show }, syncOpts.setSeries);
+var l = e.srcElement.innerText;
+for (var i = 1; i < series.length; i++) if (series[i].label === l) break;
+filtMouse(e) && setSeries(i, { show: !series[i].show }, syncOpts.setSeries);
 });
 if (cursorFocus) {
 on(mouseenter, label, function (e) {
@@ -1202,9 +1216,8 @@ setSeries(series.indexOf(s), { focus: true }, syncOpts.setSeries);
 });
 }}
 for (var key in legendCols) {
-var v = placeTag('td', LEGEND_VALUE, row);
-v.textContent = '--';
-_row.push(v);
+var v = placeTag('div', LEGEND_VALUE, row);
+_row.push(row);
 }
 return _row;
 }
@@ -1883,7 +1896,9 @@ _fire !== false && fire('setSelect');
 self.setSelect = setSelect;
 function toggleDOM (i, onOff) {
 var s = series[i];
-var label = showLegend ? legendRows[i][0].parentNode : null;
+for(var i=0;i<legendRows.length;i++)
+if (s.label == legendRows[i][0].firstChild.innerText) break;
+var label = showLegend ? legendRows[i][0] : null;
 if (s.show) { label && remClass(label, OFF); } else {
 label && addClass(label, OFF);
 cursorPts.length > 1 && trans(cursorPts[i], 0, -10);
@@ -2017,6 +2032,7 @@ if (cursorFocus) { setSeries(null, { focus: true }, syncOpts.setSeries); }} else
 idx = closestIdxFromXpos(mouseLeft1);
 var scX = scales[xScaleKey];
 var xPos = round3(getXPos(data[0][idx], scX, plotWidCss, 0));
+var y = [];
 for (var i$1 = 0; i$1 < series.length; i$1++) {
 var s = series[i$1];
 var idx2 = cursor.dataIdx(self, i$1, idx);
@@ -2030,11 +2046,26 @@ cursorPts.length > 1 && trans(cursorPts[i$1], xPos2, yPos);
 if (showLegend && legend.live) {
 if ((idx2 == cursor.idx && !forceUpdateLegend) || i$1 == 0 && multiValLegend) { continue; }
 var src$1 = i$1 == 0 && xScaleDistr == 2 ? data0 : data[i$1];
-var vals = multiValLegend ? s.values(self, i$1, idx2) : { _: s.value(self, src$1[idx2], i$1, idx2) };
+var vals = { _: s.value(self, src$1[idx2], i$1, idx2) };
 var j$1 = 0;
-for (var k in vals) { legendRows[i$1][j$1++][firstChild].nodeValue = vals[k]; }}}
+if (i$1) {
+y.push([src$1[idx2], s.label, s.stroke, vals[k]])
+} else for (var k in vals) { legendRows[i$1][j$1++].lastElementChild.innerText = vals[k]; }}}
 forceUpdateLegend = false;
+if (!y.length) return;
+var all = y.pop();
+if (all[1] !== 'Vše') {
+y.push(all);
+all = 0;
 }
+y.sort(function (a, b) { return b[0] - a[0]; });
+if (all) y.push(all);
+for (var i$1 = 0; i$1 < y.length; i$1++) {
+var row = legendRows[i$1 + 1][0];
+row.firstChild.style.color = y[i$1][2];
+row.firstChild.innerText = y[i$1][1];
+row.lastElementChild.innerText = y[i$1][3];
+}}
 if (select.show && dragging) {
 var dx = abs(mouseLeft1 - mouseLeft0);
 var dy = abs(mouseTop1 - mouseTop0);
@@ -2311,11 +2342,12 @@ return uPlot;
 </script>
 </head>
 <body>
-Data do <select onchange="createTab()"></select> <span id=report></span>
+Data do <select onchange="createTab()"></select> <span id=report></span><br>
+<span style="position: absolute; height:60vh; overflow-y:auto" onscroll="scrollMe(this)"></style>
 <table border="1" cellspacing="0" cellpadding="5" onclick="sortByCol()">
     <TR><TD></TD>
-            <TH></TH><TH style="vertical-align: top">
-                <DIV style="position: relative; left:15px"><span style="position: absolute; background-color: #FF8080; padding: 5px">Pozitivních</span></DIV>
+            <TH>Okres</TH><TH style="vertical-align: top">
+                <DIV style="position: relative; left:15px"><span style="position: absolute; background-color: #FF8080; padding: 5px;z-index:1;">Pozitivních</span></DIV>
                 </TH><TH><HR>100000</TH><TH><HR>km<sup>2</sup></TH><TH><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
                 <TH><span style="background-color: black; color: white; padding: 5px">┼</span><HR>km<sup>2</sup></TH>
                 <TH>Naka-<BR>žených<BR>celkem</TH>
@@ -2326,5 +2358,7 @@ Data do <select onchange="createTab()"></select> <span id=report></span>
         <TH>Obyvatel</TH><TH>km<sup>2</sup></TH>
     </TR>
 </table>
+</span>
+<div style="height:60vh;"></div><br>
 <div></div></body>
 </html>
