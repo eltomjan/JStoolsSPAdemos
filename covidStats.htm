@@ -56,18 +56,20 @@ var datumy = [];
 var lastDetailsDate;
 var sumPerDay = {};
 function init() {
-    var data = {};
+    var dataRel = {}, data = {}, dataDestRel, dataDest, okrSizes = {};
     for(var i=0;i<cvd.data.length;i++) {
         var o = cvd.data[i];
         if (byDay[o.datum] === undefined) {
             byDay[o.datum] = {};
             sumPerDay[o.datum] = 0;
             datumy.push(o.datum);
+            dataDestRel = (dataRel[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
+            dataDest = (data[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
         }
         var keys = [o.okres_lau_kod, o.kraj_nuts_kod];
         var sw = places[keys[0]] === undefined;
         byDay[o.datum][keys[sw-0]] = {
-            okres: keys[sw-1],
+            okres: keys[1-sw],
             nakazenych: o.kumulativni_pocet_nakazenych,
             vylecenych: o.kumulativni_pocet_vylecenych,
             umrti: o.kumulativni_pocet_umrti
@@ -76,6 +78,12 @@ function init() {
         var okr = places[keys[0]].cast || keys[0];
         var base = places[okr].obyvatel / 1000;
         okr = places[okr].mesto;
+        if (dataDest[okr] === undefined) {
+            dataDestRel[okr] = (dataDest[okr] = o.kumulativni_pocet_nakazenych) / base;
+        } else {
+            dataDestRel[okr] += (o.kumulativni_pocet_nakazenych / base);
+            dataDest[okr] += o.kumulativni_pocet_nakazenych;
+        }
     }
     createDays(datumy);
     lastDetailsDate = datumy.pop();
@@ -84,9 +92,10 @@ function init() {
     lastObj = lastObj[lastObj.length-1];
     document.getElementById('report').innerHTML = '<p>Souhrná data k <b>' + lastObj.datum + ': ' + lastObj.kumulativni_pocet_nakazenych +
     '</b> nakažených detailní okresy k <b>' + lastDetailsDate + '</b> (poslední aktualizace <b>' + cvd.modified.substr(0,19).replace('T','</b> ') + ')</p>';
-    var data2 = [[]], labels = [];
+    var data2Rel = [[]], data2 = [[]], labels = [];
     for(var i in data) {
         data2[0].push(parseInt(i));
+        data2Rel[0].push(parseInt(i));
         var niceLegend = Object.keys(data[i]).sort();
         var start = doNotShow ? doNotShow.split(',') : [];
         for(var j in start) niceLegend[niceLegend.indexOf(start[j])] = undefined;
@@ -99,6 +108,12 @@ function init() {
                 pos = labels.length;
                 labels.push(j);
             }
+            if (data2.length - 1 <= pos) {
+                data2.push([]);
+                data2Rel.push([]);
+            }
+            data2[pos+1].push(data[i][j]);
+            data2Rel[pos+1].push(dataRel[i][j]);
         }
     }
     if (!Object.assign) return;
