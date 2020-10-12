@@ -4,7 +4,10 @@
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <meta http-equiv="Pragma" content="no-cache">
 <style>
-.uplot, .uplot *, .uplot *::before, .uplot *::after {box-sizing: border-box;}.uplot {font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";line-height: 1.5;width: max-content;}.u-title {text-align: center;font-size: 18px;font-weight: bold;}.u-wrap {position: relative;user-select: none;}.u-over, .u-under {position: absolute;overflow: hidden;}.uplot canvas {display: block;position: relative;width: 100%;height: 100%;}.u-legend {font-size: 14px;margin: auto;text-align: center;}.u-inline {display: block;}.u-inline * {display: inline-block;}.u-inline tr {margin-right: 16px;}.u-legend th {font-weight: 600;}.u-legend th > * {vertical-align: middle;display: inline-block;}.u-legend .u-marker {width: 1em;height: 1em;margin-right: 4px;border: 2px solid transparent;}.u-inline.u-live th::after {content: ":";vertical-align: middle;}.u-inline:not(.u-live) .u-value {display: none;}.u-series > * {padding: 4px;}.u-series th {cursor: pointer;}.u-legend .u-off > * {opacity: 0.3;}.u-select {background: rgba(0,0,0,0.07);position: absolute;pointer-events: none;}.u-select.u-off {display: none;}.u-cursor-x, .u-cursor-y {position: absolute;left: 0;top: 0;pointer-events: none;will-change: transform;z-index: 100;}.u-cursor-x {height: 100%;border-right: 1px dashed #607D8B;}.u-cursor-y {width: 100%;border-bottom: 1px dashed #607D8B;}.u-cursor-pt {position: absolute;top: 0;left: 0;border-radius: 50%;filter: brightness(85%);pointer-events: none;will-change: transform;z-index: 100;}
+.uplot, .uplot *, .uplot *::before, .uplot *::after {box-sizing: border-box;}.uplot {font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";line-height: 1.5;width: max-content;}.u-title {text-align: center;font-size: 18px;font-weight: bold;}.u-wrap {position: relative;user-select: none;}.u-over, .u-under {position: absolute;overflow: hidden;}.uplot canvas {display: block;position: relative;width: 100%;height: 100%;}
+.u-legend {font-size: 14px;margin: auto;text-align: center;
+width: 98vw;min-height: 174;user-select: none;
+}.u-inline {display: block;}.u-inline * {display: inline-block;}.u-inline tr {margin-right: 16px;}.u-legend th {font-weight: 600;}.u-legend th > * {vertical-align: middle;display: inline-block;}.u-legend .u-marker {width: 1em;height: 1em;margin-right: 4px;border: 2px solid transparent;}.u-inline.u-live th::after {content: ":";vertical-align: middle;}.u-inline:not(.u-live) .u-value {display: none;}.u-series > * {padding: 4px;}.u-series th {cursor: pointer;}.u-legend .u-off > * {opacity: 0.3;}.u-select {background: rgba(0,0,0,0.07);position: absolute;pointer-events: none;}.u-select.u-off {display: none;}.u-cursor-x, .u-cursor-y {position: absolute;left: 0;top: 0;pointer-events: none;will-change: transform;z-index: 100;}.u-cursor-x {height: 100%;border-right: 1px dashed #607D8B;}.u-cursor-y {width: 100%;border-bottom: 1px dashed #607D8B;}.u-cursor-pt {position: absolute;top: 0;left: 0;border-radius: 50%;filter: brightness(85%);pointer-events: none;will-change: transform;z-index: 100;}
 TH {
 -webkit-touch-callout: none;
 -webkit-user-select: none;
@@ -25,11 +28,6 @@ background-color: red;
 }
 TD {
 text-align: right;
-}
-.u-legend {
-width: 98vw;
-min-height: 174;
-user-select: none;
 }
 </style>
 <script>
@@ -58,15 +56,13 @@ var datumy = [];
 var lastDetailsDate;
 var sumPerDay = {};
 function init() {
-    var dataRel = {}, data = {}, dataDestRel, dataDest, okrSizes = {};
+    var data = {};
     for(var i=0;i<cvd.data.length;i++) {
         var o = cvd.data[i];
         if (byDay[o.datum] === undefined) {
             byDay[o.datum] = {};
             sumPerDay[o.datum] = 0;
             datumy.push(o.datum);
-            dataDestRel = (dataRel[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
-            dataDest = (data[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
         }
         var keys = [o.okres_lau_kod, o.kraj_nuts_kod];
         var sw = places[keys[0]] === undefined;
@@ -80,25 +76,17 @@ function init() {
         var okr = places[keys[0]].cast || keys[0];
         var base = places[okr].obyvatel / 1000;
         okr = places[okr].mesto;
-        if (dataDest[okr] === undefined) {
-            dataDestRel[okr] = (dataDest[okr] = o.kumulativni_pocet_nakazenych) / base;
-        } else {
-            dataDestRel[okr] += (o.kumulativni_pocet_nakazenych / base);
-            dataDest[okr] += o.kumulativni_pocet_nakazenych;
-        }
     }
     createDays(datumy);
     lastDetailsDate = datumy.pop();
     var tab = document.getElementsByTagName("TABLE")[0];
     var lastObj = latest.data;
     lastObj = lastObj[lastObj.length-1];
-    document.getElementById('report').innerHTML = 'Souhrná data k <b>' + lastObj.datum +
-    ' (' + lastObj.kumulativni_pocet_nakazenych + ') ' +
-    '</b> detailní k <b>' + lastDetailsDate;
-    var data2Rel = [[]], data2 = [[]], labels = [];
+    document.getElementById('report').innerHTML = '<p>Souhrná data k <b>' + lastObj.datum + ': ' + lastObj.kumulativni_pocet_nakazenych +
+    '</b> nakažených detailní okresy k <b>' + lastDetailsDate + '</b> (poslední aktualizace <b>' + cvd.modified.substr(0,19).replace('T','</b> ') + ')</p>';
+    var data2 = [[]], labels = [];
     for(var i in data) {
         data2[0].push(parseInt(i));
-        data2Rel[0].push(parseInt(i));
         var niceLegend = Object.keys(data[i]).sort();
         var start = doNotShow ? doNotShow.split(',') : [];
         for(var j in start) niceLegend[niceLegend.indexOf(start[j])] = undefined;
@@ -111,12 +99,6 @@ function init() {
                 pos = labels.length;
                 labels.push(j);
             }
-            if (data2.length - 1 <= pos) {
-                data2.push([]);
-                data2Rel.push([]);
-            }
-            data2[pos+1].push(data[i][j]);
-            data2Rel[pos+1].push(dataRel[i][j]);
         }
     }
     if (!Object.assign) return;
@@ -2343,7 +2325,7 @@ return uPlot;
 </head>
 <body>
 Data do <select onchange="createTab()"></select> <span id=report></span><br>
-<span style="position: absolute; height:60vh; overflow-y:auto" onscroll="scrollMe(this)"></style>
+<span style="position: absolute; height:60vh; overflow-y:auto" onscroll="scrollMe(this)">
 <table border="1" cellspacing="0" cellpadding="5" onclick="sortByCol()">
     <TR><TD></TD>
             <TH>Okres</TH><TH style="vertical-align: top">
