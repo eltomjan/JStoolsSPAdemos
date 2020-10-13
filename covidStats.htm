@@ -54,17 +54,19 @@ var doNotShow = 'Praha';
 var byDay = {};
 var datumy = [];
 var lastDetailsDate;
-var sumPerDay = {};
+var sumPerDay = {}; var sumPerDayO = {};
 function init() {
     var dataRel = {}, data = {}, dataDestRel, dataDest, okrSizes = {};
     for(var i=0;i<cvd.data.length;i++) {
         var o = cvd.data[i];
+        var dateInt = new Date(o.datum.replace(/-/g,'/')).getTime() / 1000;
         if (byDay[o.datum] === undefined) {
             byDay[o.datum] = {};
             sumPerDay[o.datum] = 0;
             datumy.push(o.datum);
-            dataDestRel = (dataRel[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
-            dataDest = (data[new Date(o.datum.replace(/-/g,'/')).getTime() / 1000] = {});
+            dataDestRel = (dataRel[dateInt] = {});
+            dataDest = (data[dateInt] = {});
+            sumPerDayO[dateInt] = 0;
         }
         var keys = [o.okres_lau_kod, o.kraj_nuts_kod];
         var sw = places[keys[0]] === undefined;
@@ -74,7 +76,8 @@ function init() {
             vylecenych: o.kumulativni_pocet_vylecenych,
             umrti: o.kumulativni_pocet_umrti
         }
-        sumPerDay[o.datum] += o.kumulativni_pocet_nakazenych;
+        sumPerDayO[dateInt] =
+            (sumPerDay[o.datum] += o.kumulativni_pocet_nakazenych);
         var okr = places[keys[0]].cast || keys[0];
         var base = places[okr].obyvatel / 1000;
         okr = places[okr].mesto;
@@ -135,6 +138,22 @@ function init() {
     var no = data3.length-1;
     for(var i=0;i<sum.length;i++) sum[i] /= no;
     data3.push(sum);
+    var sum = 0;
+    var cur, lst = 0;
+    var data4 = [data2[0].slice(1), [], [], []];
+    for(var j=0;j<data3[0].length;j++) {
+        cur = sumPerDayO[data3[0][j]];
+        var rel = (cur - lst) / lst * 1000;
+        if (j) {
+            sum += rel;
+            data4[1].push(rel);
+            if (j > 1) data4[2].push(sum / (j-1));
+            else data4[2].push(rel);
+            data4[3].push((cur - lst));
+        }
+        lst = cur;
+    }
+    createChart(data4,"Relativní šíření ‰ (přírůstek / nakažených)",document.body.lastElementChild, ['‰', 'Průměr', 'Absolutní'], 'Absolutní');
     createChart(data3,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), '');
     createChart(data2Rel,"‰ nakažených obyvatel",document.body.lastElementChild, labels, '');
     createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nezvolena",document.body.lastElementChild, labels, doNotShow);
