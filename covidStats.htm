@@ -66,7 +66,7 @@ function init() {
             datumy.push(o.datum);
             dataDestRel = (dataRel[dateInt] = {});
             dataDest = (data[dateInt] = {});
-            sumPerDayO[dateInt] = 0;
+            sumPerDayO[dateInt] = { All: 0 };
         }
         var keys = [o.okres_lau_kod, o.kraj_nuts_kod];
         var sw = places[keys[0]] === undefined;
@@ -76,16 +76,13 @@ function init() {
             vylecenych: o.kumulativni_pocet_vylecenych,
             umrti: o.kumulativni_pocet_umrti
         }
-        sumPerDayO[dateInt] =
-            (sumPerDay[o.datum] += o.kumulativni_pocet_nakazenych);
         var okr = places[keys[0]].cast || keys[0];
         var base = places[okr].obyvatel / 1000;
         okr = places[okr].mesto;
         if (dataDest[okr] === undefined) {
             dataDestRel[okr] = (dataDest[okr] = o.kumulativni_pocet_nakazenych) / base;
-        } else {
-            dataDestRel[okr] += (o.kumulativni_pocet_nakazenych / base);
-            dataDest[okr] += o.kumulativni_pocet_nakazenych;
+            sumPerDayO[dateInt].All +=
+                (sumPerDayO[dateInt][okr] = Math.max(o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych, 0));
         }
     }
     createDays(datumy);
@@ -138,35 +135,44 @@ function init() {
     var no = data3.length-1;
     for(var i=0;i<sum.length;i++) sum[i] /= no;
     data3.push(sum);
-    var sum = 0;
-    var cur, lst = 0;
-    var data4 = [data2[0].slice(1), [], [], []];
+    var sum = {};
+    var cur, lst;
+    var data4 = [data2[0].slice(1)];
+    data4.push([]);
+    data4.push([]);
+    var allSum = 0;
     for(var j=0;j<data3[0].length;j++) {
         cur = sumPerDayO[data3[0][j]];
-        var rel = (cur - lst) / lst * 1000;
+        for(var okr in labels) {
+            if (j === 0) {
+                data4.push([]);
+                continue;
+            }
+            var rel = (cur[labels[okr]] - lst[labels[okr]]) / lst[labels[okr]] * 100;
+            if (lst[labels[okr]] === 0) rel = 0;
+            data4[parseInt(okr)+1].push(rel.toFixed(2));
+        }
         if (j) {
-            sum += rel;
-            data4[1].push(rel);
-            if (j > 1) data4[2].push(sum / (j-1));
-            else data4[2].push(rel);
-            data4[3].push((cur - lst));
+            var rel = (cur.All - lst.All) / lst.All * 100;
+            allSum += rel;
+            data4[data4.length-1].push(rel.toFixed(2));
+            data4[data4.length-2].push(allSum / j);
         }
         lst = cur;
     }
-    createChart(data4,"Relativní šíření ‰ (přírůstek / nakažených)",document.body.lastElementChild, ['‰', 'Průměr', 'Absolutní'], 'Absolutní');
+    createChart(data4,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],labels).concat(['Průměr všech','Všechny']), labels.join(','), 0);
     createChart(data3,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), '');
     createChart(data2Rel,"‰ nakažených obyvatel",document.body.lastElementChild, labels, '');
     createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nezvolena",document.body.lastElementChild, labels, doNotShow);
 }
-function createChart(data, title, inside, labels, doNotShow) {
+function createChart(data, title, inside, labels, doNotShow, srt) {
 	let zoomedOpts = {
-        "width":1280,"height":600,title:title,"axes":[{},{"size":60,"space":15}],"series":[{}]
+        "width":1280,"height":600,title:title,"axes":[{},{"size":60,"space":15}],"series":[{show:srt===undefined}]
 	};
-	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#FF0000"];
-    for(let l in labels) {
-        if (!doNotShow || doNotShow.indexOf(labels[l]) < 0) zoomedOpts.series.push({label:labels[l], stroke: colors[l]});
-        else zoomedOpts.series.push({label:labels[l], stroke: colors[l], show:false});
-    }
+	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#C00000","#FF0000"];
+    for(let l in labels)
+        zoomedOpts.series.push({label:labels[l], stroke: colors[l], show:(!doNotShow || doNotShow.indexOf(labels[l]) < 0)});
+
     if (data[data.length-1][0] !== 0) zoomedOpts.series[zoomedOpts.series.length-1].width = 2;
 
 	let uZoomed = new uPlot(zoomedOpts, data, inside);
@@ -2074,7 +2080,7 @@ if (all[1] !== 'Vše') {
 y.push(all);
 all = 0;
 }
-y.sort(function (a, b) { return b[0] - a[0]; });
+if(series[0].show) y.sort(function (a, b) { return b[0] - a[0]; });
 if (all) y.push(all);
 for (var i$1 = 0; i$1 < y.length; i$1++) {
 var row = legendRows[i$1 + 1][0];
