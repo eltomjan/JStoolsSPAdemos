@@ -81,6 +81,7 @@ function init() {
         okr = places[okr].mesto;
         if (dataDest[okr] === undefined) {
             dataDestRel[okr] = (dataDest[okr] = o.kumulativni_pocet_nakazenych) / base;
+            sumPerDay[o.datum] += o.kumulativni_pocet_nakazenych;
             sumPerDayO[dateInt].All +=
                 (sumPerDayO[dateInt][okr] = Math.max(o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych, 0));
         }
@@ -140,30 +141,38 @@ function init() {
     var data4 = [data2[0].slice(1)];
     data4.push([]);
     data4.push([]);
-    var allSum = 0;
+    var allSum = 0, allAkt = 0;
+    var data5 = [data2[0].slice(1)];
+    data5.push([]);
     for(var j=0;j<data3[0].length;j++) {
         cur = sumPerDayO[data3[0][j]];
         for(var okr in labels) {
             if (j === 0) {
                 data4.push([]);
+                data5.push([]);
                 continue;
             }
             var rel = (cur[labels[okr]] - lst[labels[okr]]) / lst[labels[okr]] * 100;
             if (lst[labels[okr]] === 0) rel = 0;
             data4[parseInt(okr)+1].push(rel.toFixed(2));
+            data5[parseInt(okr)+1].push(cur[labels[okr]]);
+            allAkt += cur[labels[okr]];
         }
         if (j) {
             var rel = (cur.All - lst.All) / lst.All * 100;
             allSum += rel;
             data4[data4.length-1].push(rel.toFixed(2));
             data4[data4.length-2].push(allSum / j);
+            data5[data5.length-1].push(allAkt);
+            allAkt = 0;
         }
         lst = cur;
     }
     createChart(data4,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],labels).concat(['Průměr všech','Všechny']), labels.join(','), 0);
+    createChart(data5,"Aktuálně nakažení (" + doNotShow + " a vše) nevybráno",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), doNotShow + ',Vše');
     createChart(data3,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, Object.assign([],labels).concat('Vše'), '');
     createChart(data2Rel,"‰ nakažených obyvatel",document.body.lastElementChild, labels, '');
-    createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nezvolena",document.body.lastElementChild, labels, doNotShow);
+    createChart(data2,"Počet všech nakažených obyvatel (" + doNotShow + ") nevybrána",document.body.lastElementChild, labels, doNotShow);
 }
 function createChart(data, title, inside, labels, doNotShow, srt) {
 	let zoomedOpts = {
