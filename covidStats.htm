@@ -105,21 +105,24 @@ function init() {
     }
     okrAkt = [];
     to100 = [];
-    rel = [[],[]];
+    rel = [[],[],[]];
     for(var j in structures.dates) {
         var dateInt = structures.dates[j];
         okrAkt.push(structures.byDay[dateInt].All.ill);
         rel[0].push(structures.byDay[dateInt].All.Avg);
         rel[1].push(structures.byDay[dateInt].All.Inc);
+        rel[2].push(106.7+Math.sin(rel[1].length)*9);
         to100.push(structures.byDay[dateInt].All.to100);
     }
     dataAkt.push(okrAkt);
     dataTo100.push(to100);
     dataRel.push(rel[0]);
     dataRel.push(rel[1]);
+    dataRel.push(rel[2]);
     var allLabels = Object.assign([],structures.labels).concat('Vše');
     structures.points = structures.labels.length;
-    createChart(dataRel,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],structures.labels).concat(['Průměr všech','Všechny']), structures.labels.join(','), 0);
+    const aprox = '106,7 + 9 x sin(den)';
+    createChart(dataRel,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],structures.labels).concat(['Průměr všech','Všechny',aprox]), structures.labels.join(','), 0);
     createChart(dataAkt,"Aktuálně nakažení (" + doNotShow + " a vše) nevybráno",document.body.lastElementChild, allLabels, doNotShow + ',Vše');
     createChart(dataTo100,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, allLabels, '');
     createChart(dataRelO,"‰ nakažených obyvatel",document.body.lastElementChild, structures.labels, '');
@@ -129,7 +132,7 @@ function createChart(data, title, inside, labels, doNotShow, srt) {
 	let zoomedOpts = {
         "width":1280,"height":600,title:title,"axes":[{},{"size":60,"space":15}],"series":[{show:srt===undefined}]
 	};
-	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#C00000","#FF0000"];
+	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#C00000","#FF0000","#B0B080"];
     for(let l in labels)
         zoomedOpts.series.push({label:labels[l], stroke: colors[l], show:(!doNotShow || doNotShow.indexOf(labels[l]) < 0), points:{show:structures.points-- > 0}});
 
@@ -146,7 +149,8 @@ function createTab() {
     if (!day) return;
     var days = o.options;
     var from2 = [day, Math.max(day+1, days.length-1)];
-    var dayStr = days[day].text;
+    var dayStr = days[day].text.substr(0, 10);
+    if (isNaN(dayStr[0])) return;
     var src = structures.byDay[structures.dates[dayStr]];
     var sumInfo;
     for(var i=0;i<latest.data.length;i++) if (latest.data[i].datum == dayStr) sumInfo = latest.data[i].kumulativni_pocet_nakazenych;
@@ -154,8 +158,8 @@ function createTab() {
     sumInfo + ' vs ' +
     src.All.cum + '<hr>Okres';
     var tabData = {};
-    var d = days[day].text.split('-');
-    var m = days[parseInt((days.length + day) / 2)].text;
+    var d = days[day].text.substr(0, 10).split('-');
+    var m = days[parseInt((days.length + day) / 2)].text.substr(0, 10);
     var sums = [];
     sums.push(src.All.cum);
     sums.push(structures.byDay[structures.dates[m]].All.cum);
@@ -170,13 +174,13 @@ function createTab() {
         o = tabData[mst];
         var daysMin = [0,0];
         for(var j=days.length-1;j>day;j--) {
-            var o2 = structures.byDay[structures.dates[days[j].text]][mst].cum;
+            var o2 = structures.byDay[structures.dates[days[j].text.substr(0, 10)]][mst].cum;
             if (!o2) continue;
             daysMin[0] = o2;
             break;
         }
         for(i=days.length-1;i>day;i--) {
-            o2 = structures.byDay[structures.dates[days[i].text]][mst];
+            o2 = structures.byDay[structures.dates[days[i].text.substr(0, 10)]][mst];
             if (o2.dead) {
                 daysMin[1] = j - i;
                 break;
@@ -197,7 +201,8 @@ function createTab() {
     var current = latest.data[latest.data.length-1];
     var mlt = [sums[0] / sums[1], current.kumulativni_pocet_nakazenych / sums[0]];
     m = current.datum.split('-');
-    d = days[1].text.split('-');
+    i = 1; while (isNaN(days[i].text[0])) i++;
+    d = days[i].text.substr(0, 10).split('-');
     var emptyDays = getDaysBetweenDates(new Date(d[0], d[1], d[2]), new Date(m[0], m[1], m[2]));
     var base = [Math.exp(Math.log(mlt[0])/half), Math.exp(Math.log(mlt[1])/emptyDays)];
     var remains = [(Math.log(vsichni / sums[0]) / Math.log(base[0])), (Math.log(vsichni / current.kumulativni_pocet_nakazenych) / Math.log(base[1]))]
@@ -205,6 +210,7 @@ function createTab() {
     base[0].toFixed(4) + ' => zbývá ' + remains[0].toFixed(0) + ' dní do 100% promoření (' + new Date(selDate.getTime() + 864e5 * remains[0]).toLocaleDateString() + ').\n' +
     'Do nejnovějších dat (' + current.datum + ') přibylo ' + mlt[1].toFixed(3) + 'x (na ' + current.kumulativni_pocet_nakazenych + '), koef ' + base[1].toFixed(4) +
     ' => zbývá ' + remains[1].toFixed(0) + ' dní do 100% promoření (' + new Date(selDate.getTime() + 864e5 * remains[1]).toLocaleDateString() + ')';
+    var all = [[],[]];
     for(var o in tabData) {
         tabData[o][4] = tabData[o][3] / tabData[o][2];
         var diff = tabData[o][5] - tabData[o][6][0];
@@ -220,10 +226,31 @@ function createTab() {
         else tabData[o].push(':-) ' + ((tabData[o][5] - tabData[o][0]) / tabData[o][1] * 1000).toFixed(2) + '‰');
         tabData[o].push(tabData[o][6][1]);
         tabData[o][6] = days;
+        tabData[o].push(tabData[o][0]/tabData[o][5] * 100);
+        tabData[o].push(tabData[o][3]/tabData[o][1] * 1000);
+        tabData[o].push(tabData[o][3]/tabData[o][5] * 1000);
+
         tabData[o].push(tabData[o][1]);
         tabData[o].push(tabData[o][2]);
         tabData[o][1] = tabData[o][0] / tabData[o][1] * 100000;
         tabData[o][2] = tabData[o][0] / tabData[o][2];
+        var nxt = all[0].length;
+        for(var i=0;i<tabData[o].length;i++) {
+            var avn = tabData[o][i];
+            if (isNaN(avn)) continue;
+            if(nxt) {
+                all[0][i] += avn;
+                all[1][i]++;
+            } else {
+                all[0].push(avn);
+                all[1].push(1);
+            }
+        }
+    }
+    for(var i=0;i<all[0].length;i++) {
+        tab.rows[0].cells[i+2].title = 'Součet ' + all[0][i].toFixed(2).replace('.00','') +
+        '\nprůměr ' + (all[0][i] / all[1][i]).toFixed(2);
+        if (!i) tab.rows[0].cells[i+2].lastElementChild.innerText = all[0][i];
     }
     var i=1;
     for(var mst in tabData) {
@@ -265,12 +292,22 @@ function createDays(dt) {
     sel.options.length = 0;
     var o = document.createElement("OPTION");
     o.innerText = 'Historie';
-    var i=dt.length;
-    do {
-        sel.appendChild(o);
+    sel.appendChild(o);
+    var o2 = latest.data
+    var i = o2.length;
+    var e = dt[dt.length-1];
+    while (o2[--i].datum > e) {
         o = document.createElement("OPTION");
-        o.text = dt[--i];
-    } while (i > -1)
+        o.text = '(' + o2[i].datum + ' ' + o2[i].kumulativni_pocet_nakazenych + '/? +' + o2[i].prirustkovy_pocet_nakazenych + ')';
+        sel.appendChild(o);
+    }
+    var j=dt.length;
+    while(j--) {
+        o = document.createElement("OPTION");
+        const lstStat = structures.byDay[structures.dates[dt[j]]];
+        o.text = dt[j] + ' (' + lstStat.All.cum + '/' + lstStat.All.ill + ((latest.data[i].datum === dt[j])?(' +' + latest.data[i--].prirustkovy_pocet_nakazenych + ')'):'???');
+        sel.appendChild(o);
+    }
     return dt[dt.length-1];
 }
 function sortByCol() {
@@ -2385,15 +2422,19 @@ Data do <select onchange="createTab()"></select> <span id=report></span><br>
 <table border="1" cellspacing="0" cellpadding="5" onclick="sortByCol()">
     <TR><TD></TD>
             <TH>Okres</TH><TH style="vertical-align: top">
-                <DIV style="position: relative; left:15px"><span style="position: absolute; background-color: #FF8080; padding: 5px;z-index:1;">Pozitivních</span></DIV>
-                </TH><TH><HR>100000</TH><TH><HR>km<sup>2</sup></TH><TH><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
-                <TH><span style="background-color: black; color: white; padding: 5px">┼</span><HR>km<sup>2</sup></TH>
-                <TH>Naka-<BR>žených<BR>celkem</TH>
-                <TH>Dnů</TH>
-                <TH title="Nakažených / dnů">Prům.<BR>denní<BR>nárůst</TH>
-                <TH title="Nakažených / 1000 obyvatel">-"- ‰<HR>obyvatel</TH>
-                <TH>Vyléčení<HR><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
-                <TH>Nakažený<BR>˅&nbsp;&nbsp;&nbsp;<BR>1.&nbsp;<span style="background-color: black; color: white; padding: 5px">┼</span> dny</TH>
+            <DIV style="position: relative; left:15px"><span style="position: absolute; background-color: #FF8080; padding: 5px;z-index:1;">Pozitivních</span></DIV><BR><BR>
+            <span></span>
+        </TH><TH><HR>100000</TH><TH><HR>km<sup>2</sup></TH><TH><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
+        <TH><span style="background-color: black; color: white; padding: 5px">┼</span><HR>km<sup>2</sup></TH>
+        <TH>Naka-<BR>žených<BR>celkem</TH>
+        <TH>Dnů</TH>
+        <TH>Prům.<BR>denní<BR>nárůst</TH>
+        <TH>-"- ‰<HR>obyvatel</TH>
+        <TH>Vyléčení<HR><span style="background-color: black; color: white; padding: 5px">┼</span></TH>
+        <TH>Nakažený<BR>˅&nbsp;&nbsp;&nbsp;<BR>1.&nbsp;<span style="background-color: black; color: white; padding: 5px">┼</span> dny</TH>
+        <TH>% dosud<BR>nemocných</TH>
+        <TH>‰ <span style="background-color: black; color: white; padding: 5px">┼</span><HR>obyvatel</TH>
+        <TH>‰ <span style="background-color: black; color: white; padding: 5px">┼</span><HR>nakažených</TH>
         <TH>Obyvatel</TH><TH>km<sup>2</sup></TH>
     </TR>
 </table>
