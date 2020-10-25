@@ -167,7 +167,7 @@ function createTab() {
     var selDate = new Date(d[0], d[1], d[2]);
     var half = getDaysBetweenDates(new Date(m[0], m[1], m[2]), selDate);
     var vsichni = 0;
-    for(var i in places) vsichni += places[i].obyvatel;
+    for(var i in places) if (i.indexOf('CZ') === 0) vsichni += places[i].obyvatel;
     m = m.join('-'); d = d.join('-');
     for(var mst in src) {
         if (mst === 'All') continue;
@@ -205,10 +205,10 @@ function createTab() {
     d = days[i].text.substr(0, 10).split('-');
     var emptyDays = getDaysBetweenDates(new Date(d[0], d[1], d[2]), new Date(m[0], m[1], m[2]));
     var base = [Math.exp(Math.log(mlt[0])/half), Math.exp(Math.log(mlt[1])/emptyDays)];
-    var remains = [(Math.log(vsichni / sums[0]) / Math.log(base[0])), (Math.log(vsichni / current.kumulativni_pocet_nakazenych) / Math.log(base[1]))]
+    var remains = [(Math.log(vsichni / sums[0]) / Math.log(base[0])), (Math.log(vsichni / sums[0]) / Math.log(base[1]))]
     document.getElementById('report').innerText = day < 1 ? '' : ' za polovinu období (' + half + ' dní) přibylo ' + mlt[0].toFixed(3) + 'x nakažených (na ' + sums[0] + '), denní koeficient ' +
     base[0].toFixed(4) + ' => zbývá ' + remains[0].toFixed(0) + ' dní do 100% promoření (' + new Date(selDate.getTime() + 864e5 * remains[0]).toLocaleDateString() + ').\n' +
-    'Do nejnovějších dat (' + current.datum + ') přibylo ' + mlt[1].toFixed(3) + 'x (na ' + current.kumulativni_pocet_nakazenych + '), koef ' + base[1].toFixed(4) +
+    'Od zvolených do aktuálních dat (' + current.datum + ') přibylo ' + mlt[1].toFixed(3) + 'x (na ' + current.kumulativni_pocet_nakazenych + '), koef ' + base[1].toFixed(4) +
     ' => zbývá ' + remains[1].toFixed(0) + ' dní do 100% promoření (' + new Date(selDate.getTime() + 864e5 * remains[1]).toLocaleDateString() + ')';
     var all = [[],[]];
     for(var o in tabData) {
@@ -217,7 +217,6 @@ function createTab() {
         var days = tabData[o][7];
         if (diff < 0 || tabData[o][5] === 0 || days === 0) {
             tabData[o][7] = '–';
-            tabData[o].push('–');
         } else {
             tabData[o][7] = diff / days;
         }
@@ -226,9 +225,11 @@ function createTab() {
         else tabData[o].push(':-) ' + ((tabData[o][5] - tabData[o][0]) / tabData[o][1] * 1000).toFixed(2) + '‰');
         tabData[o].push(tabData[o][6][1]);
         tabData[o][6] = days;
-        tabData[o].push(tabData[o][0]/tabData[o][5] * 100);
+        if (tabData[o][0] + tabData[o][5] === 0) tabData[o].push('-');
+        else tabData[o].push(tabData[o][0]/tabData[o][5] * 100);
         tabData[o].push(tabData[o][3]/tabData[o][1] * 1000);
-        tabData[o].push(tabData[o][3]/tabData[o][5] * 1000);
+        if (tabData[o][3] + tabData[o][5] === 0) tabData[o].push('-');
+        else tabData[o].push(tabData[o][3]/tabData[o][5] * 1000);
 
         tabData[o].push(tabData[o][1]);
         tabData[o].push(tabData[o][2]);
@@ -237,11 +238,16 @@ function createTab() {
         var nxt = all[0].length;
         for(var i=0;i<tabData[o].length;i++) {
             var avn = tabData[o][i];
-            if (isNaN(avn)) continue;
             if(nxt) {
+                if (isNaN(avn)) continue;
                 all[0][i] += avn;
                 all[1][i]++;
             } else {
+                if (isNaN(avn)) {
+                    all[0].push(0);
+                    all[1].push(0);
+                    continue;
+                }
                 all[0].push(avn);
                 all[1].push(1);
             }
