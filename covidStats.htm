@@ -49,7 +49,7 @@ latest = JSON.parse(this.responseText);
 loadNo++;
 if (loadNo++ > 1) init();
 }};
-xhttp2.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakaza.json", true);
+xhttp2.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakazeni-vyleceni-umrti-testy.min.json", true);
 xhttp2.send();
 var doNotShow = 'Praha';
 var structures = {
@@ -106,8 +106,13 @@ function init() {
     okrAkt = [];
     to100 = [];
     rel = [[],[],[]];
-    for(var j in structures.dates) {
-        var dateInt = structures.dates[j];
+    for(var dateInt in structures.byDay) {
+        if (isNaN(structures.byDay[dateInt].All.to100)) {
+            dataRel[0].push(parseInt(dateInt));
+        rel[1].push(structures.byDay[dateInt].All.Inc);
+            rel[2].push(106.7+Math.sin(dataRel[0].length)*9);
+            continue;
+        }
         okrAkt.push(structures.byDay[dateInt].All.ill);
         rel[0].push(structures.byDay[dateInt].All.Avg);
         rel[1].push(structures.byDay[dateInt].All.Inc);
@@ -221,15 +226,15 @@ function createTab() {
             tabData[o][7] = diff / days;
         }
         tabData[o].push(diff / tabData[o][1] * 1000);
-        if (tabData[o][3]) tabData[o].push((tabData[o][5] - tabData[o][0]) / tabData[o][3]);
-        else tabData[o].push(':-) ' + ((tabData[o][5] - tabData[o][0]) / tabData[o][1] * 1000).toFixed(2) + '‰');
+        if (tabData[o][3]) tabData[o].push((tabData[o][5] - tabData[o][0] - tabData[o][3]) / tabData[o][3]);
+        else tabData[o].push(':-) ' + ((tabData[o][5] - tabData[o][0] - tabData[o][3]) / tabData[o][1] * 1000).toFixed(2) + '‰');
         tabData[o].push(tabData[o][6][1]);
         tabData[o][6] = days;
         if (tabData[o][0] + tabData[o][5] === 0) tabData[o].push('-');
-        else tabData[o].push(tabData[o][0]/tabData[o][5] * 100);
+        else tabData[o].push(tabData[o][0]/(tabData[o][5] - tabData[o][3]) * 100);
         tabData[o].push(tabData[o][3]/tabData[o][1] * 1000);
         if (tabData[o][3] + tabData[o][5] === 0) tabData[o].push('-');
-        else tabData[o].push(tabData[o][3]/tabData[o][5] * 1000);
+        else tabData[o].push(tabData[o][3]/(tabData[o][5] - tabData[o][3]) * 1000);
 
         tabData[o].push(tabData[o][1]);
         tabData[o].push(tabData[o][2]);
@@ -302,16 +307,16 @@ function createDays(dt) {
     var o2 = latest.data
     var i = o2.length;
     var e = dt[dt.length-1];
-    while (o2[--i].datum > e) {
+    while (i--) {
         o = document.createElement("OPTION");
-        o.text = '(' + o2[i].datum + ' ' + o2[i].kumulativni_pocet_nakazenych + '/? +' + o2[i].prirustkovy_pocet_nakazenych + ')';
-        sel.appendChild(o);
-    }
-    var j=dt.length;
-    while(j--) {
-        o = document.createElement("OPTION");
-        const lstStat = structures.byDay[structures.dates[dt[j]]];
-        o.text = dt[j] + ' (' + lstStat.All.cum + '/' + lstStat.All.ill + ((latest.data[i].datum === dt[j])?(' +' + latest.data[i--].prirustkovy_pocet_nakazenych + ')'):'???');
+        var o2cum = o2[i].kumulativni_pocet_nakazenych;
+        if (!o2cum) break;
+        if (o2[i].datum > e) brackets = '()';
+        else brackets = '  ';
+        o.text = brackets[0] + o2[i].datum + ' ' + o2cum + '/' +
+            (o2cum - o2[i].kumulativni_pocet_vylecenych - o2[i].kumulativni_pocet_umrti) +
+            ' +' + (i?(o2cum - o2[i-1].kumulativni_pocet_nakazenych):0)
+         + brackets[1];
         sel.appendChild(o);
     }
     return dt[dt.length-1];
@@ -415,11 +420,14 @@ function scrollMe(d) {
     timeoutObj=window.setTimeout(scrollMe2,100); // optional slowdown
 }
 function readData (cvd) {
+    var nakazaPos = 0;
+    while (cvd.data[0].datum != latest.data[nakazaPos].datum) nakazaPos++;
     for (var i = 0; i < cvd.data.length; i++) {
         var o = cvd.data[i];
         var dateInt = new Date(o.datum.replace(/-/g, '/')).getTime() / 1000;
         if (structures.byDay[dateInt] === undefined) {
             structures.byDay[dateInt] = { All: { cum: 0, ill: 0 } };
+            nakazaPos++;
         }
         var sw = places[o.okres_lau_kod] || places[o.kraj_nuts_kod];
         var o2 = (structures.byDay[dateInt][sw.mesto] = {
@@ -430,6 +438,15 @@ function readData (cvd) {
         o2.relO = o2.cum / sw.obyvatel * 1000;
         structures.byDay[dateInt].All.ill += o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych;
         if (o.kumulativni_pocet_nakazenych > 0) structures.byDay[dateInt].All.cum += o.kumulativni_pocet_nakazenych;
+    }
+    while (++nakazaPos < latest.data.length) {
+        o = latest.data[nakazaPos];
+        dateInt = new Date(o.datum.replace(/-/g, '/')).getTime() / 1000;
+        structures.byDay[dateInt] = {
+            All: {
+                ill: o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych
+            }
+        };
     }
 }
 function readStructures (cvd) {
@@ -444,11 +461,20 @@ function readStructures (cvd) {
     }
 }
 function computeStats () {
-    var lastO = structures.byDay[Object.keys(structures.byDay).pop()];
-    var no = 1, sum = 0;
+    var no = 1, sum = 0, percAct, percActSum = 0, lastO;
+    for(var i in structures.byDay) {
+        if (!structures.byDay[i].All.cum) break;
+        lastO = structures.byDay[i];
+    }
     for (var i in structures.byDay) {
         var prevO;
         var o = structures.byDay[i];
+        if (!o.All.ill) {
+            o.All.ill = prevO.All.ill + o.All.Inc;
+            o.All.Inc = (o.All.ill / prevO.All.ill * 100).toFixed(2);
+            prevO = o;
+            continue;
+        }
         for (var okr in o) {
             o[okr].to100 = o[okr].cum / lastO[okr].cum * 100;
             if (prevO) {
@@ -456,6 +482,8 @@ function computeStats () {
                 else o[okr].rel = (o[okr].ill / prevO[okr].ill * 100).toFixed(2);
             } else o[okr].rel = null;
         }
+        percAct = o.All.ill / o.All.cum2;
+        percActSum += percAct;
         o.All.Inc = (o.All.ill / (prevO || o).All.ill * 100)
         sum += o.All.Inc;
         o.All.Inc = o.All.Inc.toFixed(2);
