@@ -85,7 +85,7 @@ function init() {
     }
     if (!Object.assign) return;
     var dates = Object.values(structures.dates);
-    var dataCum = [dates],  dataTo100 = [dates], dataAkt = [dates], dataRel = [dates], dataRelO = [dates];
+    var dataCum = [dates],  dataTo100 = [dates], dataAkt = [dates], dataRel = [dates.slice(0)], dataRelO = [dates];
     for(var i in structures.labels) {
         i = structures.labels[i];
         var okr = []; dataCum.push(okr);
@@ -105,18 +105,22 @@ function init() {
     }
     okrAkt = [];
     to100 = [];
-    rel = [[],[],[]];
+    rel = [[],[],[],[],[]];
     for(var dateInt in structures.byDay) {
-        if (isNaN(structures.byDay[dateInt].All.to100)) {
-            dataRel[0].push(parseInt(dateInt));
         rel[1].push(structures.byDay[dateInt].All.Inc);
-            rel[2].push(106.7+Math.sin(dataRel[0].length)*9);
+        rel[2].push(6.7+Math.sin(rel[1].length)*9);
+        rel[3].push(structures.byDay[dateInt].All.dead
+            / structures.byDay[dateInt].All.ill * 100);
+        rel[4].push(structures.byDay[dateInt].All.healed
+            / structures.byDay[dateInt].All.cum * 100);
+        if (structures.byDay[dateInt][structures.labels[0]] === undefined) {
+            dataRel[0].push(parseInt(dateInt));
+            for(i=1;i<dataRel.length;i++) dataRel[i].push(null);
+            rel[0].push(null);
             continue;
         }
         okrAkt.push(structures.byDay[dateInt].All.ill);
-        rel[0].push(structures.byDay[dateInt].All.Avg);
-        rel[1].push(structures.byDay[dateInt].All.Inc);
-        rel[2].push(106.7+Math.sin(rel[1].length)*9);
+        rel[0].push(structures.byDay[dateInt].All.Avg - 100);
         to100.push(structures.byDay[dateInt].All.to100);
     }
     dataAkt.push(okrAkt);
@@ -124,10 +128,13 @@ function init() {
     dataRel.push(rel[0]);
     dataRel.push(rel[1]);
     dataRel.push(rel[2]);
+    dataRel.push(rel[4]);
+    dataRel.push(rel[3]);
     var allLabels = Object.assign([],structures.labels).concat('Vše');
     structures.points = structures.labels.length;
     const aprox = '106,7 + 9 x sin(den)';
-    createChart(dataRel,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],structures.labels).concat(['Průměr všech','Všechny',aprox]), structures.labels.join(','), 0);
+    createChart(dataRel,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],structures.labels).concat(['Průměr všech','Všechny',aprox,
+        'Uzdravení','Všichni zemřelí / pozitivní']), structures.labels.join(','), 0);
     createChart(dataAkt,"Aktuálně nakažení (" + doNotShow + " a vše) nevybráno",document.body.lastElementChild, allLabels, doNotShow + ',Vše');
     createChart(dataTo100,"Průběhy promoření do aktuálního stavu ("+lastDetailsDate+" = 100%)",document.body.lastElementChild, allLabels, '');
     createChart(dataRelO,"‰ nakažených obyvatel",document.body.lastElementChild, structures.labels, '');
@@ -137,7 +144,8 @@ function createChart(data, title, inside, labels, doNotShow, srt) {
 	let zoomedOpts = {
         "width":1280,"height":600,title:title,"axes":[{},{"size":60,"space":15}],"series":[{show:srt===undefined}]
 	};
-	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#C00000","#FF0000","#B0B080"];
+	const colors = ["#666666","#CCCCCC","#CCCC99","#9999CC","#666699","#660000","#663300","#996633","#003300","#003333","#003399","#000066","#330066","#660066","#990000","#993300","#CC9900","#006600","#336666","#0033FF","#000099","#660099","#990066","#CC0000","#CC3300","#FFCC00","#009900","#006666","#0066FF","#0000CC","#663399","#CC0099","#FF0000","#FF3300","#FFFF00","#00CC00","#009999","#0099FF","#0000FF","#9900CC","#FF0099","#CC3333","#FF6600","#FFFF33","#00FF00","#00CCCC","#00CCFF","#3366FF","#9933FF","#FF00FF","#FF6666","#FF6633","#FFFF66","#66FF66","#66CCCC","#00FFFF","#3399FF","#9966FF","#FF66FF","#FF9999","#FF9966","#FFFF99","#99FF99","#66FFCC","#99FFFF","#66CCFF","#9999FF","#FF99FF","#FFCCCC","#FFCC99","#FFFFCC","#CCFFCC","#99FFCC","#CCFFFF","#99CCFF","#CCCCFF","#FFCCFF","#C00000","#FF0000","#D0D0A0",
+        "#00FF00","#000000"];
     for(let l in labels)
         zoomedOpts.series.push({label:labels[l], stroke: colors[l], show:(!doNotShow || doNotShow.indexOf(labels[l]) < 0), points:{show:structures.points-- > 0}});
 
@@ -426,7 +434,7 @@ function readData (cvd) {
         var o = cvd.data[i];
         var dateInt = new Date(o.datum.replace(/-/g, '/')).getTime() / 1000;
         if (structures.byDay[dateInt] === undefined) {
-            structures.byDay[dateInt] = { All: { cum: 0, ill: 0 } };
+            structures.byDay[dateInt] = { All: { cum: 0, ill: 0, healed: 0, dead: 0 } };
             nakazaPos++;
         }
         var sw = places[o.okres_lau_kod] || places[o.kraj_nuts_kod];
@@ -434,17 +442,22 @@ function readData (cvd) {
             cum: o.kumulativni_pocet_nakazenych,
             dead: o.kumulativni_pocet_umrti
         });
-        o2.ill = o2.cum - o.kumulativni_pocet_vylecenych;
+        o2.ill = o2.cum - o.kumulativni_pocet_vylecenych - o2.dead;
         o2.relO = o2.cum / sw.obyvatel * 1000;
-        structures.byDay[dateInt].All.ill += o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych;
+        structures.byDay[dateInt].All.ill += o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych - o2.dead;
         if (o.kumulativni_pocet_nakazenych > 0) structures.byDay[dateInt].All.cum += o.kumulativni_pocet_nakazenych;
+        structures.byDay[dateInt].All.healed += o.kumulativni_pocet_vylecenych;
+        structures.byDay[dateInt].All.dead += o2.dead;
     }
     while (++nakazaPos < latest.data.length) {
         o = latest.data[nakazaPos];
         dateInt = new Date(o.datum.replace(/-/g, '/')).getTime() / 1000;
         structures.byDay[dateInt] = {
             All: {
-                ill: o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych
+                cum: o.kumulativni_pocet_nakazenych,
+                ill: o.kumulativni_pocet_nakazenych - o.kumulativni_pocet_vylecenych - o.kumulativni_pocet_umrti,
+                healed: o.kumulativni_pocet_vylecenych,
+                dead: o.kumulativni_pocet_umrti
             }
         };
     }
@@ -461,33 +474,24 @@ function readStructures (cvd) {
     }
 }
 function computeStats () {
-    var no = 1, sum = 0, percAct, percActSum = 0, lastO;
-    for(var i in structures.byDay) {
-        if (!structures.byDay[i].All.cum) break;
-        lastO = structures.byDay[i];
-    }
+    var no = 1, sum = 0, lastO = Object.values(structures.dates);
+    lastO = structures.byDay[lastO.pop()];
     for (var i in structures.byDay) {
         var prevO;
         var o = structures.byDay[i];
-        if (!o.All.ill) {
-            o.All.ill = prevO.All.ill + o.All.Inc;
-            o.All.Inc = (o.All.ill / prevO.All.ill * 100).toFixed(2);
-            prevO = o;
-            continue;
-        }
         for (var okr in o) {
             o[okr].to100 = o[okr].cum / lastO[okr].cum * 100;
             if (prevO) {
                 if (prevO[okr].ill === 0 || o[okr].ill === prevO[okr].ill) o[okr].rel = null;
-                else o[okr].rel = (o[okr].ill / prevO[okr].ill * 100).toFixed(2);
+                else o[okr].rel = (o[okr].ill / prevO[okr].ill * 100 - 100).toFixed(2);
             } else o[okr].rel = null;
         }
-        percAct = o.All.ill / o.All.cum2;
-        percActSum += percAct;
-        o.All.Inc = (o.All.ill / (prevO || o).All.ill * 100)
+        o.All.Inc = (o.All.ill / (prevO || o).All.ill * 100) - 100;
+        console.log(o.All.ill + ' ' + (prevO || o).All.ill + ' ' + o.All.Inc);
         sum += o.All.Inc;
         o.All.Inc = o.All.Inc.toFixed(2);
-        o.All.Avg = (sum / no).toFixed(2);
+        o.All.Avg = (sum / no + 100).toFixed(2);
+        o.All.relDead = prevO?(o.All.dead - prevO.All.dead):0;
         prevO = o;
         no++;
     }
@@ -1303,7 +1307,7 @@ function initLegendRow (s, i) {
 if (i == 0 && (multiValLegend || !legend.live)) { return null; }
 var _row = [];
 var row = placeTag('div', LEGEND_SERIES, legendEl, legendEl.childNodes[i]);
-addClass(row, s.class);
+addClass(row, s.class || (s.show?0:OFF));
 row.style.minWidth = 80;
 if (s.scale !== "x") {
 var label = placeTag('div', null, row);
