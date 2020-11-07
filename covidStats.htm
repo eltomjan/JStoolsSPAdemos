@@ -132,7 +132,7 @@ function init() {
     dataRel.push(rel[3]);
     var allLabels = Object.assign([],structures.labels).concat('Vše');
     structures.points = structures.labels.length;
-    const aprox = '106,7 + 9 x sin(den)';
+    const aprox = '6,7 + 9 x sin(den)';
     createChart(dataRel,"Relativní šíření % (přírůstek / nakažených)",document.body.lastElementChild, Object.assign([],structures.labels).concat(['Průměr všech','Všechny',aprox,
         'Uzdravení','Všichni zemřelí / pozitivní']), structures.labels.join(','), 0);
     createChart(dataAkt,"Aktuálně nakažení (" + doNotShow + " a vše) nevybráno",document.body.lastElementChild, allLabels, doNotShow + ',Vše');
