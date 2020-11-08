@@ -2363,7 +2363,7 @@ class PDFPageProxy {
         pageIndex: this._pageIndex,
         intent: renderingIntent,
         renderInteractiveForms: renderInteractiveForms === true,
-        annotationStorage: annotationStorage?.getAll() || null
+        annotationStorage: annotationStorage ? annotationStorage.getAll() : null
       });
     }
 
@@ -2719,7 +2719,7 @@ class PDFPageProxy {
       }
     }
 
-    intentState.streamReader.cancel(new _util.AbortException(reason?.message));
+    intentState.streamReader.cancel(new _util.AbortException(reason?reason.message:null));
     intentState.streamReader = null;
 
     if (this._transport.destroyed) {
@@ -2765,7 +2765,7 @@ class LoopbackPort {
       let buffer, result;
 
       if ((buffer = value.buffer) && (0, _util.isArrayBuffer)(buffer)) {
-        if (transfers?.includes(buffer)) {
+        if (transfers && transfers.includes(buffer)) {
           result = new value.constructor(buffer, value.byteOffset, value.byteLength);
         } else {
           result = new value.constructor(value);
@@ -2855,7 +2855,7 @@ const PDFWorker = function PDFWorkerClosure() {
     isWorkerDisabled = true;
     fallbackWorkerSrc = "./pdf.worker.js";
   } else if (typeof document === "object" && "currentScript" in document) {
-    const pdfjsFilePath = document.currentScript?.src;
+    const pdfjsFilePath = document.currentScript && document.currentScript.src;
 
     if (pdfjsFilePath) {
       fallbackWorkerSrc = pdfjsFilePath.replace(/(\.(?:min\.)?js)(\?.*)?$/i, ".worker$1$2");
@@ -2882,7 +2882,7 @@ const PDFWorker = function PDFWorkerClosure() {
     let mainWorkerMessageHandler;
 
     try {
-      mainWorkerMessageHandler = globalThis.pdfjsWorker?.WorkerMessageHandler;
+      mainWorkerMessageHandler = globalThis.pdfjsWorker && globalThis.pdfjsWorker.WorkerMessageHandler;
     } catch (ex) {}
 
     return mainWorkerMessageHandler || null;
@@ -3420,7 +3420,7 @@ class WorkerTransport {
 
           let fontRegistry = null;
 
-          if (params.pdfBug && globalThis.FontInspector?.enabled) {
+          if (params.pdfBug && globalThis.FontInspector && globalThis.FontInspector.enabled) {
             fontRegistry = {
               registerFont(font, url) {
                 globalThis.FontInspector.fontAdded(font, url);
@@ -3475,7 +3475,7 @@ class WorkerTransport {
           pageProxy.objs.resolve(id, imageData);
           const MAX_IMAGE_SIZE_TO_STORE = 8000000;
 
-          if (imageData?.data?.length > MAX_IMAGE_SIZE_TO_STORE) {
+          if (imageData && "data" in imageData && imageData.data.length > MAX_IMAGE_SIZE_TO_STORE) {
             pageProxy.cleanupAfterRender = true;
           }
 
@@ -3584,7 +3584,7 @@ class WorkerTransport {
   saveDocument(annotationStorage) {
     return this.messageHandler.sendWithPromise("SaveDocument", {
       numPages: this._numPages,
-      annotationStorage: annotationStorage?.getAll() || null,
+      annotationStorage: annotationStorage && annotationStorage.getAll() || null,
       filename: this._fullReader ? this._fullReader.filename : null
     }).finally(() => {
       if (annotationStorage) {
@@ -3831,7 +3831,7 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
         canvasInRendering.add(this._canvas);
       }
 
-      if (this._pdfBug && globalThis.StepperManager?.enabled) {
+      if (this._pdfBug && globalThis.StepperManager && globalThis.StepperManager.enabled) {
         this.stepper = globalThis.StepperManager.create(this._pageIndex);
         this.stepper.init(this.operatorList);
         this.stepper.nextBreakPoint = this.stepper.getNextBreakPoint();
@@ -4063,7 +4063,7 @@ class BaseFontLoader {
   }
 
   get isFontLoadingAPISupported() {
-    return (0, _util.shadow)(this, "isFontLoadingAPISupported", !!this._document?.fonts);
+    return (0, _util.shadow)(this, "isFontLoadingAPISupported", this._document && !!this._document.fonts);
   }
 
   get isSyncFontLoadingSupported() {
@@ -4101,7 +4101,7 @@ exports.FontLoader = FontLoader;
       } else {
         const m = /Mozilla\/5.0.*?rv:(\d+).*? Gecko/.exec(navigator.userAgent);
 
-        if (m?.[1] >= 14) {
+        if (m && m[1] >= 14) {
           supported = true;
         }
       }
@@ -5659,7 +5659,7 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
       ctx.globalAlpha = this.current.strokeAlpha;
 
       if (this.contentVisible) {
-        if (typeof strokeColor === "object" && strokeColor?.getPattern) {
+        if (typeof strokeColor === "object" && strokeColor.getPattern) {
           ctx.save();
           const transform = ctx.mozCurrentTransform;
 
@@ -6427,7 +6427,7 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
         }
       }
 
-      if (glyph?.compiled) {
+      if (glyph && glyph.compiled) {
         glyph.compiled(ctx);
         return;
       }
@@ -8569,7 +8569,7 @@ class PDFDataTransportStream {
     this._progressiveDone = params.progressiveDone || false;
     const initialData = params.initialData;
 
-    if (initialData?.length > 0) {
+    if (initialData && initialData.length > 0) {
       const buffer = new Uint8Array(initialData).buffer;
 
       this._queuedChunks.push(buffer);
@@ -8641,7 +8641,7 @@ class PDFDataTransportStream {
     if (evt.total === undefined) {
       const firstReader = this._rangeReaders[0];
 
-      if (firstReader?.onProgress) {
+      if (firstReader && firstReader.onProgress) {
         firstReader.onProgress({
           loaded: evt.loaded
         });
@@ -8649,7 +8649,7 @@ class PDFDataTransportStream {
     } else {
       const fullReader = this._fullRequestReader;
 
-      if (fullReader?.onProgress) {
+      if (fullReader && fullReader.onProgress) {
         fullReader.onProgress({
           loaded: evt.loaded,
           total: evt.total
@@ -9329,12 +9329,12 @@ const WebGLUtils = function WebGLUtilsClosure() {
     drawFigures,
 
     cleanup() {
-      if (smaskCache?.canvas) {
+      if (smaskCache && smaskCache.canvas) {
         smaskCache.canvas.width = 0;
         smaskCache.canvas.height = 0;
       }
 
-      if (figuresCache?.canvas) {
+      if (figuresCache && figuresCache.canvas) {
         figuresCache.canvas.width = 0;
         figuresCache.canvas.height = 0;
       }
@@ -10962,7 +10962,7 @@ const renderTextLayer = function renderTextLayerClosure() {
     this._textDivs = textDivs || [];
     this._textContentItemsStr = textContentItemsStr || [];
     this._enhanceTextSelection = !!enhanceTextSelection;
-    this._fontInspectorEnabled = !!globalThis.FontInspector?.enabled;
+    this._fontInspectorEnabled = !!(globalThis.FontInspector && globalThis.FontInspector.enabled);
     this._reader = null;
     this._layoutTextLastFontSize = null;
     this._layoutTextLastFontFamily = null;
@@ -12117,7 +12117,7 @@ exports.SVGGraphics = SVGGraphics;
     endText() {
       const current = this.current;
 
-      if (current.textRenderingMode & _util.TextRenderingMode.ADD_TO_PATH_FLAG && current.txtElement?.hasChildNodes()) {
+      if (current.textRenderingMode & _util.TextRenderingMode.ADD_TO_PATH_FLAG && current.txtElement && current.txtElement.hasChildNodes()) {
         current.element = current.txtElement;
         this.clip("nonzero");
         this.endPath();
@@ -14042,7 +14042,7 @@ function createFetchOptions(headers, withCredentials, abortController) {
   return {
     method: "GET",
     headers,
-    signal: abortController?.signal,
+    signal: abortController && abortController.signal,
     mode: "cors",
     credentials: withCredentials ? "include" : "same-origin",
     redirect: "follow"
@@ -14260,7 +14260,7 @@ class PDFFetchStreamRangeReader {
 
       this._reader = response.body.getReader();
     }).catch(reason => {
-      if (reason?.name === "AbortError") {
+      if (reason && reason.name === "AbortError") {
         return;
       }
 
