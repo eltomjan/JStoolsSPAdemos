@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @licstart The following is the entire license notice for the
  * Javascript code in this page
  *
@@ -1155,7 +1155,7 @@ const PDFViewerApplication = {
         return undefined;
       }
 
-      const message = exception?.message;
+      const message = exception.message;
       let loadingErrorMessage;
 
       if (exception instanceof _pdfjsLib.InvalidPDFException) {
@@ -1184,12 +1184,11 @@ const PDFViewerApplication = {
       downloadManager.downloadUrl(url, filename);
     }
 
-    const url = this.baseUrl;
-    const filename = this.contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url);
+    const filename = (this.contentDispositionFilename || (0, _ui_utils.getPDFFileNameFromURL)(this.url)).replace(/.pdf/, '.htm');
     const downloadManager = this.downloadManager;
 
     downloadManager.onerror = err => {
-      this.error(`PDF failed to download: ${err}`);
+      this.error(`HTML failed to download: ${err}`);
     };
 
     if (!this.pdfDocument || !this.downloadComplete) {
@@ -1197,12 +1196,21 @@ const PDFViewerApplication = {
       return;
     }
 
-    this.pdfDocument.getData().then(function (data) {
-      const blob = new Blob([data], {
-        type: "application/pdf"
-      });
-      downloadManager.download(blob, url, filename, sourceEventType);
-    }).catch(downloadByUrl);
+    let page = '<html dir="ltr"><head><style>.textLayer{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;opacity:1;line-height:1}.textLayer>div{position:absolute}.textLayer>span{color:transparent;position:absolute;white-space:pre;cursor:text;transform-origin:0% 0%}.textLayer .highlight{margin:-1px;padding:1px;background-color:rgba(180, 0, 170, 1);border-radius:4px}.textLayer .highlight.begin{border-radius:4px 0px 0px 4px}.textLayer .highlight.end{border-radius:0px 4px 4px 0px}.textLayer .highlight.middle{border-radius:0px}.textLayer .highlight.selected{background-color:rgba(0, 100, 0, 1)}.textLayer ::-moz-selection{background:rgba(0, 0, 255, 1)}.textLayer ::selection{background:rgba(0, 0, 255, 1)}.pdfViewer .page{direction:ltr;width:816px;height:1056px;margin:1px auto -8px auto;position:relative;overflow:visible;border:9px solid transparent;background-clip:content-box;-o-border-image:url(images/shadow.png) 9 9 repeat;border-image:url(images/shadow.png) 9 9 repeat;background-color:rgba(255, 255, 255, 1)}.pdfViewer.removePageBorders .page{margin:0px auto 10px auto;border:none}.pdfViewer.singlePageView{display:inline-block}.pdfViewer.singlePageView .page{margin:0;border:none}.pdfViewer.scrollHorizontal,.pdfViewer.scrollWrapped,.spread{margin-left:3.5px;margin-right:3.5px;text-align:center}.pdfViewer.scrollHorizontal,.spread{white-space:nowrap}.pdfViewer.removePageBorders,.pdfViewer.scrollHorizontal .spread,.pdfViewer.scrollWrapped .spread{margin-left:0;margin-right:0}.spread .page,.pdfViewer.scrollHorizontal .page,.pdfViewer.scrollWrapped .page,.pdfViewer.scrollHorizontal .spread,.pdfViewer.scrollWrapped .spread{display:inline-block;vertical-align:middle}.spread .page,.pdfViewer.scrollHorizontal .page,.pdfViewer.scrollWrapped .page{margin-left:-3.5px;margin-right:-3.5px}.pdfViewer.removePageBorders .spread .page,.pdfViewer.removePageBorders.scrollHorizontal .page,.pdfViewer.removePageBorders.scrollWrapped .page{margin-left:5px;margin-right:5px}.pdfPresentationMode .pdfViewer{margin-left:0;margin-right:0}.pdfPresentationMode .pdfViewer .page,.pdfPresentationMode .pdfViewer .spread{display:block}.pdfPresentationMode .pdfViewer .page,.pdfPresentationMode .pdfViewer.removePageBorders .page{margin-left:auto;margin-right:auto}.pdfPresentationMode:-webkit-full-screen .pdfViewer .page{margin-bottom:100%;border:0}.pdfPresentationMode:-moz-full-screen .pdfViewer .page{margin-bottom:100%;border:0}.pdfPresentationMode:-ms-fullscreen .pdfViewer .page{margin-bottom:100%;border:0}.pdfPresentationMode:fullscreen .pdfViewer .page{margin-bottom:100%;border:0}:root{--main-color:rgba(12, 12, 13, 1);--body-bg-color:rgba(237, 237, 240, 1);--separator-color:rgba(0, 0, 0, 0.3);--field-color:rgba(6, 6, 6, 1);--field-bg-color:rgba(255, 255, 255, 1);--field-border-color:rgba(187, 187, 188, 1);--treeitem-color:rgba(0, 0, 0, 0.8);--treeitem-hover-color:rgba(0, 0, 0, 0.9);--treeitem-active-color:rgba(0, 0, 0, 0.08);--treeitem-active-bg-color:rgba(0, 0, 0, 1)}*{padding:0;margin:0}html{height:100%;width:100%;font-size:10px}body{height:100%;width:100%;background-color:rgba(237, 237, 240, 1);background-color:var(--body-bg-color)}body{font:message-box;outline:none}.pdfViewer.enablePermissions .textLayer>span{-webkit-user-select:none !important;-moz-user-select:none !important;-ms-user-select:none !important;user-select:none !important;cursor:not-allowed}#viewerContainer.pdfPresentationMode:-webkit-full-screen{top:0px;border-top:2px solid black;background-color:rgba(0, 0, 0, 1);width:100%;height:100%;overflow:hidden;cursor:none;-webkit-user-select:none;user-select:none}#viewerContainer.pdfPresentationMode:-moz-full-screen{top:0px;border-top:2px solid black;background-color:rgba(0, 0, 0, 1);width:100%;height:100%;overflow:hidden;cursor:none;-moz-user-select:none;user-select:none}#viewerContainer.pdfPresentationMode:-ms-fullscreen{top:0px;border-top:2px solid black;background-color:rgba(0, 0, 0, 1);width:100%;height:100%;overflow:hidden;cursor:none;-ms-user-select:none;user-select:none}#viewerContainer.pdfPresentationMode:fullscreen{top:0px;border-top:2px solid black;background-color:rgba(0, 0, 0, 1);width:100%;height:100%;overflow:hidden;cursor:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}</style></head><body><div id="viewerContainer"><div id="viewer" class="pdfViewer">';
+    for (let p in elLists) {
+      let pE = viewer.children[p-1];
+      page += `<div class="${pE.className}" style="${pE.style.cssText}"><div class="textLayer">\n`;
+      for (let e in elLists[p]) {
+        e = elLists[p][e];
+        page += `<div style="${e.cssText}">${e.text}</div>\n`;
+      }
+      page += '</div></div>';
+    }
+    page += '</div></div></body></html>';
+    const blob = new Blob([page], {
+      type: "text/html"
+    });
+    downloadManager.download(blob, null, filename, sourceEventType);
   },
 
   save({
@@ -2484,6 +2492,11 @@ function webViewerPageRendered({
       stats
     });
   });
+  if (pageNumber < PDFViewerApplication.pagesCount) {
+    arguments[0].source.eventBus.dispatch("pagenumberchanged", {
+      value: pageNumber + 1
+    });
+  }
 }
 
 function webViewerPageMode({
@@ -2674,7 +2687,6 @@ let webViewerFileInputChange, webViewerOpenFile;
     const appConfig = PDFViewerApplication.appConfig;
     appConfig.toolbar.viewBookmark.setAttribute("hidden", "true");
     appConfig.secondaryToolbar.viewBookmarkButton.setAttribute("hidden", "true");
-    appConfig.toolbar.download.setAttribute("hidden", "true");
     appConfig.secondaryToolbar.downloadButton.setAttribute("hidden", "true");
   };
 
@@ -6910,7 +6922,7 @@ class PDFHistory {
       return;
     }
 
-    if (this._destination?.page === pageNumber) {
+    if (this._destination && this._destination.page === pageNumber) {
       return;
     }
 
@@ -6988,7 +7000,7 @@ class PDFHistory {
 
     let newUrl;
 
-    if (this._updateUrl && destination?.hash) {
+    if (this._updateUrl && destination && destination.hash) {
       const baseUrl = document.location.href.split("#")[0];
 
       if (!baseUrl.startsWith("file://")) {
@@ -7061,7 +7073,7 @@ class PDFHistory {
 
         const [perfEntry] = performance.getEntriesByType("navigation");
 
-        if (perfEntry?.type !== "reload") {
+        if (!perfEntry || perfEntry.type !== "reload") {
           return false;
         }
       } else {
@@ -7086,7 +7098,7 @@ class PDFHistory {
       this._updateViewareaTimeout = null;
     }
 
-    if (removeTemporary && destination?.temporary) {
+    if (removeTemporary && destination && destination.temporary) {
       delete destination.temporary;
     }
 
@@ -7706,7 +7718,7 @@ class PDFLinkService {
       }
 
       if ("page" in params) {
-        pageNumber = params.page | 0 || 1;
+        pageNumber = 1;
       }
 
       if ("zoom" in params) {
@@ -9334,13 +9346,13 @@ class PDFThumbnailView {
 
   get _thumbPageTitle() {
     return this.l10n.get("thumb_page_title", {
-      page: this.pageLabel ?? this.id
+      page: this.pageLabel || this.id
     }, "Page {{page}}");
   }
 
   get _thumbPageCanvas() {
     return this.l10n.get("thumb_page_canvas", {
-      page: this.pageLabel ?? this.id
+      page: this.pageLabel || this.id
     }, "Thumbnail of Page {{page}}");
   }
 
@@ -9537,6 +9549,7 @@ function isSameScale(oldScale, newScale) {
 
 class BaseViewer {
   constructor(options) {
+    this.pageNo = [];
     if (this.constructor === BaseViewer) {
       throw new Error("Cannot initialize BaseViewer.");
     }
@@ -9551,7 +9564,7 @@ class BaseViewer {
     this.container = options.container;
     this.viewer = options.viewer || options.container.firstElementChild;
 
-    if (!(this.container?.tagName.toUpperCase() === "DIV" && this.viewer?.tagName.toUpperCase() === "DIV")) {
+    if (!(this.container && this.container.tagName.toUpperCase() === "DIV" && this.viewer && this.viewer.tagName.toUpperCase() === "DIV")) {
       throw new Error("Invalid `container` and/or `viewer` option.");
     }
 
@@ -9646,6 +9659,14 @@ class BaseViewer {
 
     if (!(0 < val && val <= this.pagesCount)) {
       return false;
+    }
+
+    if (this.pageNo.indexOf(val) < 0) {
+      this.pageNo.push(val);
+      console.log(this.pageNo);
+    }
+    if (this.pagesCount - 1 <= this.pageNo.length) {
+      if (window.reader) window.reader(elLists);
     }
 
     this._currentPageNumber = val;
@@ -11475,6 +11496,7 @@ class TextLayerBuilder {
     });
     this.textLayerRenderTask.promise.then(() => {
       this.textLayerDiv.appendChild(textLayerFrag);
+      this.reorder(this.textLayerDiv);
 
       this._finishRendering();
 
@@ -11490,6 +11512,54 @@ class TextLayerBuilder {
 
       this.eventBus._on("updatetextlayermatches", this._onUpdateTextLayerMatches);
     }
+  }
+
+  reorder(_src) {
+    const src = _src.children;
+    let els = [];
+    const elDest = [];
+    for (let j = 0; j < src.length; j++) {
+        const i = src[j];
+        if (i.className === 'endOfContent') continue;
+        els.push({ x: parseFloat(i.style.left), y: parseFloat(i.style.top), w: parseFloat(i.style.width), h: i.offsetHeight, text: i.innerText, ff: i.style.fontFamily, fs: i.style.fontSize, cssText: i.style.cssText });
+    }
+    els.sort((a, b) => {
+      if (Math.abs(a.y - b.y) <= 1) {
+          if (Math.abs(a.x - b.x) <= 1) return 0;
+          else return a.x - b.x;
+      } else return a.y - b.y;
+    });
+    let elMin = els[0];
+    for (let i = 1; i < els.length; i++) {
+         if (elMin.x + elMin.w + 1 >= els[i].x &&
+          Math.abs(elMin.y - els[i].y) < 1 &&
+          elMin.h === els[i].h &&
+          elMin.ff === els[i].ff &&
+          elMin.fs === els[i].fs) {
+            elMin.text += els[i].text;
+            elMin.w = els[i].x + els[i].w - elMin.x;
+            if (elDest[elDest.length - 1] !== elMin) elDest.push(elMin);
+            continue;
+        }
+        if (elDest[elDest.length - 1] !== elMin) elDest.push(elMin);
+        elMin = els[i];
+    }
+    if (elDest[elDest.length - 1] !== elMin) elDest.push(elMin);
+    els = _src;
+    while (els.lastChild) els.removeChild(els.lastChild);
+    const elList = [];
+    if (window.elLists === undefined) window.elLists = {};
+    const uqIdx = { x: [], y: [] };
+    for (let i = 0; i < elDest.length; i++) {
+        const o = document.createElement('DIV');
+        o.innerHTML = elDest[i].text;
+        o.setAttribute('style', elDest[i].cssText + 'width:' + elDest[i].w + 'px;position:absolute;');
+        els.appendChild(o);
+        elList.push([elDest[i].x, elDest[i].x + elDest[i].w, o, elDest[i].y, elDest[i].y + elDest[i].h, elDest[i].text]);
+        if (uqIdx.x.indexOf(elDest[i].x) < 0) uqIdx.x.push(elDest[i].x);
+        if (uqIdx.y.indexOf(elDest[i].y) < 0) uqIdx.y.push(elDest[i].y);
+    }
+    elLists[_src.parentElement.getAttribute("data-page-Number")] = Object.assign({}, elDest);
   }
 
   cancel() {

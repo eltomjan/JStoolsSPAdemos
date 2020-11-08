@@ -10586,8 +10586,7 @@ const renderTextLayer = function renderTextLayerClosure() {
 
     textDiv.style.left = `${left}px`;
     textDiv.style.top = `${top}px`;
-    textDiv.style.fontSize = `${fontHeight}px`;
-    textDiv.style.fontFamily = style.fontFamily;
+    textDiv.style.font = `${fontHeight}px ${style.fontFamily}`;
     textDiv.textContent = geom.str;
 
     if (task._fontInspectorEnabled) {
@@ -11041,6 +11040,7 @@ const renderTextLayer = function renderTextLayerClosure() {
 
         if (width > 0) {
           textDivProperties.scale = textDivProperties.canvasWidth / width;
+          textDiv.style.width = `${width}px`;
           transform = `scaleX(${textDivProperties.scale})`;
         }
       }
