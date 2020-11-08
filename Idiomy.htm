@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
@@ -41,7 +41,7 @@ async function learn() {
 		for(let e of slovnik[en[pos]]) {
 			if (e.indexOf('/') > 0) {
 				if (ew.substr(-1) === ';') ew = ew.substr(0, ew.length-1);
-				ew += ',' + e.replace(/\//g, ',');
+				cs.push(e.replace(/\//g, ','));
 			} else cs.push(e);
 		}
 		if (ew.substr(-1) === ';') ew = ew.substr(0, ew.length-1);
@@ -89,7 +89,11 @@ function sayCs(w) {
 <span name="wordsList"></span>
 <BR>
 <a href="https://stackoverflow.com/questions/47379725/how-do-i-add-a-voice-language-to-speechsynthesis#47485786">Přidání jazyků TTS do Windows 10</a><BR>
-Zdroj idiomů https://www.wordbot.cz/domains/wordbot.cz/index.php?p=sentence-public<BR>
+Zdroje idiomů https://www.wordbot.cz/domains/wordbot.cz/index.php?p=sentence-public,<BR>
+ https://www.ef-czech.cz/pruvodce-anglictinou/anglicke-idiomy/<BR>
+ https://www.anglictina-bez-biflovani.cz/anglicke-idiomy<BR>
+ https://www.anglictina-bez-biflovani.cz/Files/Pracovni_list_anglicke_idiomy.pdf<BR>
+ https://www.speakingfriends.com/cz/anglicke-fraze/<BR>
 Automaticky přeloženo slovníkem z <a href="https://play.google.com/store/apps/details?id=com.dic_o.dico_cze_eng">2.13-dico_cze_eng</a>
 </body>
 </html>
