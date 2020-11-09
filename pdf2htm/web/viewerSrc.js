@@ -9666,9 +9666,6 @@ class BaseViewer {
     if (this.pageNo.indexOf(val) < 0) {
       this.pageNo.push(val);
     }
-    if (this.pagesCount - 1 <= this.pageNo.length) {
-      if (window.reader) window.reader(window.convert2HTML(elLists));
-    }
 
     this._currentPageNumber = val;
     this.eventBus.dispatch("pagechanging", {
@@ -11522,7 +11519,7 @@ class TextLayerBuilder {
     for (let j = 0; j < src.length; j++) {
         const i = src[j];
         if (i.className === 'endOfContent') continue;
-        els.push({ x: parseFloat(i.style.left), y: parseFloat(i.style.top), w: parseFloat(i.style.width), h: i.offsetHeight, text: i.innerText, ff: i.style.fontFamily, fs: i.style.fontSize, cssText: i.style.cssText });
+        els.push({ x: parseFloat(i.style.left), y: parseFloat(i.style.top), w: parseFloat(i.style.width || i.offsetWidth), h: i.offsetHeight, text: i.innerText, ff: i.style.fontFamily, fs: i.style.fontSize, cssText: i.style.cssText });
     }
     els.sort((a, b) => {
       if (Math.abs(a.y - b.y) <= 1) {
@@ -11539,6 +11536,7 @@ class TextLayerBuilder {
           elMin.fs === els[i].fs) {
             elMin.text += els[i].text;
             elMin.w = els[i].x + els[i].w - elMin.x;
+            elMin.cssText = elMin.cssText.replace(/\s*width:\s*[\d.px;]+/g, '');
             if (elDest[elDest.length - 1] !== elMin) elDest.push(elMin);
             continue;
         }
@@ -11561,6 +11559,10 @@ class TextLayerBuilder {
         if (uqIdx.y.indexOf(elDest[i].y) < 0) uqIdx.y.push(elDest[i].y);
     }
     elLists[_src.parentElement.getAttribute("data-page-Number")] = Object.assign({}, elDest);
+
+    if (PDFViewerApplication.pdfViewer.pagesCount === Object.keys(elLists).length) {
+      if (window.reader) window.reader(window.convert2HTML(elLists));
+    }
   }
 
   cancel() {
@@ -14095,7 +14097,7 @@ _app.PDFPrintServiceFactory.instance = {
 /************************************************************************/
 /******/ 	// The module cache
 /******/ 	var __webpack_module_cache__ = {};
-/******/ 	
+/******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
 /******/ 		// Check if module is in cache
@@ -14108,14 +14110,14 @@ _app.PDFPrintServiceFactory.instance = {
 /******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
-/******/ 	
+/******/
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
+/******/
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
-/******/ 	
+/******/
 /************************************************************************/
 /******/ 	// startup
 /******/ 	// Load entry module

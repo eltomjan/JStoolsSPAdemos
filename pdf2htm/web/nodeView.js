@@ -23,12 +23,15 @@ datauri(pdf, (err, content, meta) => {
             // headless: false
         });
         const page = await browser.pages();
+        const session = page[0]._client;
         const c = path.join(__dirname, 'viewer.html');
         await page[0].goto('file:///' + c);
         page[0].exposeFunction('reader', (html) => {
             fs.writeFileSync(path.join(__dirname, pdf.replace('.pdf', '.htm')), html);
-            setTimeout(() => { browser.close(); }, 100);
+            session.on('Page.lifecycleEvent', event => {
+                console.log(JSON.stringify(event));
+                if (event.name === 'firstMeaningfulPaint') browser.close();
+            });
         });
     })();
-
 });
