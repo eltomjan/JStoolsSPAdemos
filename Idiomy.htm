@@ -73,7 +73,7 @@ function sayCs(w) {
 	els[0].innerText += w;
 	let m = new SpeechSynthesisUtterance(w.replace(/,/g, ' '));
 	m.lang='cs';
-	m.rate = 2;
+	// m.rate = 2;
 	let p = new Promise(resolve => {
     	m.onend = () => resolve();
   	});
