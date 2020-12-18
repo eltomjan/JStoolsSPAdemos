@@ -438,6 +438,10 @@ function readData (cvd) {
             nakazaPos++;
         }
         var sw = places[o.okres_lau_kod] || places[o.kraj_nuts_kod];
+        if (sw == undefined) {
+            console.log('Error in:', JSON.stringify(o));
+            continue;
+        }
         var o2 = (structures.byDay[dateInt][sw.mesto] = {
             cum: o.kumulativni_pocet_nakazenych,
             dead: o.kumulativni_pocet_umrti
@@ -487,7 +491,7 @@ function computeStats () {
             } else o[okr].rel = null;
         }
         o.All.Inc = (o.All.ill / (prevO || o).All.ill * 100) - 100;
-        console.log(o.All.ill + ' ' + (prevO || o).All.ill + ' ' + o.All.Inc);
+        //console.log(o.All.ill + ' ' + (prevO || o).All.ill + ' ' + o.All.Inc);
         sum += o.All.Inc;
         o.All.Inc = o.All.Inc.toFixed(2);
         o.All.Avg = (sum / no + 100).toFixed(2);

@@ -1,0 +1,499 @@
+<html>
+<head>
+<style>
+body {
+	background-color: black;
+	color: white;
+	font: 20px Arial;
+}
+input
+{
+	font: bold 25px Arial;
+}
+span > P > span {
+	position: absolute;
+}
+span > P > span > span,
+span > P > I > span > span,
+span > I > P > span > span {
+	position: relative;
+	top: -1em;
+	font: 25px Arial;
+}
+span.hide > P > span,
+span.hide > P > I > span,
+span.hide > I > P > span
+{
+	display: none;
+}
+p {
+	display: block;
+	margin-block-start: 1em;
+	margin-block-end: 0em;
+}
+span.hide > P,
+span.hide > I > P
+{
+	margin-block-start: 0.1em;
+}
+</style>
+<script>
+if (location.protocol != "file:" && location.pathname != "/")
+{
+	location.href = "/";
+}
+var store;
+function downloadObject(exportedData, exportName) {
+	if (navigator.msSaveBlob) { // IE10+
+		var blob = new Blob([exportedData], {
+		type: 'text/html'
+	});
+	return navigator.msSaveBlob(blob, exportName + ".htm");
+	}
+	var dataStr = "data:application/json;charset=utf-8," + encodeURIComponent(exportedData);
+	var downloadAnchorNode = document.getElementsByName('_saveAnchor')[0];
+	downloadAnchorNode.setAttribute("href", dataStr);
+	downloadAnchorNode.setAttribute("download", exportName + ".htm");
+}
+function saveMe()
+{
+	if (!store.style.display) {
+	store.style.display = "none";
+	showSong();
+	}
+	var src = document.body.outerHTML;
+	var i = src.indexOf("<textarea"), j = src.indexOf("</textarea");
+	i = src.indexOf('>', i);
+	src = "<html>\n" + document.head.outerHTML + "\n" + src.substr(0, ++i) + store.value + src.substr(j) + "\n</html>";
+	downloadObject(src, 'schola');
+}
+function showSong()
+{
+	store = document.forms[0].textdata;
+	var s = store.value.split('<hr>');
+	var r = [];
+	for(var n of s)
+	{
+		if (n.indexOf('(') > -1) {
+			var row = n.split('\n');
+			n = [];
+			for(var i of row)
+			{
+				if (i.indexOf('(') > -1)
+					n.push("<P>" + i + "</P>");
+				else
+					n.push(i + "<BR>\n");
+			}
+			n = n.join("")
+				.replace(/\(/g, "<span><span>")
+				.replace(/\)/g, "</span></span>");
+		} else {
+			n = n.replace(/\n/g, "<BR>\n");
+		}
+		r.push(n);
+	}
+	document.getElementById("view").innerHTML = r.join('<hr>');
+	var o = document.body.lastElementChild.previousElementSibling;
+	while (o && o.id != "view")
+	{
+		document.body.removeChild(o);
+	}
+}
+function EditSave()
+{
+	if (store.style.display)
+	{
+		store.style.display = "";
+		document.getElementById("view").innerHTML = "";
+	}
+	else
+	{
+		if (location.protocol == "file:")
+		{
+			store.style.display = "none";
+			showSong();
+		}
+		else
+		{
+			store.form.submit();
+		}
+	}
+}
+function Accords()
+{
+	var view = document.getElementById("view");
+	if (view.className) view.className = "";
+	else view.className = "hide";
+}
+function up()
+{
+	var breaks = document.getElementsByTagName("HR");
+	var y = document.body.scrollTop;
+	for(var i=breaks.length;--i >= 0;)
+	{
+		if (breaks[i].offsetTop < y)
+		{
+			breaks[i].scrollIntoView();
+			return;
+		}
+	}
+	if (breaks[0].offsetTop >= y)
+	document.body.scrollIntoView();
+}
+function down()
+{
+	var breaks = document.getElementsByTagName("HR");
+	var y = document.body.scrollTop;
+	for(var i of breaks)
+	{
+		if (i.offsetTop > y)
+		{
+			i.scrollIntoView();
+			break;
+		}
+	}
+}
+</script>
+</head>
+<body onload="showSong()">
+<div style="float:right; position: fixed; top: 0; right: 0;">
+<input type="button" value="Editace / Uložení změn" onclick="EditSave()"> <a name="_saveAnchor"><input type="button" value="Stáhnout" onclick="saveMe()"></a>
+<br><br>
+<input type="button" value="Akordy" onclick="Accords()">
+<input type="button" value="Předchozí" onclick="up()"> <input type="button" value="Následující" onclick="down()">
+</div>
+<form name="savefile" method="post" action="index.php">
+<textarea name="textdata" style="display: none;" rows="250" cols="60"><b>Vstup</b> / Ejhle Hospodin přijde - zvyšuje se /
+1/3 (C)Ejhle, Ho(F)spodin (G)přij(C)de
+(G)a všichni (D)sva(G)tí (D)jeho (G)s ním;
+(C)a bude (D)v onen (C)den (D)světlo (G)velké,
+(Dm C G C)aleluja.
+
+2/3 (C)Ejhle, Ho(F)spodin (G)přij(C)de
+(G)a všichni (D)sva(G)tí (D)jeho (G)s ním;
+(C)a bude (D)v onen (C)den (D)světlo (G)velké,
+(Dm C G C)aleluja.
+
+3/3 (C)Ejhle, Ho(F)spodin (G)přij(C)de
+(G)a všichni (D)sva(G)tí (D)jeho (G)s ním;
+(C)a bude (D)v onen (C)den (D)světlo (G)velké,
+(Dm C G C)aleluja.
+
+1/3 (C)Rosu dejte, nebesa i (F)shů(C)ry,
+a oblakové, dštěte (D)Spravedli(C)vé.
+(C)Otevři se, (F)ze(C)mě,
+a vydej (D)Spasi(C)tele.
+
+2/3 (C)Rosu dejte, nebesa i (F)shů(C)ry,
+a oblakové, dštěte (D)Spravedli(C)vé.
+(C)Otevři se, (F)ze(C)mě,
+a vydej (D)Spasi(C)tele.
+
+3/3 (C)Rosu dejte, nebesa i (F)shů(C)ry,
+a oblakové, dštěte (D)Spravedli(C)vé.
+(C)Otevři se, (F)ze(C)mě,
+a vydej (D)Spasi(C)tele.
+
+(C)Ejhle, Ho(F)spodin (G)přij(C)de
+(G)a všichni (D)sva(G)tí (D)jeho (G)s ním;
+(C)a bude (D)v onen (C)den (D)světlo (G)velké,
+(Dm C G C)aleluja.
+<hr><B>Evangelium</B>
+
+Aleluja, Aleluja, Aleluja
+Aleluja, Aleluja, Aleluja
+Aleluja, Aleluja, Aleluja
+<br><li><i>duch páně je nademnou poslal mě, abych přinesl chudým radostnou zvěst</i></li>
+Aleluja, Aleluja, Aleluja
+Aleluja, Aleluja, Aleluja
+Aleluja, Aleluja, Aleluja
+<hr><B>Dary</B> / Zpívej, brzy už přijde Pán /
+
+!!! PŘEDEHRA !!!
+
+1/3 Zpívej, brzy už přijde Pán
+(Hm)Zpí(F#m)vej, (Hm) brzy už (A)přijde (D)Pán,
+(Hm)zpí(E)vej, (F#m)brzy už (E)přijde (A)Král.
+Září (Hm)na nebi zname(E)ní, 
+přichá(A)zí vykoupe(D)ní,
+modli se a (Hm)miluj, modli se a (E)služ,
+do konce vytr(F#)vej.
+
+2/3 Zpívej, brzy už přijde Pán
+(Hm)Zpí(F#m)vej, (Hm) brzy už (A)přijde (D)Pán,
+(Hm)zpí(E)vej, (F#m)brzy už (E)přijde (A)Král.
+Září (Hm)na nebi zname(E)ní, 
+přichá(A)zí vykoupe(D)ní,
+modli se a (Hm)miluj, modli se a (E)služ,
+do konce vytr(F#)vej.
+
+3/3 Zpívej, brzy už přijde Pán
+(Hm)Zpí(F#m)vej, (Hm) brzy už (A)přijde (D)Pán,
+(Hm)zpí(E)vej, (F#m)brzy už (E)přijde (A)Král.
+Září (Hm)na nebi zname(E)ní, 
+přichá(A)zí vykoupe(D)ní,
+modli se a (Hm)miluj, modli se a (E)služ,
+do konce vytr(F#)vej.
+
+Září (Hm)na nebi zname(E)ní, 
+přichá(A)zí vykoupe(D)ní,
+modli se a (Hm)miluj, modli se a (E)služ,
+do konce vytr(F#)vej.
+<hr><B>Přijímání</B> / Světlo světa - Hymna SDM Torronto 2002 /
+
+Lucka
+<i>1. Ten, (A)koho směly naše oči (Hm/A)zřít, 
+ten, (E)který řekl nám: „(A4)Dotkni se mých (A)ran“,
+ten, jehož hlas nám v uších mohl (Hm/A)znít, 
+ten, (E4)který do srd(E)cí svůj (A)pokoj rozdá(A/C#)vá.
+Ať (D)každá píseň stále o něm (A/C#)zpívá, 
+svět (F#m)může poznat (Dmaj7)Zář, 
+která (Hm7)vchází do všech (E4)stí(E)nů.
+
+Ondra
+2. Sám před sebou svět oči zavírá. 
+Jak cestu poznat má, kdo slepý klopýtá?
+Už nesmíš déle dřímat, je čas vstát, 
+své srdce otevřít a ruce podávat.
+Pak můžem spolu projít každou bouří 
+a bdít jak noční stráž, 
+která čeká na svítání!</i>
+
+!!! VŠICHNI !!!
+
+R: Chci (A)dál světlo nést,(A/G# F#m)být pro zem sůl! (F#m/E)
+Už (Hm7)mizí všechny stíny, teď (G)láska hoří v (E)nás! 
+Chci (A)dál světlo nést! (F#m)Kristus je svící, 
+dnes (Hm7)celá země září, 
+plná (E)lesku (D)jeho svě(Hm7)tla 
+(E7)v každém (A)z nás.
+
+3. Tak mnoho lidí hledá pro co žít, 
+jak krokům smysl dát, čím dlaně naplnit. 
+Teď s úsměvem jim můžeš vyjít vstříc, 
+ať v novém setkání smí Ježíš promluvit. 
+Tím světlem, které v hloubi srdce nosíš, 
+máš sílu tišit pláč,
+místo nářků zajásání.
+
+R: Chci (A)dál světlo nést,(A/G# F#m)být pro zem sůl! (F#m/E)
+Už (Hm7)mizí všechny stíny, teď (G)láska hoří v (E)nás! 
+Chci (A)dál světlo nést! (F#m)Kristus je svící, 
+dnes (Hm7)celá země září, 
+plná (E)lesku (D)jeho svě(Hm7)tla 
+(E7)v každém (A)z nás.
+
+!!! MEZIHRA !!!
+
+4. Co osolí sůl chuti zbavená 
+a komu posvítí lampa ukrytá? 
+Jak život dá se -- bez Života žít? 
+Přijď, Duchu, obnov nás, 
+přijď vlažné zapálit!
+Kéž pravá láska znovu všechny spojí,
+a víra s nadějí nás vede k zmrtvýchvstání.
+
+R: Chci (A)dál světlo nést,(A/G# F#m)být pro zem sůl! (F#m/E)
+Už (Hm7)mizí všechny stíny, teď (G)láska hoří v (E)nás! 
+Chci (A)dál světlo nést! (F#m)Kristus je svící, 
+dnes (Hm7)celá země září, 
+plná (E)lesku (D)jeho svě(Hm7)tla 
+(E7)v každém (A)z nás.
+
+<i>!!! Lucka !!!
+... plná (E)lesku (D)jeho svě(Hm7)tla 
+(E7)v každém (A)z nás.</i><hr>/ Ztišením se sluší Tebe chválit /
+1/2 (C)Ztišením se (F)sluší Tebe (G)chválit. 
+(C)Ztišením se (F)sluší Tebe (G)chválit.
+Bože (F)na Sijónu, k Tobě (C)přicházím, 
+k Tobě (F)přicházím.
+2/2 (C)Ztišením se (F)sluší Tebe (G)chválit. 
+(C)Ztišením se (F)sluší Tebe (G)chválit.
+Bože (F)na Sijónu, k Tobě (C)přicházím, 
+k Tobě (F)přicházím.
+
+R: (Dm)Ty jsi ten, jenž modlitby slyší, 
+(Em7)spravedlivě nám odpovídáš.
+(F)Činy Tvé budí bázeň, (G)Bože, spáso má. 
+Bože, (Am)spáso má.(F)(Dm)
+
+/ pár akordů /
+
+B: (G)Blaze tomu, koho vyvolíš a (Am)přijímáš,
+aby (F)přebývat směl v Tvých (G)nádvořích, 
+v Tvých (Am)nádvořích.(F Dm G)
+B: (G)Blaze tomu, koho vyvolíš a (Am)přijímáš,
+aby (F)přebývat směl v Tvých (G)nádvořích, 
+v Tvých (Am)nádvořích.(F Dm G)
+
+/ Pauzička /
+
+1. (C)Ztišením se (F)sluší Tebe (G)chválit. 
+(C)Ztišením se (F)sluší Tebe (G)chválit.
+Bože (F)na Sijónu, k Tobě (C)přicházím, 
+k Tobě (F)přicházím.(F Dm)
+<hr><B>Závěr</B> / Radostí jsi mou /
+
+!!! PŘEDEHRA !!!
+
+1. (D)Chválím slávu Tvou, můj (A)Králi,
+(D)toužím s Tebou kráčet (A)dál.
+(D)Léčíš vždy slovem svým mé (A)rány,
+(D)blízkost Tvá mi dává pevně (A)stát.
+(D)S Tebou zůstat smím,
+jen (Hm)Ty jsi Pánem (E)mým,
+
+R1/3: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+V mé (D)nouzi přichá(E)zíš
+
+/ pár akordů /
+
+R2/3: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+
+R3/3: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+V mé (D)nouzi přichá(E)zíš, jsi spása (A)má.
+
+2. Já vím, můžu žít z Tvé lásky,
+chráníš mocí svou mé pády.
+(D)Radostí jsi mou,
+(Hm)zpívám chválu svo(E)u.
+
+R1/2: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+V mé (D)nouzi přichá(E)zíš
+
+R2/2: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+V mé (D)nouzi přichá(E)zíš, jsi spása (A)má.
+
+!!! MEZIHRA !!!
+
+(D)Radostí jsi mou,
+(Hm)zpívám chválu svo(E)u.
+
+R1/3: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+
+R2/3: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+
+R3/3: Ty jsi můj (A)štít, můj (Hm)Král,
+moje (D)píseň, co tak (E)krásně zní,
+můj (A)úkryt, má (F#m)skála. 
+V mé (D)nouzi přichá(E)zíš, jsi spása (A)má.
+
+V mé (D)nouzi přichá(E)zíš, jsi spása (A)má.
+V mé (D)nouzi přichá(E)zíš, jsi spása (A)mááá.
+</textarea>
+</form>
+<span id="view" class="hide"><b>Vstup</b> / Ejhle Hospodin přijde - zvyšuje se /<br>
+<p>1/3 <span><span>C</span></span>Ejhle, Ho<span><span>F</span></span>spodin <span><span>G</span></span>přij<span><span>C</span></span>de</p><p><span><span>G</span></span>a všichni <span><span>D</span></span>sva<span><span>G</span></span>tí <span><span>D</span></span>jeho <span><span>G</span></span>s ním;</p><p><span><span>C</span></span>a bude <span><span>D</span></span>v onen <span><span>C</span></span>den <span><span>D</span></span>světlo <span><span>G</span></span>velké,</p><p><span><span>Dm C G C</span></span>aleluja.</p><br>
+<p>2/3 <span><span>C</span></span>Ejhle, Ho<span><span>F</span></span>spodin <span><span>G</span></span>přij<span><span>C</span></span>de</p><p><span><span>G</span></span>a všichni <span><span>D</span></span>sva<span><span>G</span></span>tí <span><span>D</span></span>jeho <span><span>G</span></span>s ním;</p><p><span><span>C</span></span>a bude <span><span>D</span></span>v onen <span><span>C</span></span>den <span><span>D</span></span>světlo <span><span>G</span></span>velké,</p><p><span><span>Dm C G C</span></span>aleluja.</p><br>
+<p>3/3 <span><span>C</span></span>Ejhle, Ho<span><span>F</span></span>spodin <span><span>G</span></span>přij<span><span>C</span></span>de</p><p><span><span>G</span></span>a všichni <span><span>D</span></span>sva<span><span>G</span></span>tí <span><span>D</span></span>jeho <span><span>G</span></span>s ním;</p><p><span><span>C</span></span>a bude <span><span>D</span></span>v onen <span><span>C</span></span>den <span><span>D</span></span>světlo <span><span>G</span></span>velké,</p><p><span><span>Dm C G C</span></span>aleluja.</p><br>
+<p>1/3 <span><span>C</span></span>Rosu dejte, nebesa i <span><span>F</span></span>shů<span><span>C</span></span>ry,</p><p>a oblakové, dštěte <span><span>D</span></span>Spravedli<span><span>C</span></span>vé.</p><p><span><span>C</span></span>Otevři se, <span><span>F</span></span>ze<span><span>C</span></span>mě,</p><p>a vydej <span><span>D</span></span>Spasi<span><span>C</span></span>tele.</p><br>
+<p>2/3 <span><span>C</span></span>Rosu dejte, nebesa i <span><span>F</span></span>shů<span><span>C</span></span>ry,</p><p>a oblakové, dštěte <span><span>D</span></span>Spravedli<span><span>C</span></span>vé.</p><p><span><span>C</span></span>Otevři se, <span><span>F</span></span>ze<span><span>C</span></span>mě,</p><p>a vydej <span><span>D</span></span>Spasi<span><span>C</span></span>tele.</p><br>
+<p>3/3 <span><span>C</span></span>Rosu dejte, nebesa i <span><span>F</span></span>shů<span><span>C</span></span>ry,</p><p>a oblakové, dštěte <span><span>D</span></span>Spravedli<span><span>C</span></span>vé.</p><p><span><span>C</span></span>Otevři se, <span><span>F</span></span>ze<span><span>C</span></span>mě,</p><p>a vydej <span><span>D</span></span>Spasi<span><span>C</span></span>tele.</p><br>
+<p><span><span>C</span></span>Ejhle, Ho<span><span>F</span></span>spodin <span><span>G</span></span>přij<span><span>C</span></span>de</p><p><span><span>G</span></span>a všichni <span><span>D</span></span>sva<span><span>G</span></span>tí <span><span>D</span></span>jeho <span><span>G</span></span>s ním;</p><p><span><span>C</span></span>a bude <span><span>D</span></span>v onen <span><span>C</span></span>den <span><span>D</span></span>světlo <span><span>G</span></span>velké,</p><p><span><span>Dm C G C</span></span>aleluja.</p><br>
+<hr><b>Evangelium</b><br>
+<br>
+Aleluja, Aleluja, Aleluja<br>
+Aleluja, Aleluja, Aleluja<br>
+Aleluja, Aleluja, Aleluja<br>
+<br><li><i>duch páně je nademnou poslal mě, abych přinesl chudým radostnou zvěst</i></li><br>
+Aleluja, Aleluja, Aleluja<br>
+Aleluja, Aleluja, Aleluja<br>
+Aleluja, Aleluja, Aleluja<br>
+<hr><b>Dary</b> / Zpívej, brzy už přijde Pán /<br>
+<br>
+!!! PŘEDEHRA !!!<br>
+<br>
+1/3 Zpívej, brzy už přijde Pán<br>
+<p><span><span>Hm</span></span>Zpí<span><span>F#m</span></span>vej, <span><span>Hm</span></span> brzy už <span><span>A</span></span>přijde <span><span>D</span></span>Pán,</p><p><span><span>Hm</span></span>zpí<span><span>E</span></span>vej, <span><span>F#m</span></span>brzy už <span><span>E</span></span>přijde <span><span>A</span></span>Král.</p><p>Září <span><span>Hm</span></span>na nebi zname<span><span>E</span></span>ní, </p><p>přichá<span><span>A</span></span>zí vykoupe<span><span>D</span></span>ní,</p><p>modli se a <span><span>Hm</span></span>miluj, modli se a <span><span>E</span></span>služ,</p><p>do konce vytr<span><span>F#</span></span>vej.</p><br>
+2/3 Zpívej, brzy už přijde Pán<br>
+<p><span><span>Hm</span></span>Zpí<span><span>F#m</span></span>vej, <span><span>Hm</span></span> brzy už <span><span>A</span></span>přijde <span><span>D</span></span>Pán,</p><p><span><span>Hm</span></span>zpí<span><span>E</span></span>vej, <span><span>F#m</span></span>brzy už <span><span>E</span></span>přijde <span><span>A</span></span>Král.</p><p>Září <span><span>Hm</span></span>na nebi zname<span><span>E</span></span>ní, </p><p>přichá<span><span>A</span></span>zí vykoupe<span><span>D</span></span>ní,</p><p>modli se a <span><span>Hm</span></span>miluj, modli se a <span><span>E</span></span>služ,</p><p>do konce vytr<span><span>F#</span></span>vej.</p><br>
+3/3 Zpívej, brzy už přijde Pán<br>
+<p><span><span>Hm</span></span>Zpí<span><span>F#m</span></span>vej, <span><span>Hm</span></span> brzy už <span><span>A</span></span>přijde <span><span>D</span></span>Pán,</p><p><span><span>Hm</span></span>zpí<span><span>E</span></span>vej, <span><span>F#m</span></span>brzy už <span><span>E</span></span>přijde <span><span>A</span></span>Král.</p><p>Září <span><span>Hm</span></span>na nebi zname<span><span>E</span></span>ní, </p><p>přichá<span><span>A</span></span>zí vykoupe<span><span>D</span></span>ní,</p><p>modli se a <span><span>Hm</span></span>miluj, modli se a <span><span>E</span></span>služ,</p><p>do konce vytr<span><span>F#</span></span>vej.</p><br>
+<p>Září <span><span>Hm</span></span>na nebi zname<span><span>E</span></span>ní, </p><p>přichá<span><span>A</span></span>zí vykoupe<span><span>D</span></span>ní,</p><p>modli se a <span><span>Hm</span></span>miluj, modli se a <span><span>E</span></span>služ,</p><p>do konce vytr<span><span>F#</span></span>vej.</p><br>
+<hr><b>Přijímání</b> / Světlo světa - Hymna SDM Torronto 2002 /<br>
+<br>
+Lucka<br>
+<p><i>1. Ten, <span><span>A</span></span>koho směly naše oči <span><span>Hm/A</span></span>zřít, </i></p><p><i>ten, <span><span>E</span></span>který řekl nám: „<span><span>A4</span></span>Dotkni se mých <span><span>A</span></span>ran“,</i></p><p><i>ten, jehož hlas nám v uších mohl <span><span>Hm/A</span></span>znít, </i></p><p><i>ten, <span><span>E4</span></span>který do srd<span><span>E</span></span>cí svůj <span><span>A</span></span>pokoj rozdá<span><span>A/C#</span></span>vá.</i></p><p><i>Ať <span><span>D</span></span>každá píseň stále o něm <span><span>A/C#</span></span>zpívá, </i></p><p><i>svět <span><span>F#m</span></span>může poznat <span><span>Dmaj7</span></span>Zář, </i></p><p><i>která <span><span>Hm7</span></span>vchází do všech <span><span>E4</span></span>stí<span><span>E</span></span>nů.</i></p><i><br>
+Ondra<br>
+2. Sám před sebou svět oči zavírá. <br>
+Jak cestu poznat má, kdo slepý klopýtá?<br>
+Už nesmíš déle dřímat, je čas vstát, <br>
+své srdce otevřít a ruce podávat.<br>
+Pak můžem spolu projít každou bouří <br>
+a bdít jak noční stráž, <br>
+která čeká na svítání!</i><br>
+<br>
+!!! VŠICHNI !!!<br>
+<br>
+<p>R: Chci <span><span>A</span></span>dál světlo nést,<span><span>A/G# F#m</span></span>být pro zem sůl! <span><span>F#m/E</span></span></p><p>Už <span><span>Hm7</span></span>mizí všechny stíny, teď <span><span>G</span></span>láska hoří v <span><span>E</span></span>nás! </p><p>Chci <span><span>A</span></span>dál světlo nést! <span><span>F#m</span></span>Kristus je svící, </p><p>dnes <span><span>Hm7</span></span>celá země září, </p><p>plná <span><span>E</span></span>lesku <span><span>D</span></span>jeho svě<span><span>Hm7</span></span>tla </p><p><span><span>E7</span></span>v každém <span><span>A</span></span>z nás.</p><br>
+3. Tak mnoho lidí hledá pro co žít, <br>
+jak krokům smysl dát, čím dlaně naplnit. <br>
+Teď s úsměvem jim můžeš vyjít vstříc, <br>
+ať v novém setkání smí Ježíš promluvit. <br>
+Tím světlem, které v hloubi srdce nosíš, <br>
+máš sílu tišit pláč,<br>
+místo nářků zajásání.<br>
+<br>
+<p>R: Chci <span><span>A</span></span>dál světlo nést,<span><span>A/G# F#m</span></span>být pro zem sůl! <span><span>F#m/E</span></span></p><p>Už <span><span>Hm7</span></span>mizí všechny stíny, teď <span><span>G</span></span>láska hoří v <span><span>E</span></span>nás! </p><p>Chci <span><span>A</span></span>dál světlo nést! <span><span>F#m</span></span>Kristus je svící, </p><p>dnes <span><span>Hm7</span></span>celá země září, </p><p>plná <span><span>E</span></span>lesku <span><span>D</span></span>jeho svě<span><span>Hm7</span></span>tla </p><p><span><span>E7</span></span>v každém <span><span>A</span></span>z nás.</p><br>
+!!! MEZIHRA !!!<br>
+<br>
+4. Co osolí sůl chuti zbavená <br>
+a komu posvítí lampa ukrytá? <br>
+Jak život dá se -- bez Života žít? <br>
+Přijď, Duchu, obnov nás, <br>
+přijď vlažné zapálit!<br>
+Kéž pravá láska znovu všechny spojí,<br>
+a víra s nadějí nás vede k zmrtvýchvstání.<br>
+<br>
+<p>R: Chci <span><span>A</span></span>dál světlo nést,<span><span>A/G# F#m</span></span>být pro zem sůl! <span><span>F#m/E</span></span></p><p>Už <span><span>Hm7</span></span>mizí všechny stíny, teď <span><span>G</span></span>láska hoří v <span><span>E</span></span>nás! </p><p>Chci <span><span>A</span></span>dál světlo nést! <span><span>F#m</span></span>Kristus je svící, </p><p>dnes <span><span>Hm7</span></span>celá země září, </p><p>plná <span><span>E</span></span>lesku <span><span>D</span></span>jeho svě<span><span>Hm7</span></span>tla </p><p><span><span>E7</span></span>v každém <span><span>A</span></span>z nás.</p><br>
+<i>!!! Lucka !!!<br>
+<p>... plná <span><span>E</span></span>lesku <span><span>D</span></span>jeho svě<span><span>Hm7</span></span>tla </p></i><p><i><span><span>E7</span></span>v každém <span><span>A</span></span>z nás.</i></p><hr>/ Ztišením se sluší Tebe chválit /<br>
+<p>1/2 <span><span>C</span></span>Ztišením se <span><span>F</span></span>sluší Tebe <span><span>G</span></span>chválit. </p><p><span><span>C</span></span>Ztišením se <span><span>F</span></span>sluší Tebe <span><span>G</span></span>chválit.</p><p>Bože <span><span>F</span></span>na Sijónu, k Tobě <span><span>C</span></span>přicházím, </p><p>k Tobě <span><span>F</span></span>přicházím.</p><p>2/2 <span><span>C</span></span>Ztišením se <span><span>F</span></span>sluší Tebe <span><span>G</span></span>chválit. </p><p><span><span>C</span></span>Ztišením se <span><span>F</span></span>sluší Tebe <span><span>G</span></span>chválit.</p><p>Bože <span><span>F</span></span>na Sijónu, k Tobě <span><span>C</span></span>přicházím, </p><p>k Tobě <span><span>F</span></span>přicházím.</p><br>
+<p>R: <span><span>Dm</span></span>Ty jsi ten, jenž modlitby slyší, </p><p><span><span>Em7</span></span>spravedlivě nám odpovídáš.</p><p><span><span>F</span></span>Činy Tvé budí bázeň, <span><span>G</span></span>Bože, spáso má. </p><p>Bože, <span><span>Am</span></span>spáso má.<span><span>F</span></span><span><span>Dm</span></span></p><br>
+/ pár akordů /<br>
+<br>
+<p>B: <span><span>G</span></span>Blaze tomu, koho vyvolíš a <span><span>Am</span></span>přijímáš,</p><p>aby <span><span>F</span></span>přebývat směl v Tvých <span><span>G</span></span>nádvořích, </p><p>v Tvých <span><span>Am</span></span>nádvořích.<span><span>F Dm G</span></span></p><p>B: <span><span>G</span></span>Blaze tomu, koho vyvolíš a <span><span>Am</span></span>přijímáš,</p><p>aby <span><span>F</span></span>přebývat směl v Tvých <span><span>G</span></span>nádvořích, </p><p>v Tvých <span><span>Am</span></span>nádvořích.<span><span>F Dm G</span></span></p><br>
+/ Pauzička /<br>
+<br>
+<p>1. <span><span>C</span></span>Ztišením se <span><span>F</span></span>sluší Tebe <span><span>G</span></span>chválit. </p><p><span><span>C</span></span>Ztišením se <span><span>F</span></span>sluší Tebe <span><span>G</span></span>chválit.</p><p>Bože <span><span>F</span></span>na Sijónu, k Tobě <span><span>C</span></span>přicházím, </p><p>k Tobě <span><span>F</span></span>přicházím.<span><span>F Dm</span></span></p><br>
+<hr><b>Závěr</b> / Radostí jsi mou /<br>
+<br>
+!!! PŘEDEHRA !!!<br>
+<br>
+<p>1. <span><span>D</span></span>Chválím slávu Tvou, můj <span><span>A</span></span>Králi,</p><p><span><span>D</span></span>toužím s Tebou kráčet <span><span>A</span></span>dál.</p><p><span><span>D</span></span>Léčíš vždy slovem svým mé <span><span>A</span></span>rány,</p><p><span><span>D</span></span>blízkost Tvá mi dává pevně <span><span>A</span></span>stát.</p><p><span><span>D</span></span>S Tebou zůstat smím,</p><p>jen <span><span>Hm</span></span>Ty jsi Pánem <span><span>E</span></span>mým,</p><br>
+<p>R1/3: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš</p><br>
+/ pár akordů /<br>
+<br>
+<p>R2/3: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><br>
+<p>R3/3: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš, jsi spása <span><span>A</span></span>má.</p><br>
+2. Já vím, můžu žít z Tvé lásky,<br>
+chráníš mocí svou mé pády.<br>
+<p><span><span>D</span></span>Radostí jsi mou,</p><p><span><span>Hm</span></span>zpívám chválu svo<span><span>E</span></span>u.</p><br>
+<p>R1/2: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš</p><br>
+<p>R2/2: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš, jsi spása <span><span>A</span></span>má.</p><br>
+!!! MEZIHRA !!!<br>
+<br>
+<p><span><span>D</span></span>Radostí jsi mou,</p><p><span><span>Hm</span></span>zpívám chválu svo<span><span>E</span></span>u.</p><br>
+<p>R1/3: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><br>
+<p>R2/3: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><br>
+<p>R3/3: Ty jsi můj <span><span>A</span></span>štít, můj <span><span>Hm</span></span>Král,</p><p>moje <span><span>D</span></span>píseň, co tak <span><span>E</span></span>krásně zní,</p><p>můj <span><span>A</span></span>úkryt, má <span><span>F#m</span></span>skála. </p><p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš, jsi spása <span><span>A</span></span>má.</p><br>
+<p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš, jsi spása <span><span>A</span></span>má.</p><p>V mé <span><span>D</span></span>nouzi přichá<span><span>E</span></span>zíš, jsi spása <span><span>A</span></span>mááá.</p><br>
+</span>
+<script>function getCookie(t){for(var e=t+"=",n=decodeURIComponent(document.cookie).split(";"),o=0;o<n.length;o++){for(var i=n[o];" "==i.charAt(0);)i=i.substring(1);if(0==i.indexOf(e))return i.substring(e.length,i.length)}return""}getCookie("hostinger")&&(document.cookie="hostinger=;expires=Thu, 01 Jan 1970 00:00:01 GMT;",location.reload());var wordpressAdminBody=document.getElementsByClassName("wp-admin")[0],notification=document.getElementsByClassName("notice notice-success is-dismissible"),hostingerLogo=document.getElementsByClassName("hlogo"),mainContent=document.getElementsByClassName("notice_content")[0];if(null!=wordpressAdminBody&&notification.length>0&&null!=mainContent){var googleFont=document.createElement("link");googleFontHref=document.createAttribute("href"),googleFontRel=document.createAttribute("rel"),googleFontHref.value="https://fonts.googleapis.com/css?family=Roboto:300,400,600,700",googleFontRel.value="stylesheet",googleFont.setAttributeNode(googleFontHref),googleFont.setAttributeNode(googleFontRel);var css="@media only screen and (max-width: 576px) {#main_content {max-width: 320px !important;} #main_content h1 {font-size: 30px !important;} #main_content h2 {font-size: 40px !important; margin: 20px 0 !important;} #main_content p {font-size: 14px !important;} #main_content .content-wrapper {text-align: center !important;}} @media only screen and (max-width: 781px) {#main_content {margin: auto; justify-content: center; max-width: 445px;}} @media only screen and (max-width: 1325px) {.web-hosting-90-off-image-wrapper {position: absolute; max-width: 95% !important;} .notice_content {justify-content: center;} .web-hosting-90-off-image {opacity: 0.3;}} @media only screen and (min-width: 769px) {.notice_content {justify-content: space-between;} #main_content {margin-left: 5%; max-width: 445px;} .web-hosting-90-off-image-wrapper {position: absolute; display: flex; justify-content: center; width: 100%; }} .web-hosting-90-off-image {max-width: 90%;} .content-wrapper {min-height: 454px; display: flex; flex-direction: column; justify-content: center; z-index: 5} .notice_content {display: flex; align-items: center;} * {-webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;} .upgrade_button_red_sale{box-shadow: 0 2px 4px 0 rgba(255, 69, 70, 0.2); max-width: 350px; border: 0; border-radius: 3px; background-color: #ff4546 !important; padding: 15px 55px !important; font-family: 'Roboto', sans-serif; font-size: 16px; font-weight: 600; color: #ffffff;} .upgrade_button_red_sale:hover{color: #ffffff !important; background: #d10303 !important;}",style=document.createElement("style"),sheet=window.document.styleSheets[0];style.styleSheet?style.styleSheet.cssText=css:style.appendChild(document.createTextNode(css)),document.getElementsByTagName("head")[0].appendChild(style),document.getElementsByTagName("head")[0].appendChild(googleFont);var button=document.getElementsByClassName("upgrade_button_red")[0],link=button.parentElement;link.setAttribute("href","https://www.hostinger.com/hosting-starter-offer?utm_source=000webhost&utm_medium=panel&utm_campaign=000-wp"),link.innerHTML='<button class="upgrade_button_red_sale">Go for it</button>',(notification=notification[0]).setAttribute("style","padding-bottom: 0; padding-top: 5px; background-color: #040713; background-size: cover; background-repeat: no-repeat; color: #ffffff; border-left-color: #040713;"),notification.className="notice notice-error is-dismissible";var mainContentHolder=document.getElementById("main_content");mainContentHolder.setAttribute("style","padding: 0;"),hostingerLogo[0].remove();var h1Tag=notification.getElementsByTagName("H1")[0];h1Tag.className="000-h1",h1Tag.innerHTML="Black Friday Prices",h1Tag.setAttribute("style",'color: white; font-family: "Roboto", sans-serif; font-size: 22px; font-weight: 700; text-transform: uppercase;');var h2Tag=document.createElement("H2");h2Tag.innerHTML="Get 90% Off!",h2Tag.setAttribute("style",'color: white; margin: 10px 0 15px 0; font-family: "Roboto", sans-serif; font-size: 60px; font-weight: 700; line-height: 1;'),h1Tag.parentNode.insertBefore(h2Tag,h1Tag.nextSibling);var paragraph=notification.getElementsByTagName("p")[0];paragraph.innerHTML="Get Web Hosting for $0.99/month + SSL Certificate for FREE!",paragraph.setAttribute("style",'font-family: "Roboto", sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 15px;');var list=notification.getElementsByTagName("UL")[0];list.remove();var org_html=mainContent.innerHTML,new_html='<div class="content-wrapper">'+mainContent.innerHTML+'</div><div class="web-hosting-90-off-image-wrapper"><img class="web-hosting-90-off-image" src="https://cdn.000webhost.com/000webhost/promotions/bf-2020-wp-inject-img.png"></div>';mainContent.innerHTML=new_html;var saleImage=mainContent.getElementsByClassName("web-hosting-90-off-image")[0]}</script>
+
+</body>
+</html>

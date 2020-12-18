@@ -1,0 +1,281 @@
+﻿<body onload="build()">
+<textarea name="fuseData">
+s	s	11	17	23	31
+1	6	12	18	24	32
+2	7	13	19	25	33
+3	8	14	20	26	34
+4	9	15	21	27	35
+5	10	16	22	28	36
+39B	49B	59B	29	37
+40B	50B	60B	30	38
+41B	51B	61B
+42B	52B	62B
+43B	53B	63B
+44B	54B	64B
+45B	55B	65B
+46B	56B	66B
+47B	57B	67B
+48B	58B	68B
+*List*
+No	Description	A	Interiér	Exteriér	Motor	Osvětlení	Vlevo	Vpravo	Vepředu	Vzadu	Ostatní
+1	panel přístrojů, ESP	5	1				1		1		
+2	brzdová světla	10		1						1	
+3	napájení diagnostické svorkovnice, klimatizace	5									
+4	osvětlení vnitřní, odkládací schránky, zavazadlového prostoru	10	1			1	1	1	1	1	
+5	varovná světla dveří	5		1		1	1	1	1		
+6	výškové nastavení světlometů	5		1		1	1	1	1		
+7	elektronika motoru, servořízení	5			1				1		
+8	neobsazeno	N/A									
+9	lambda-sonda	10			1						
+10	S-kontakt (86s)	5									
+11	el. ovládaná a vyhřívaná zrcátka	5		1			1	1	1		
+12	klapka čerstvého a recirkulovaného vzduchu, klimatizace, navigační systém, telefon, xenonové světlomety	5	1			1	1	1	1		
+13	couvací světla	10		1		1	1	1		1	
+14	řídící jednotka motoru	10			1						
+15	stírače a ostřikovače	10		1			1	1	1		
+16	panel přístrojů	5	1				1		1		
+17	řídící jednotka motoru	5			1				1		
+17	řídící jednotka motoru 1.2/40kW	15			1				1		
+18	telefon	5									1
+19	automatická převodovka	10			1				1		
+20	kontrola prasklých vláken žárovek	5				1					
+21	vyhřívání trysek ostřikovačů	5		1					1		
+22	neobsazeno	N/A									
+23	pravé dálkové světlo	10		1		1		1	1		
+24	elektronika motoru	10			1				1		
+25	řídící jednotka ABS/ASR	5									1
+25	řídící jednotka ABS/ESP	10									1
+26	neobsazeno	N/A									
+27	neobsazeno	N/A									
+28	spínač brzdového a spojkového pedálu, elektronika motoru	5	1	1	1		1		1		
+29	neobsazeno	N/A									
+30	levé dálkové světlo, kontrolka dálkových světel	10		1		1	1	1	1		
+31	centrální zamykání víka zavazadlového prostoru	10		1						1	
+32	zadní stírač	10		1						1	
+33	pravá obrysová světla	5		1		1		1	1	1	
+34	levá obrysová světla	5		1		1	1		1	1	
+35	zážehový motor vstřikovací ventily	10			1						
+36	osvětlení SPZ	5		1		1				1	
+37	zadní mlhové světlo, kontrolka	7.5	1	1		1				1	
+38	el. ovládaná a vyhřívaná zrcátka	5		1			1	1	1		
+39	vyhřívané zadní sklo	20		1						1	
+40	zvuková houkačka	20		1					1		
+41	přední stírače	20		1			1	1	1		
+42	zásuvka	15	1						1		
+43	centrální řídicí jednotka vozu, blokování volicí páky autom. přev.	20		1							1
+44	směrová světla	15		1		1	1	1	1	1	
+45	rádio, navigační systém	20	1						1		1
+46	el. stahování oken	25	1				1	1	1	1	
+47	neobsazeno	N/A									
+48	řídící jednotka motoru	30			1						
+49	centrální zamykání	15	1								1
+50	pravé tlumené světlo/xenonová výbojka vpravo, výškové nastavení pravého světlometu	15		1		1		1			
+51	zásuvka v zavazadlovém prostoru	15	1							1	
+52	zážehový motor - zapalování	15			1						
+53	el. stahování oken	25	1				1	1	1	1	
+54	levé tlumené světlo/ xenonová výbojka vlevo, výškové nastavení levého světlometu	15		1		1	1				
+55	neobsazeno	N/A									
+56	řídící jednotka motoru	20			1						
+57	tažné zařízení	25		1						1	
+58	el. stahování oken	25	1				1	1	1	1	
+59	neobsazeno	N/A									
+60	varovné zařízení proti krádeži	15	1								1
+61	palivové čerpadlo	15	1		1					1	
+62	el. ovládané střešní okno	25	1								
+63	vyhřívané sedačky	15	1				1	1	1	1	
+64	ostřikovače světlometů	20		1			1	1	1		
+65	přední mlhová světla	15		1		1	1	1			
+66	el. stahování oken	25	1				1	1	1	1	
+67	neobsazeno	N/A									
+68	ventilátor čerstvého vzduchu	25	1								1
+</textarea>
+</body>
+<style>
+span {
+	display: flex;
+	flex-flow: row wrap;
+	background-color: #808080;
+}
+div {
+	margin: 0.5%;
+	padding: 0.1%;
+	text-align: center;
+	border: 1px solid #444444;
+}
+div.unused {
+	background-color: #808080;
+}
+table {
+  border-spacing: 0px; /* small tricks 2 make rounded table simply or */
+}
+td {
+    padding: 0px;
+    background-color: white;
+}
+</style>
+<script>
+var colors = {
+	5:"peru",
+	7.5:"brown",
+	10:"red",
+	15:"#4040FF",
+	20:"yellow",
+	25:"white",
+	30:"green"
+}, box, fuses, unused = "N/A", list;
+function build() {
+	var fD = document.getElementsByName("fuseData")[0];
+	var data = fD.value.split("\n*List*\n");
+	fuses = processFuses(data[1]);
+	box = processBox(data[0], fuses);
+	fD.parentNode.removeChild(fD);
+	list = document.createElement("table");
+	list.border = 1;
+	document.body.appendChild(list);
+	fillTable();
+}
+function processBox(data, fuses) {
+	var rows = data.split('\n'), box = {}, parent, css, cellWidth;
+	css = document.getElementsByTagName("style")[0];
+	for(var r in rows) {
+		parent = document.createElement("SPAN");
+		var cols = rows[r].split('\t');
+		for(var c in cols) {
+			if(css) {
+				cellWidth = 100/(cols.length*1.2);
+				getRule(css.sheet.rules, "div").style.width = cellWidth + "%";
+				css = 0;
+			}
+			var d = document.createElement("DIV"), no = cols[c];
+			if(no) {
+				if(isNaN(no)) {
+					if (no.substr(no.length - 1) == 'B') {
+						d.style.width = cellWidth * 1.365 + '%';
+						if (no.length == 1) {
+							parent.appendChild(d);
+							continue;
+						}
+					} else if (no == 's') {
+						d.style.borderColor = "transparent";
+						parent.appendChild(d);
+						continue;
+					}
+					no = parseInt(no);
+				}
+				var amps = fuses[no][1];
+				d.innerText = no;
+				if(amps != unused) {
+					d.title = fuses[no][0];
+					d.style.backgroundColor = colors[amps];
+				} else {
+					d.style.textDecoration = "line-through";
+					d.title = fuses[no][0];
+					d.innerHTML = "&nbsp;" + no + "&nbsp;";
+					d.style.opacity = 0.15;
+				}
+			} else {
+				d.innerHTML = "&nbsp;";
+				d.className = "unused";
+			}
+			box[no] = d;
+			parent.appendChild(d);
+		}
+		document.body.appendChild(parent);
+	}
+	return box;
+}
+function processFuses(data) {
+	var rows = data.replace(/\n$/gm,'').split('\n'), fuses = {};
+	fuses.size = rows.length - 2;
+	for(var r in rows) {
+		var cols = rows[r].split('\t');
+		if(fuses[cols[0]]) {
+			var row = fuses[cols[0]];
+			fuses[cols[0]] = cols.slice(1);
+			fuses[cols[0]][0] = row[1] + "A " + row[0] + '\n' + cols[2] + "A " + fuses[cols[0]][0];
+		} else {
+			if(r != "0") cols[1] = cols[2] + "A " + cols[1];
+			fuses[cols[0]] = cols.slice(1);
+		}
+	}
+	var el = fuses.No, form = document.createElement("form");
+	form.appendChild(document.createTextNode("Zobraz pouze "));
+	for(var c=2;c<el.length;c++) {
+		var newEl = document.createElement("input");
+		newEl.type = "checkbox";
+		newEl.name = "selection";
+		newEl.onclick = buttonClick;
+		form.appendChild(newEl);
+		form.appendChild(document.createTextNode(el[c]))
+	}
+	document.body.appendChild(form);
+	return fuses;
+}
+function buttonClick() {
+	var cols = getSelection();
+	for(var r in fuses) {
+		if(!isNaN(r)) {
+			var selected = true;
+			for(var c in cols) {
+				var idx = fuses.No.indexOf(cols[c]);
+				if(fuses[r][idx] != "1") {
+					selected = false;
+					break;
+				}
+			}
+			if(selected && fuses[r][1] != unused) {
+				box[r].style.opacity = 1;
+			} else {
+				box[r].style.opacity = 0.15;
+			}
+		}
+	}
+	fillTable();
+}
+function fillTable() {
+	var cols = getSelection(), selected;
+	while(list.firstChild) {
+		list.removeChild(list.firstChild);
+	}
+	for(var r=0;r<fuses.size;r++) {
+		if(r) {
+			selected = true;
+			for(var c in cols) {
+				var idx = fuses.No.indexOf(cols[c]);
+				if(fuses[r][idx] != "1") {
+					selected = false;
+					break;
+				}
+			}
+			if(!selected) continue;
+		}
+		var rObj = r?fuses[r]:fuses.No;
+		var row = document.createElement("tr");
+		var cell = document.createElement("td");
+		cell.innerText = r?r:"#";
+		row.appendChild(cell);
+		list.appendChild(row);
+		for(var c in rObj) {
+			if(c == 1) continue; // Ampéry
+			cell = document.createElement("td");
+			cell.innerText = rObj[c];
+			row.appendChild(cell);
+		}
+		list.appendChild(row);
+	}
+}
+function getSelection() {
+	var el = document.forms[0].selection, cols = [];
+	for(var b=0;b<el.length;b++) {
+		if(el[b].checked) cols.push(el[b].nextSibling.textContent)
+	}
+	return cols;
+}
+function getRule(rules, selector) {
+	for(var i in rules) {
+		if (rules[i].selectorText == selector)
+			return rules[i];
+	}
+	return null;
+}
+</script>
