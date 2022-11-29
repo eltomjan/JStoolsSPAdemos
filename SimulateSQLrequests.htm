@@ -33,53 +33,110 @@ Extended to accept also key={a 'b c:d e-f'} etc.
 	var reg = new RegExp(/[A-Za-z_.]+\(.*?\)+|\(.*?\)+|'[^'](?:|\'|'')*'+|`(?:[^`]|``)*`+|([^\s,{]+{[^}]+})|([^\s,{};])+/gi);
 	for(var r=0;r<sql.length;r++) {
 		rq = sql[r];
+		var insert = rq.match(/(INSERT\s+OR\s+UPDATE)|(INSERT\s+OR\s+IGNORE)|(INSERT)\s+INTO\s+/g);
 		var elements = rq.match(reg); // UPDATE,table,SET,col=val,...,where,key=name
 		if(!elements
 		|| elements[0].toUpperCase() != 'UPDATE'
 		|| elements[2].toUpperCase() != 'SET') {
+			if (!insert)
 			continue; // unrecognized statement
 		}
-		tab = elements[1]; // dest table
+		var pos = 1;
+		if (insert) do {} while (elements[pos++] != "INTO");
+		tab = unquote(elements[pos++]); // dest table
 		collect = new Array;
-		var i=elements.length-1;
+		var i = elements.length - 1;
 		var key = '',val = '';
 		for(;i>2;i--) {
 			if(elements[i].toUpperCase() == 'WHERE') {
-				var pair = elements[i+1].split('=');
-				key = pair[0];
-				val = pair[1];
+				var pair;
+				if (elements[i + 1].indexOf('=') >= 0)
+				{
+					pair = elements[i + 1].split('=');
+					key = pair[0];
+					val = pair[1];
+				}
+				else
+				{
+					key = elements[i + 1];
+					val = elements[i + 3];
+					pair = [key, val];
+				}
 				val = unquote(val);
 				if(key == val[val.length-1]) val = val.substr(1, val.length-2);
 				collect[pair[0]] = val; // key=value
+				collect.key = pair;
 				break;
 			}
 		}
-		if((i==2) && elements[i].toUpperCase() != 'WHERE') {
-			i=elements.length;
+		if((i == 2) && elements[i].toUpperCase() != 'WHERE') {
+			i = elements.length;
 		}
 		if(!tables[tab]) {
 			tables[tab] = new Array;
 		}
-		for(var j=3;j<i;j++) {
+		if (insert)
+		{
+			key = elements[pos++].match(/([^,()\s]+)+/g);
+			while (++pos < elements.length)
+			{
+				val = elements[pos].match(/([^,()\s]+)+/g);
+				for(var j=0;j<key.length;j++)
+				{
+					if (collect[key[j]] === undefined)
+					{
+						collect[key[j]] = unquote(val[j]);
+					}
+					else
+					{
+						collect[key[j]] += "<BR>" + unquote(val[j]);
+					}
+				}
+			}
+		}
+		else for(var j=3;j<i;j++) {
 			var pair = elements[j].split('=');
+			if (pair.length == 1 && j + 2 <= i)
+			{
+				pair.push(elements[j + 2]);
+				j += 2;
+			}
 			collect[pair[0]] = unquote(pair[1]);
 		}
-		if(tables[tab][val]) {
+		if (collect.key && tables[tab].length)
+		{
+			for(var t = 0; t < tables[tab].length; t++)
+			{
+				if (tables[tab][t][collect.key[0]] == collect.key[1])
+				{
+					key = t;
+					break;
+				}
+			}
+		}
+		else
+		{
+			key = tables[tab].length;
+		}
+		if(tables[tab][key]) {
 			for(var nm in collect) {
-				if(tables[tab][val][nm] && nm != key) {
-					if(tables[tab][val][nm] != collect[nm]) {
-						tables[tab][val][nm] += "  <span style='color:red'>►</span> " + collect[nm]
+				if(tables[tab][key][nm] && nm != key) {
+					if(tables[tab][key][nm] != collect[nm]) {
+						tables[tab][key][nm] += "  <span style='color:red'>►</span> " + collect[nm]
 						rewrites++
 						rewriteRepeatTxt[0] += rq.replace(nm,"<b>"+nm+"</b>").replace(/\n/g,"<br>");
 					} else {
 						repeats++;
-						rewriteRepeatTxt[1] += rq + nm + ':' + tables[tab][val][nm] + "->" + collect[nm] + '\n';
+						rewriteRepeatTxt[1] += rq + nm + ':' + tables[tab][key][nm] + "->" + collect[nm] + '\n';
 					}
 				} else {
-					tables[tab][val][nm] = collect[nm]
+					tables[tab][key][nm] = collect[nm]
 				}
 			}
-		} else tables[tab][val] = collect;
+		} else
+		{
+			tables[tab][key] = collect;
+		}
 	}
 	// Processing collected data
 	out = '';
@@ -133,7 +190,7 @@ Extended to accept also key={a 'b c:d e-f'} etc.
 }
 function unquote(val) {
 	if(val[0] == val[val.length-1]) {
-		if(val[0] == '"' || val[0] == '\'') {
+		if(val[0] == '"' || val[0] == '\'' || val[0] == '`') {
 			val = val.substr(1, val.length-2);
 		}
 	}
