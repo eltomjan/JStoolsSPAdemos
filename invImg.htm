@@ -35,8 +35,15 @@ function setIt()
 {
   document.getElementsByTagName("IMG")[0].src = event.srcElement.value;
 }
+function priprav()
+{
+    document.getElementsByTagName("INPUT")[1].value = document.location.search.substr(1);
+    document.getElementsByTagName("IMG")[0].src = document.location.search.substr(1);
+    switchCol();
+}
+
 </script>
-<body onclick="switchCol()">
+<body onclick="switchCol()" onload="priprav()">
   <img src="">
   <input type="file" onchange="getIt()" accept="image/png, image/gif, image/jpeg">
   <input type="text" onchange="setIt()" style="width: 97%;">
