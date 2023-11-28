@@ -64,7 +64,7 @@ if (myElement.id == "calCell") {
 if (!isNaN(parseInt(myElement.children["calDateText"].innerText))) {
 myElement.bgColor = "#c0c0c0";
 objPrevElement.bgColor = "";
-document.all.calSelectedDate.value = parseInt(myElement.children["calDateText"].innerText);
+document.getElementsByName("calSelectedDate")[0].value = parseInt(myElement.children["calDateText"].innerText);
 SelMonth=dcm.all.tbSelMonth.options[dcm.all.tbSelMonth.options.selectedIndex].value;
 SelDay=myElement.children("calDateText").innerText;
 SelYear=dcm.all.tbSelYear.options[dcm.all.tbSelYear.options.selectedIndex].value;
@@ -161,7 +161,7 @@ my=iYear;
 mm=iMonth;
 myMonth = fBuildCal(iYear, iMonth);
 objPrevElement.bgColor = "";
-dcm.all.calSelectedDate.value = "";
+dcm.getElementsByName("calSelectedDate")[0].value = "";
 for (w = 1; w < 7; w++) {
 for (d = 0; d < 7; d++) {
 if (!isNaN(myMonth[w][d])) {

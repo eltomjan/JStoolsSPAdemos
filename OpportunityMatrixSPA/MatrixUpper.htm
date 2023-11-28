@@ -25,7 +25,6 @@
         </STYLE>
 <SCRIPT language="JavaScript">var isBD=0;</SCRIPT>
 <SCRIPT language="JavaScript" type="text/javascript">
-<!--
 var h;
 function testing() {
 for(a=0;a<dcm.forms.length;a++) {
@@ -66,7 +65,6 @@ var dbpath = parent.location.href.substr(0, parent.location.href.indexOf(".nsf")
 var prhd='<TD WIDTH=21 bgcolor=CCCCCC>Pr.</TD><TD width=40 bgcolor=CCCCCC>Num.</TD><TD width=20></TD><td width=201>ACCOUNT</td><td width=156>OPPORTUNITY</td>'+
 (isBD?'':'<td width=148>SEGMENT</td>')+
 '<td width=123>STAGE</td><td width=84>EST. SHIP DATE</td>'
-//var prhd='<TD WIDTH=21 bgcolor=CCCCCC>Pr.</TD><TD width=40 bgcolor=CCCCCC>Num.</TD><TD width=20></TD><td width=201>ACCOUNT</td><td width=156>OPPORTUNITY</td><td></td><td width=123>STAGE</td><td width=84>EST. SHIP DATE</td>'
 function svtst() {
 for (a=1;a<dcm.forms.length;a++)
  if (dcm.forms[a].save)
@@ -114,29 +112,35 @@ if(event.type=='mouseout') {
 	c='';
 	t.bgColor=''
 } else {
-	if(t.parentElement==m) {
+	if(t.parentElement.id == "m") {
 	c='0';
 	l=document.body.clientWidth-m.offsetWidth;
-	for(a=0;a<m.cells.length;a++) if(m.cells[a].firstChild.style) {
+	for(a=0;a<m.cells.length;a++) if(m.cells[a].firstElementChild && m.cells[a].firstElementChild.style) {
 		l+=m.cells[a].offsetWidth;
-		m.cells[a].firstChild.style.left=l-m.cells[a].firstChild.offsetWidth+2;
-		m.cells[a].firstChild.style.zIndex=50;
+		m.cells[a].firstElementChild.style.left=l-m.cells[a].firstElementChild.offsetWidth+2;
+		m.cells[a].firstElementChild.style.zIndex=50;
 		} else l+=m.cells[a].offsetWidth;
 	} else c='666666'
 }
 x=t.parentElement
 for (a=0;a<x.cells.length;a+=2) if(x.cells[a]!=t) {
 	x.cells[a].bgColor=''
-	b=x.cells[a].firstChild.style
+    if (m.cells[a].firstElementChild) {
+        b=x.cells[a].firstElementChild.style
 	if(b) b.visibility='hidden'
+    }
 } else {
 if(c!='') {
 	x.cells[a].bgColor=c;
-	b=x.cells[a].firstChild.style
+    if (m.cells[a].firstElementChild) {
+        b=x.cells[a].firstElementChild.style
 	if(b) b.visibility='visible';
+    }
 } else if(event.offsetY<0||event.offsetX<0||event.offsetWidth==x.offsetX) {
-	b=x.cells[a].firstChild.style
+    if (m.cells[a].firstElementChild) {
+        b=x.cells[a].firstElementChild.style
 	if(b) b.visibility='hidden';
+    }
 }}
 }
 
@@ -190,6 +194,7 @@ if (x.id=='total') {
 total(dcm.all[dcm.forms[bx].sourceIndex+1]);
 b=total(dcm.all[dcm.forms[bx].sourceIndex+1]);
 if(!isNaN(b)) sm+=b;
+if(!dcm.forms[bx].cases) return;
 b=parseFloat(dcm.forms[bx].cases.value.replace(/,/g,''));
 if(!isNaN(b)) ct+=b;
 }
@@ -201,9 +206,9 @@ status="Done";}
 
 function wo(a,b) { window.open(a,"",b) };
 function dlt(th) {
-b=th.parentNode.parentNode.ProspectName;
+b=parent.data.getForm(parent.menu.getTR(parent.menu.getTab(th).parentElement).parentElement.firstElementChild.nextElementSibling, "ProspectName");
 c=th.parentNode.parentNode==dcm.forms[1]
-th=dcm.all[th.sourceIndex-1].form;
+th=parent.menu.getTR(th);
 for(a=0;a<dcm.forms.length;a++) {
 if(dcm.forms[a].save) if(dcm.forms[a].save.checked) {
 if(dcm.forms[a].id2) id2=dcm.forms[a].id2.substr(0,3); else id2='';
@@ -216,13 +221,11 @@ if((th.id.substr(0,3)=='new')&&c) return false;
 if (confirm('Are you sure you want to delete this item ?')) {
 if((id2.substr(0,3)=='new')||(th.id.substr(0,3)=='new')) {
 	if(b) {
-		b=th.parentNode.rowIndex-1
+        b=th.rowIndex-1
 		if(b) b--;
-		a=th.parentNode.parentNode.parentNode;
-		a.deleteRow(b)
-		for (;a.rows(b).innerText.indexOf("CATEGORYSUBSKUDESCRIPTION")!=0;) a.deleteRow(b)
-		a.deleteRow(b)
-	} else th.parentNode.parentNode.parentNode.deleteRow(th.parentNode.rowIndex);
+        a=parent.menu.getTR(th);
+        a.parentElement.removeChild(a);
+    } else parent.menu.getTR(th).deleteRow(th.parentNode.rowIndex);
 } else {
 th.save.checked=true;
 if (th.ProspectName) id=th.id; else id=th.id2;
@@ -274,41 +277,41 @@ for (a=0;a<i.length;i++) {
 if(b==i[a]) { sel=' selected'; c='';} else sel='';
 x+='<option value=\"'+escp(i[a])+'"'+sel+'>'+i[a]+'</option>';
 }
-return('<select name='+nme+' onchange="this.form.save.checked=true" style="width=146px">'+c+x+'</select>');
+return('<select name='+nme+' onchange="parent.data.getForm(this,\"save\").checked=true" style="width=146px">'+c+x+'</select>');
 }
 
 function descr(th){
-th.form["save"].checked=true
-x=th.form.SKU.options[th.selectedIndex]
+parent.data.getForm(th,"save").checked=true
+x=parent.data.getForm(th,"SKU").options[th.selectedIndex]
 x.selected=true;
 x=x.value;
 if(x!='ALL') {
 if(x) x=x.split('|'); else x='||'.split('|')
-//th.form.Price.value=x[2];
+parent.data.getForm(th, "Price").value=x[2];
 }}
 
 function nw(t) {var x;
 var xx=new Array;
-xx[0]='<input type=checkbox name=pr onclick=\'this.value=(this.checked)?"checked":"";this.form.save.checked=true;\')>'
-xx[1]='<input name=num size=3 onchange="this.form.save.checked=true">'
+xx[0]='<input type=checkbox name=pr onclick=\'this.value=(this.checked)?"checked":"";parent.data.getForm(this,\"save\").checked=true;\')>'
+xx[1]='<input name=num size=3 onchange="parent.data.getForm(this,\"save\").checked=true">'
 xx[2]='<input type=checkbox name=save style="display:none">'+del;
 xx[3]=prn('$internal$');
-xx[4]='<input name=Initiative onchange=this.form["save"].checked=true style="width:155px">'
+xx[4]='<input name=Initiative onchange=parent.data.getForm(this,\"save\").checked=true style="width:155px">'
 xx[5]=(isBD?'':slct('Segment',seg,''))
 xx[6]=stg(st)
-xx[7]='<input name=ShipDate onchange=this.form["save"].checked=true size=11>'; // readonly onclick="document.frames[0].calendar(this,event.clientY+document.body.scrollTop,event.clientX)"
+xx[7]='<input name=ShipDate onchange=parent.data.getForm(this,\"save\").checked=true size=11>'; // readonly onclick="document.frames[0].calendar(this,event.clientY+document.body.scrollTop,event.clientX)"
 if(t) {
-a='<tr>'+prhd+'</tr><tr valign=top height=30><form id=new0>'
+a='<tr>'+prhd+'</tr><tr valign=top height=30 id=new0><form>'
 for(b=0;b<8;b++) {
 	if(xx[b]) a+='<td'+((b<2)?' bgcolor=cccccc':'')+'>'+xx[b]+'</td>'
 }
 b=dcm.body.innerHTML.indexOf('</TBODY>')
 dcm.body.innerHTML=dcm.body.innerHTML.substr(0,b)+a+'</form></tr>'+
-'<tr><td bgcolor=CCCCCC colspan=2></td><td colspan=6 align=right><table border=0 cellpadding=0 cellspacing=0 style="font-size:12px; font-weight: bold;'+(1?'':'visibility:hidden')+'"><tr  style="color:ff6633"><td width=20></td><td width=150>CATEGORY</td><td width=93>SUB</td><td width=77>SKU</td><td width=173>DESCRIPTION</td><td width=73>&nbsp;&nbsp;PRICE</td><td width=64>CASES</td><td width=73>&nbsp;&nbsp;VOLUME</td></tr>'+
-'<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);parent.menu.total(this);return false;" href=""><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr>'+
+'<tr><td bgcolor=CCCCCC colspan=2></td><td colspan=4 align=right><table border=0 cellpadding=0 cellspacing=0 style="font-size:12px; font-weight: bold;'+(1?'':'visibility:hidden')+'"><tr  style="color:ff6633"><td width=20></td><td width=150>CATEGORY</td><td width=93>SUB</td><td width=77>SKU</td><td width=173>DESCRIPTION</td><td width=73>&nbsp;&nbsp;PRICE</td><td width=64>CASES</td><td width=73>&nbsp;&nbsp;VOLUME</td></tr>'+
+'<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);return false;" href="#"><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr>'+
 dcm.body.innerHTML.substr(b)
 } else {
-x=dcm.all.tags('table')[0];
+x=dcm.getElementsByTagName('table')[0];
 d=x.rows[x.rows.length-1].bgColor;
 a=x.insertRow()
 y=a
@@ -322,8 +325,11 @@ a=x.insertRow()
 a.height=30
 a.style.verticalAlign='top'
 if(d!='#eeeeee') a.bgColor='eeeeee'
-b=dcm.createElement('form')
+b = dcm.createElement('td')
+b.colSpan = 99;
+b.appendChild(dcm.createElement("form"));
 b.id='new'+(++newdocs)
+b.firstElementChild.id = b.id;
 b=a.appendChild(b)
 for(a=0;a<8;a++) if(xx[a]) {
 c=dcm.createElement('td');
@@ -337,10 +343,10 @@ for(a=0;a<x.rows[2].cells.length;a++) {
 b=x.rows[2].cells[a].cloneNode(false)
 d=c.appendChild(b)
 }
-e=x.rows[2].cells[a-1].innerHTML.split('/TR')
+e=x.rows[2].cells[a-1].innerHTML.split('/tr')
 a=e.length-2;
 d.innerHTML=e[0]+"/TR><TR><FORM id=total><TD></TD><TD><A onclick=\"parent.menu.addpr(this);return false\" href=\"\">"+
-"<IMG src=\"addskuorange.gif\" border=0></A><TD colSpan=3></TD><TD align=right><A onclick=\"parent.menu.total(this);parent.menu.total(this);return false;\" href=\"\"><IMG src=\"totalsku.gif\" border=0></A>&nbsp;</TD><TD><INPUT style=\"WIDTH: 64px\" name=cases></TD><TD><FONT color=0>$<INPUT style=\"WIDTH: 64px\" name=total></FONT></TD></FORM></TR"
+"<IMG src=\"addskuorange.gif\" border=0></A><TD colSpan=3></TD><TD align=right><A onclick=\"parent.menu.total(this);return false;\" href=\"#\"><IMG src=\"totalsku.gif\" border=0></A>&nbsp;</TD><TD><INPUT style=\"WIDTH: 64px\" name=cases></TD><TD><FONT color=0>$<INPUT style=\"WIDTH: 64px\" name=total></FONT></TD></FORM></TR"
 +e[a+1];
 y.scrollIntoView()
 return false
@@ -394,15 +400,14 @@ y[0]=0;
 for (a=1;a<dcm.forms.length;a++) {
 x=dcm.forms[a]
 y[a]=0;
-if (x.save) if (x.save.checked) {
+x=getTR(x);
+var inp = parent.data.getForm(x,"save");
+if (inp && (inp.name == "save") && inp.checked) {
 	if (x.id!='total') {
 		y[a]=1;
-		for (b=a;(b<dcm.forms.length) && (dcm.forms[b].id!='total');b++);
-		total(dcm.all[dcm.forms[b].sourceIndex+1])
-		total(dcm.all[dcm.forms[b].sourceIndex+1])
-		x=dcm.forms[a]
 		if (x.id) sv+=putx("002id"+x.id);
 		if (x.id2) sv+=putx("003id2"+x.id2);
+        x = x.querySelectorAll("input,select");
 		for (b=0;b<x.length;b++) {
 			w=x[b];
 			if(w.name!='save') {
@@ -434,34 +439,32 @@ for (a=0;a<generalf.length;a++) if(name==generalf[a]) return (a);
 }
 
 function total(th) {
+if(!th) return;
 var a=1;
 var id="$",b,x,gv=0,ct=0;
-while (dcm.forms[a].sourceIndex<th.parentNode.parentNode.sourceIndex) {
-if (dcm.forms[a].id!=id) b=a
-id=dcm.forms[a].id;
-a++;
-}
-b++;
-x=dcm.forms[b].save;
-for(;b<a;b++) if (dcm.forms[b].Price) {
-x=parseFloat(dcm.forms[b].unit.value.replace(/,/g,''));
+var totalFrm = th;
+th = getTR(th).previousSibling;
+x=parent.data.getForm(th,"save");
+while(th.id) if (parent.data.getForm(th,"Price")) {
+x=parseFloat(parent.data.getForm(th,"unit").value.replace(/,/g,''));
 ct+=(isNaN(x))?0:x;
-x*=parseFloat(dcm.forms[b].Price.value.replace(/,/g,''));
+x*=parseFloat(parent.data.getForm(th,"Price").value.replace(/,/g,''));
 x=(isNaN(x))?0:x
-dcm.forms[b].total.value=putn(x);
+parent.data.getForm(th,"total").value=putn(x);
 gv+=(isNaN(x))?0:x;
+th=th.previousSibling;
 }
 
-dcm.forms[a].total.value=putn(gv);
-dcm.forms[a].cases.value=putn(ct);
+parent.data.getForm(totalFrm,"total").value=putn(gv);
+parent.data.getForm(totalFrm,"cases").value=putn(ct);
 return gv;
 }
 
 function chngopp(th) {
 var a=1;
 var id="$",b,x;
-if (!th.form["save"].checked) {
-	th.form["save"].checked=true;
+    if (!parent.data.getForm(th,"save").checked) {
+        parent.data.getForm(th,"save").checked=true;
 	while (dcm.forms[a].sourceIndex<th.sourceIndex) {
 			if (dcm.forms[a].id!=id) b=a
 			id=dcm.forms[a].id;
@@ -472,6 +475,16 @@ if (!th.form["save"].checked) {
 }
 }
 
+function getTab(t)
+{
+    while(t && t.tagName != "TABLE") t = t.parentElement;
+    return t;
+}
+function getTR(t)
+{
+    while(t && t.tagName != "TR") t = t.parentElement;
+    return t;
+}
 function addpr(th) {
 if (beingsaved) {
 	alert(beingsaved+" !");
@@ -480,17 +493,20 @@ if (beingsaved) {
 x=th.parentNode.parentNode.parentNode.parentNode.parentNode.style.visibility="visible";
 var a=1;
 var id="$",b,x;
-while (dcm.forms[a].sourceIndex<th.parentNode.parentNode.sourceIndex) {
+while (getTR(dcm.forms[a]) != getTR(th)) {
 if (dcm.forms[a].id!=id) b=a
 id=dcm.forms[a].id;
 if (a<dcm.forms.length) a++; else b=a;
 }
 a--;
-x=th.parentNode.parentNode.parentNode.parentNode.parentNode;
+x = getTab(th);
 c=x.insertRow(x.rows.length-1);
-b=dcm.createElement('form')
-b.id=dcm.forms[a].id
-b.id2='new'+(++newdocs)
+b = dcm.createElement('td')
+b.appendChild(dcm.createElement("form"));
+b.colSpan = 99;
+c.id=dcm.forms[a].id='new'+(++newdocs);
+b.firstElementChild.id = c.id;
+c.id2='new'+(++newdocs)
 x=c.appendChild(b)
 for(a=0;a<8;a++) if(xx[a]) {
 d=dcm.createElement('td');
@@ -500,45 +516,45 @@ x.appendChild(d);
 }
 
 function prbchng(th) {
-var a,b,id=th.form.id
+var a,b,id=getTR(th).id
 if (th.name=='Category') {
 	x=th.options[th.selectedIndex].value;
 	a=prb('SUB',sub,0,x);
-	th.form.SUB.outerHTML=a;
-	th.form.Description.value='';
-	th.form.Price.value='';
+    parent.data.getForm(th, "SUB").outerHTML=a;
+    parent.data.getForm(th, "Description").value='';
+    parent.data.getForm(th, "Price").value='';
 	a=prb('SKU',rest,0,'');
-	th.form.SKU.outerHTML=a;
+    parent.data.getForm(th, "SKU").outerHTML=a;
 	a=prb('Description',rest,0,'');
-	th.form.Description.outerHTML=a;
+    parent.data.getForm(th, "Description").outerHTML=a;
 } else if (th.name=='SUB') {
 	x=th.options[th.selectedIndex].value;
 	if (x=='Custom'|x=='ALL') {
 	if (x=='ALL') {
 		a=prb('SKU','','ALL',0,x);
-		th.form.SKU.outerHTML=a;
+                parent.data.getForm(th, "SKU").outerHTML=a;
 		a=prb('Description','','ALL',0,x);
-		th.form.Description.outerHTML=a;
+                parent.data.getForm(th, "Description").outerHTML=a;
 	} else {
-		th.form.SKU.outerHTML='<input name=SKU style="width=77px" onchange=this.form["save"].checked=true>';
-		th.form.Description.outerHTML='<input name=Description style="width=173px" onchange=this.form["save"].checked=true>';
+                parent.data.getForm(th, "SKU").outerHTML='<input name=SKU style="width=77px" onchange=parent.data.getForm(this,\"save\").checked=true>';
+                parent.data.getForm(th, "Description").outerHTML='<input name=Description style="width=173px" onchange=parent.data.getForm(this,\"save\").checked=true>';
 	}} else {
 		a=prb('SKU',rest,0,x);
-		th.form.SKU.outerHTML=a;
+                parent.data.getForm(th, "SKU").outerHTML=a;
 		x=th.options[th.selectedIndex].value;
 		a=prb('Description',rest,0,x);
-		th.form.Description.outerHTML=a;
-		th.form.Price.value='';
+                parent.data.getForm(th, "Description").outerHTML=a;
+                parent.data.getForm(th, "Price").value='';
 	}
 } else if (th.name=='SKU') {
 	x=th.options[th.selectedIndex].value;
 	if(x!='ALL') {
 	if (x) x=x.split('|'); else x='||'.split('|')
-//	th.form.Price.value=x[2];
-	th.form.Description.options[th.selectedIndex].selected=true;
-	} else  th.form.Description.selectedIndex=th.selectedIndex;
+	parent.data.getForm(th, "Price").value=x[2];
+    parent.data.getForm(th, "Description").options[th.selectedIndex].selected=true;
+    } else  parent.data.getForm(th, "Description").selectedIndex=th.selectedIndex;
 }
-th.form["save"].checked=true
+parent.data.getForm(th, "save").checked=true
 }
 
 function prb(n,ar,b,par) {
@@ -596,7 +612,7 @@ if(b1==stp[a+1]) sel+=' selected'; else sel='';
 x+='<option value="'+stp[a+1]+'"'+sel+'>'+stp[a]+'</option>';
 }
 a='';
-b=' onchange="this.form.save.checked=true">'
+b=' onchange="parent.data.getForm(this,\"save\").checked=true">'
 +x+'</select>';
 x='<select name=\"FunnelPosition\" ';
 return(x+b);
@@ -611,7 +627,7 @@ if(b==pn[a][0]) { sel=' selected'; c=''; } else sel='';
 x+='<option value=\"'+escp(pn[a][0])+'\" '+sel+'>'+pn[a][0]+'</option>';
 }
 if(b!='$internal$'&&b!=''&&c!='') c='<option value="'+escp(b)+'">'+b+'</option>';
-return('<select name=\"ProspectName\" STYLE=\"width=200px\" onchange="this.form.save.checked=true">'+c+x+'</select>');
+return('<select name=\"ProspectName\" STYLE=\"width=200px\" onchange="parent.data.getForm(this,\'save\').checked=true">'+c+x+'</select>');
 }
 
 function arr(x) {
@@ -673,7 +689,6 @@ if('0123456789,.'.indexOf(String.fromCharCode(e.keyCode))<0) e.keyCode='';
 function escp(xstr) {
 return xstr.replace(/"/g,'&#34;').replace(/'/g,'&#39;')
 }
-// -->
 </SCRIPT>
 
 <SCRIPT language="JavaScript" type="text/javascript">
@@ -702,10 +717,43 @@ function _doClick(v, o, t, h) {
   return false;
 }
 // -->
+function start() {
+    BDmember = parent.menu.document.forms[0].BDorAll.value == 'BD';
+    if (window.name == 'data') {
+        parent.menu.typem = 1 - parent.menu.typem;
+        //	x=parent.menu.document.forms[0].sw[1].checked;
+        //	parent.menu.document.forms[0].innerHTML=dcm.forms[0].innerHTML;
+        parent.menu.document.forms[0].init.value = dcm.forms[0].init.value;
+        parent.menu.beingsaved = 0;
+        parent.menu.pos = '0|0|0|0'.split('|');
+/*	if (x) {
+    parent.menu.document.forms[0].sw[1].checked=true;
+    parent.menu.clean(1);
+} else */ parent.menu.clean(0);
+    } else {
+        x = document.getElementsByTagName('DIV')[0];
+        x.style.visibility = 'visible';
+        b = m.cells;
+        for (a = 0; a < b.length; a += 2) {
+            b[a].onmouseover = clr
+            b[a].onmouseout = clr
+            d = b[a].firstChild;
+            if (d.tagName == 'TABLE') {
+                d.onmouseout = hid
+                d.style.left = d.offsetLeft + b[a].offsetWidth - d.offsetWidth + 3;
+                d = d.rows;
+                for (c = 0; c < d.length; c++) {
+                    d[c].cells[0].onmouseover = clr
+                    d[c].cells[0].onmouseout = clr
+                }
+            }
+        }
+    }
+}
 </SCRIPT>
     <META name="GENERATOR" content="MSHTML 11.00.9600.18921">
     </HEAD>
-    <BODY text="#000000" topmargin="0" leftmargin="0" onmouseover="if(window.name=='menu') this.scrollTop=0" onmouseout="if(window.name=='menu') this.scrollTop=0" onmouseup="if(window.name=='menu') this.scrollTop=0" bgcolor="#ffffff" onload="BDmember=parent.menu.document.forms[0].BDorAll.value=='BD';&#10;if(window.name=='data') {&#10;&#9;parent.menu.typem=1-parent.menu.typem;&#10;//&#9;x=parent.menu.document.forms[0].sw[1].checked;&#10;//&#9;parent.menu.document.forms[0].innerHTML=dcm.forms[0].innerHTML;&#10;&#9;parent.menu.document.forms[0].init.value=dcm.forms[0].init.value;&#10;&#9;parent.menu.beingsaved=0;&#10;&#9;parent.menu.pos='0|0|0|0'.split('|');&#10;/*&#9;if (x) {&#10;&#9;&#9;parent.menu.document.forms[0].sw[1].checked=true;&#10;&#9;&#9;parent.menu.clean(1);&#10;&#9;} else */ parent.menu.clean(0);&#10;} else {&#10;x=document.all.tags('div')[0];&#10;x.style.visibility='visible';&#10;b=m.cells;&#10;for(a=0;a<b.length;a+=2) {&#10;b[a].onmouseover=clr&#10;b[a].onmouseout=clr&#10;d=b[a].firstChild;&#10;if(d.tagName=='TABLE') {&#10;d.onmouseout=hid&#10;d.style.left=d.offsetLeft+b[a].offsetWidth-d.offsetWidth+3;&#10;d=d.rows;&#10;for(c=0;c<d.length;c++) {&#10;d[c].cells[0].onmouseover=clr&#10;d[c].cells[0].onmouseout=clr&#10;}}}&#10;}" marginheight="0" marginwidth="0">
+    <BODY text="#000000" topmargin="0" leftmargin="0" onmouseover="if(window.name=='menu') this.scrollTop=0" onmouseout="if(window.name=='menu') this.scrollTop=0" onmouseup="if(window.name=='menu') this.scrollTop=0" bgcolor="#ffffff" onload="start()" marginheight="0" marginwidth="0">
         <FORM name="_MatrixUpper" action="/rich.nsf/MatrixUpper?OpenForm&amp;Seq=1&amp;Name=Anonymous&amp;AutoFramed" method="post">
             <INPUT name="__Click" type="hidden" value="0">
             <DIV style="visibility: hidden;">
@@ -814,7 +862,7 @@ function _doClick(v, o, t, h) {
 &nbsp;&nbsp;Help &nbsp;&nbsp;
                                             </TD>
                                             <TD>|</TD>
-                                            <TD onclick="h=dbpath+'/0pipeline?openform&amp;name=Anonymous';&#10;parent.onbeforeunload='';&#10;ans=makeMsgBox('','Do you wish to save your work?',48,3,512,0);&#10;if(ans==2) return false;&#10;parent.document.body.onbeforeunload=''&#10;if(ans==6) if(sve(0)) {/*a=window.open(h,'');*/f=dcm.forms[0];f.Stages.value='hangup';f.submit();} else {beingsaved=0;} else {if(parent.opener)parent.opener.document.location.href=h; else a=window.open(h,'');parent.close()}&#10;return false">&nbsp;&nbsp;Home &nbsp;&nbsp;</TD>
+                                            <TD onclick="parent.onbeforeunload='';&#10;ans=makeMsgBox('','Do you wish to save your work?',48,3,512,0);&#10;if(ans==2) return false;&#10;parent.document.body.onbeforeunload=''&#10;if(ans==6) if(sve(0)) {/*a=window.open(h,'');*/f=dcm.forms[0];f.Stages.value='hangup';f.submit();} else {beingsaved=0;}&#10;return false">&nbsp;&nbsp;Home &nbsp;&nbsp;</TD>
                                         </TR>
                                     </TBODY>
                                 </TABLE>
@@ -857,7 +905,7 @@ function _doClick(v, o, t, h) {
                                 </B>
                             </TD>
                             <TD>
-                                <A onclick="parent.menu.totalall();return false" href="">
+                                <A onclick="//parent.menu.totalall();" href="#">
                                     <IMG width="59" height="15" src="totalall.gif" border="1">
                                 </A>
                             </TD>
@@ -903,24 +951,24 @@ pn=arr('001'+document.forms[0].ProspectN_FOP.value);
 pn=pn.sort();
 st=document.forms[0].Stages.value.split('|');
 if (document.forms[0].init.value=='') {pl=new Array ('|fdfd'.split('|'));} else pl=arr('016'+document.forms[0].init.value);
-if(pl.length>maxopps&&w98) document.all.ps.style.display='none';
+if(pl.length>maxopps&&w98) document.ps.style.display='none';
 del='<img src="x2.gif" onclick=parent.menu.dlt(event.srcElement)>'
 itot='<input name="total" style="width=64px">';
 ac=0;
 ap='<IMG SRC="addSKUs.gif" onMouseDown="parent.menu.addpr(this)"><br>'
-+'<IMG SRC="blue_total.gif" onMouseDown="parent.menu.total(this);parent.menu.total(this);return false">';
++'<IMG SRC="blue_total.gif" onMouseDown="parent.menu.total(this);return false">';
 xx[0]='<input type=checkbox name="save" style="display:none">'+del
 xx[1]=prb('Category',pg,0,'')
 xx[2]=prb('SUB',sub,0,'')
 xx[3]=prb('SKU',rest,0,'')
 xx[4]=prb('Description',rest,0,'')
-xx[5]='$<input name=Price onchange=this.form["save"].checked=true style="width=64px" onKeyPress="parent.menu.numonly(event);">'
-xx[6]='<input name=unit onchange=this.form["save"].checked=true style="width=64px" onKeyPress="parent.menu.numonly(event);">'
-xx[7]='$<input name=total onchange=this.form["save"].checked=true style="width=64px" onKeyPress="parent.menu.numonly(event);">'
+xx[5]='$<input name=Price onchange=parent.data.getForm(this,\"save\").checked=true style="width=64px" onKeyPress="parent.menu.numonly(event);">'
+xx[6]='<input name=unit onchange=parent.data.getForm(this,\"save\").checked=true style="width=64px" onKeyPress="parent.menu.numonly(event);">'
+xx[7]='$<input name=total onchange=parent.data.getForm(this,\"save\").checked=true style="width=64px" onKeyPress="parent.menu.numonly(event);">'
 
 hrc='FFFFFF';
 if(pl.length<(maxopps+1)||!w98) q="<!-- MeadCo ScriptX --><object id=factory style='display:none' classid='clsid:1663ed61-23eb-11d2-b92f-008048fdd814' codebase='http://www.meadroid.com/scriptx/ScriptX.cab#Version=6,1,429,14'></object>"; else q="";
-q+=form0()+'<iframe id=clndr src="calendar?openpage" style="position:absolute; visibility:hidden" width=155 height=150 FRAMEBORDER=0></iframe><table border=0 cellpadding=0 cellspacing=0 style="border:solid;border-width:2;border-color:FF6633;color:FF6633;font-weight:bold;font-size:10;font-family:Verdana">';
+q+=form0()+'<iframe id=clndr src="OpportunityMatrixSPA\calendar.htm" style="position:absolute; visibility:hidden" width=155 height=150 FRAMEBORDER=0></iframe><table border=0 cellpadding=0 cellspacing=0 style="border:solid;border-width:2;border-color:FF6633;color:FF6633;font-weight:bold;font-size:10;font-family:Verdana">';
 
 pr=pl[parseInt(pos[0])][0].substr(1,32);
 typep=gfnum('FunnelPosition');
@@ -939,7 +987,7 @@ if ((!pr)||(pr==pl[ac][0].substr(1,32))) { //předchozí přeskočen nebo přid�
    if((!pl[ac][3])&&ac==pl.length+1) { pr='</table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>';
    } else { // je tu SKU
 //      pos[2]=ac;
-      pr='<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);parent.menu.total(this);return false;" href=""><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>'
+      pr='<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);return false;" href="#"><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>'
    }
 }
    x=prn(pl[ac][gfnum('ProspectName')]);
@@ -952,17 +1000,17 @@ if ((!pr)||(pr==pl[ac][0].substr(1,32))) { //předchozí přeskočen nebo přid�
       if (pl[ac][0].substr(0,1)=='1') x+='<font color="FF0000">';
       x+='Action Plan.</a>';
       q+='<tr valign=top>'+prhd+'</tr><tr bgcolor='+hrc+' valign=top height=40><form id='+pl[ac][0].substr(1,32)+' id2='+pl[ac][gfnum('prunid')].substr(0,32)+'><td bgcolor=cccccc>'+(((pos[0]==ac)&&(pl.length>maxopps)&&w98&&ac>0)?'<img src="prev.gif" style="cursor:hand;position:absolute;left:800;top:0" onclick=parent.menu.prev()>':'');
-      q+='<input type=checkbox name=pr '+pl[ac][gfnum('Priority')]+' onclick=\'this.value=(this.checked)?"checked":"";this.form.save.checked=true;\')></td><td bgcolor=cccccc>'
-+'<input name=num size=3  value="'+escp(pl[ac][gfnum('PriorityN')])+'" onchange="this.form.save.checked=true"></td><td><input type=checkbox name=save style="display:none">'+del+'</td><td>'+x+'</td><td>';
+      q+='<input type=checkbox name=pr '+pl[ac][gfnum('Priority')]+' onclick=\'this.value=(this.checked)?"checked":"";parent.data.getForm(this,\"save\").checked=true;\')></td><td bgcolor=cccccc>'
++'<input name=num size=3  value="'+escp(pl[ac][gfnum('PriorityN')])+'" onchange="parent.data.getForm(this,\"save\").checked=true"></td><td><input type=checkbox name=save style="display:none">'+del+'</td><td>'+x+'</td><td>';
    } else q=q+'<tr bgcolor='+hrc+'><td></td><td colspan=7>'
 
 if(x) { q+='<input name=Initiative value=\"'
- +escp(pl[ac][gfnum('Initiative')])+'\" onchange=this.form["save"].checked=true style="width:155px"></td><td>'
+ +escp(pl[ac][gfnum('Initiative')])+'\" onchange=parent.data.getForm(this,\"save\").checked=true style="width:155px"></td><td>'
  +(isBD?'':slct('Segment',seg,pl[ac][gfnum('Segment')])+'</td><td>')
  +stg(st,pl[ac][gfnum('FunnelPosition')])+'</td><td>'
- +'<input name=ShipDate onchange=this.form["save"].checked=true size=11 value="'+escp(pl[ac][gfnum('ShipDate')])+'"></td>' // readonly onclick="document.frames[0].calendar(this,event.clientY+document.body.scrollTop,event.clientX)"
+ +'<input name=ShipDate onchange=parent.data.getForm(this,\"save\").checked=true size=11 value="'+escp(pl[ac][gfnum('ShipDate')])+'"></td>' // readonly onclick="document.frames[0].calendar(this,event.clientY+document.body.scrollTop,event.clientX)"
 +'</form></tr>'
-+'<tr bgcolor='+hrc+'><td bgcolor=cccccc colspan=2><td colspan=6 align=right><table border=0 cellpadding=0 cellspacing=0 style="font-size:12px; font-weight: bold;'+((pl[ac][gfnum('prunid')].substr(0,32)||1)?'':'visibility:hidden')+'"><tr  style="color:ff6633"><td width=20></td><td width=150>CATEGORY</td><td width=93>SUB</td><td width=77>SKU</td><td width=173>DESCRIPTION</td><td width=73>&nbsp;&nbsp;PRICE</td><td width=64>CASES</td><td width=73>&nbsp;&nbsp;VOLUME</td></tr><tr  bgcolor='+hrc+'>'; }
++'<tr bgcolor='+hrc+'><td bgcolor=cccccc colspan=2><td colspan=4 align=right><table border=0 cellpadding=0 cellspacing=0 style="font-size:12px; font-weight: bold;'+((pl[ac][gfnum('prunid')].substr(0,32)||1)?'':'visibility:hidden')+'"><tr  style="color:ff6633"><td width=20></td><td width=150>CATEGORY</td><td width=93>SUB</td><td width=77>SKU</td><td width=173>DESCRIPTION</td><td width=73>&nbsp;&nbsp;PRICE</td><td width=64>CASES</td><td width=73>&nbsp;&nbsp;VOLUME</td></tr><tr  bgcolor='+hrc+'>'; }
 {//nic
 if (x) {q+='<td colspan=7>'}
 if (pl[ac][gfnum('prunid')].substr(0,32)) {
@@ -971,14 +1019,14 @@ if (pl[ac][gfnum('prunid')].substr(0,32)) {
    q+='<input type=checkbox name=save style="display:none">'+del+'</td><td>'
 +prb('Category',pg,pl[ac][gfnum('Category')],'')+'</td><td>';
    q+=prb('SUB',sub,pl[ac][gfnum('SUB')],allowed)+'</td><td>'
-   if (pl[ac][gfnum('SUB')]=='Custom') q+='<input name=SKU style="width=77px" onchange=this.form["save"].checked=true value="'+escp(pl[ac][gfnum('SKU')])+'"></td><td><input name=Description style="width=173px" onchange=this.form["save"].checked=true value="'+escp(pl[ac][gfnum('Description')])+'"></td><td>';
+   if (pl[ac][gfnum('SUB')]=='Custom') q+='<input name=SKU style="width=77px" onchange=parent.data.getForm(this,\"save\").checked=true value="'+escp(pl[ac][gfnum('SKU')])+'"></td><td><input name=Description style="width=173px" onchange=parent.data.getForm(this,\"save\").checked=true value="'+escp(pl[ac][gfnum('Description')])+'"></td><td>';
    else q+=prb('SKU',rest,pl[ac][gfnum('SKU')],allowed)+'</td><td>'
 +prb('Description',rest,pl[ac][gfnum('Description')],allowed)+'</td><td>';
-   q+='$<input name=Price onchange=this.form["save"].checked=true style="width=64px" value=\"'
+   q+='$<input name=Price onchange=parent.data.getForm(this,\"save\").checked=true style="width=64px" value=\"'
 +escp(putn(pl[ac][gfnum('Price')]))+'\"></td><td>'
-+'<input name=unit onchange=this.form["save"].checked=true style="width=64px" value=\"'
++'<input name=unit onchange=parent.data.getForm(this,\"save\").checked=true style="width=64px" value=\"'
 +escp(putn(pl[ac][gfnum('unit')]))+'\"></td><td>'
-+'$<input name=total onchange=this.form["save"].checked=true style="width=64px" value=\"'
++'$<input name=total onchange=parent.data.getForm(this,\"save\").checked=true style="width=64px" value=\"'
 +escp(putn(pl[ac][gfnum('Total')]))+'\">';
    q+='</td></form></tr>';
 }
@@ -986,36 +1034,37 @@ q+='</td></tr>';}//nic
 //blbost if(ac==pl.length-1) dcm.body.innerHTML+=pr;
 pr=pl[ac][0].substr(1,32);
 } else { //after for
-   if ((pr)&&(pr!=pl[ac][0].substr(1,32))) { q+='<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);parent.menu.total(this);return false;" href=""><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>';
+   if ((pr)&&(pr!=pl[ac][0].substr(1,32))) { q+='<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);return false;" href="#"><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>';
 }
    pr='';
 //end of for loop
 }
 if ((document.forms[0].init.value=='')||typec) {
 var xy=new Array;
-xy[0]='<input type=checkbox name=pr onclick=\'this.value=(this.checked)?"checked":"";this.form.save.checked=true;\')>'
-xy[1]='<input name=num size=3 onchange="this.form.save.checked=true">'
+xy[0]='<input type=checkbox name=pr onclick=\'this.value=(this.checked)?"checked":"";parent.data.getForm(this,\"save\").checked=true;\')>'
+xy[1]='<input name=num size=3 onchange="parent.data.getForm(this,\"save\").checked=true">'
 xy[2]='<input type=checkbox name=save style="display:none">';//+del
 xy[3]=prn('$internal$');
-xy[4]='<input name=Initiative onchange=this.form["save"].checked=true style="width:155px">'
+xy[4]='<input name=Initiative onchange=parent.data.getForm(this,\"save\").checked=true style="width:155px">'
 xy[5]=(isBD?'':slct('Segment',seg,''))
 xy[6]=stg(st)
-xy[7]='<input name=ShipDate onchange=this.form["save"].checked=true size=11>'; // readonly onclick="document.frames[0].calendar(this,event.clientY+document.body.scrollTop,event.clientX)"
+xy[7]='<input name=ShipDate onchange=parent.data.getForm(this,\"save\").checked=true size=11>'; // readonly onclick="document.frames[0].calendar(this,event.clientY+document.body.scrollTop,event.clientX)"
    if(pl.length<(maxopps+1)||!w98) a="<!-- MeadCo ScriptX --><object id=factory style='display:none' classid='clsid:1663ed61-23eb-11d2-b92f-008048fdd814' codebase='http://www.meadroid.com/scriptx/ScriptX.cab#Version=6,1,429,14'></object>"; else a="";
    a+="<!-- MeadCo ScriptX --><object id=factory style='display:none' classid='clsid:1663ed61-23eb-11d2-b92f-008048fdd814' codebase='http://www.meadroid.com/scriptx/ScriptX.cab#Version=6,1,429,14'></object>"+form0()+'<iframe id=clndr src="calendar?openpage" style="position:absolute; visibility:hidden" width=155 height=150 FRAMEBORDER=0></iframe><table border=0 cellpadding=0 cellspacing=0 style="border:solid;border-width:2;border-color:FF6633;color:FF6633;font-weight:bold;font-size:10;font-family:Verdana">'+
-'<tr>'+prhd+'</tr><tr valign=top height=30><form id=new0>';
+'<tr>'+prhd+'</tr><tr valign=top height=30 id=new0><form>';
 for(b=0;b<8;b++) if(xy[b]) {
 	a+='<td'+((b<2)?' bgcolor=cccccc':'')+'>'+xy[b]+'</td>'
 }
 a+='</form></tr>'
-a+='<tr><td bgcolor=CCCCCC colspan=2></td><td colspan=6 align=right><table border=0 cellpadding=0 cellspacing=0 style="font-size:12px; font-weight: bold;'+(1?'':'visibility:hidden')+'"><tr  style="color:ff6633"><td width=20></td><td width=150>CATEGORY</td><td width=93>SUB</td><td width=77>SKU</td><td width=173>DESCRIPTION</td><td width=73>&nbsp;&nbsp;PRICE</td><td width=64>CASES</td><td width=73>&nbsp;&nbsp;VOLUME</td></tr>'+
-'<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);parent.menu.total(this);return false;" href=""><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr>';
-dcm.body.innerHTML+=a
+a+='<tr><td bgcolor=CCCCCC colspan=2></td><td colspan=4 align=right><table border=0 cellpadding=0 cellspacing=0 style="font-size:12px; font-weight: bold;'+(1?'':'visibility:hidden')+'"><tr  style="color:ff6633"><td width=20></td><td width=150>CATEGORY</td><td width=93>SUB</td><td width=77>SKU</td><td width=173>DESCRIPTION</td><td width=73>&nbsp;&nbsp;PRICE</td><td width=64>CASES</td><td width=73>&nbsp;&nbsp;VOLUME</td></tr>'+
+'<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);return false;" href="#"><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr>';
+dcm=parent.data.document;
+parent.data.document.body.innerHTML=a;
 /*   dcm.body.innerHTML+=form0()+'<iframe id=clndr src="calendar?openpage" style="position:absolute; visibility:hidden" width=155 height=150 FRAMEBORDER=0></iframe><table border=0 cellpadding=0 cellspacing=0 style="border:solid;border-width:2;border-color:FF6633;color:FF6633;font-weight:bold;font-size:10;font-family:Verdana">';
 */   hrc='FFFFFF';
 //   nw(1)
 } else {
-   x='<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);parent.menu.total(this);return false" href=""><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>';
+   x='<tr><form id=total><td></td><td><a onclick="parent.menu.addpr(this);return false" href=""><img src="addskuorange.gif" border=0></a><td colspan=3></td><td align=right><a onclick="parent.menu.total(this);return false" href="#"><img src="totalsku.gif" border=0></a>&nbsp;</td><td><input name="cases" style="width=64px"></td><td><font color=0>$<input name="total" style="width=64px"></td></form></tr></table></td></tr><tr><td colspan=8 bgcolor=0 height=2></td></tr>';
    if (hrc=='EeEeEe') hrc='FFFFFF'; else hrc='EeEeEe';
    if (q.substr(q.length-x.length).indexOf('addsku')<0) q+=x;
    if(q.substr(q.length-'<tr><td colspan=8 bgcolor=0 height=2></td></tr>'.length)=='<tr><td colspan=8 bgcolor=0 height=2></td></tr>') q=q.substr(0,q.length-'<tr><td colspan=8 bgcolor=0 height=2></td></tr>'.length)
