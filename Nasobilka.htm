@@ -1,0 +1,460 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<style>
+* { font: 12px Verdana; color:white; background-color:gray; }
+div { font: bold 18px Verdana; }
+input { width: 50px; }
+button { padding: 10px; }
+textarea { width: 100%; height: 90vh;}
+</style>
+<script>
+let els, stop, slovnik;
+function init() {
+    let ta = document.getElementsByTagName("textarea")[0]
+	slovnik = ta.value.split('\n');
+	els = [document.getElementsByName("twoWords")[0],
+		document.getElementsByName("wordsList")[0],
+		document.getElementsByName("no")[0]
+	];
+	document.getElementsByName("repeat")[0].value = slovnik.length / 4;
+}
+async function learn() {
+	stop = false;
+	let repeats = parseInt(document.getElementsByName("repeat")[0].value);
+	document.body.lastChild.innerText = "";
+	let last;
+    let langs = [sayCs, sayEn, sayUA];
+	for(let i=0;repeats < 1 || i < repeats;i++) {
+		let pos = parseInt(Math.random() * slovnik.length / 4);
+		if (last === pos) {
+			i--;
+			continue;
+		}
+		last = pos;
+		let ord = parseInt(Math.random() * 3);
+		els[2].innerText = (i+1);
+		els[0].innerText = "";
+		if(stop) {
+			els[1].innerText += '──────────────\n';
+			return;
+		}
+        let text;
+		do {
+			text = slovnik[(pos * 4) + ord];
+			if (text) break;
+			ord++;
+			if (ord == 3) ord = 0;
+		} while(!text);
+        let result = slovnik[(pos * 4) + 3];
+        await langs[ord](text);
+        els[0].innerText += " → ";
+        await sayCs(result);
+		els[1].innerText += text + " → " + result + "\n";
+	}
+
+}
+function sayEn(w) {
+	els[0].innerText += w;
+	let m = new SpeechSynthesisUtterance(w);
+	m.lang='en';
+	let p = new Promise(resolve => {
+    	m.onend = () => resolve();
+  	});
+	speechSynthesis.speak(m)
+	return p;
+}
+function sayCs(w) {
+	els[0].innerText += w;
+	let m = new SpeechSynthesisUtterance(w.replace(/,/g, ' '));
+	m.lang='cs';
+	// m.rate = 2;
+	let p = new Promise(resolve => {
+    	m.onend = () => resolve();
+  	});
+	speechSynthesis.speak(m)
+	return p;
+}
+function sayUA(w) {
+	els[0].innerText += w;
+	let m = new SpeechSynthesisUtterance(w.replace(/,/g, ' '));
+	m.lang='uk';
+	// m.rate = 2;
+	let p = new Promise(resolve => {
+    	m.onend = () => resolve();
+  	});
+	speechSynthesis.speak(m)
+	return p;
+}
+</script>
+</head>
+<body onload="init()">
+<span name="no"></span> / <input name="repeat">x <button onclick="learn()">Spusť výuku</button>
+<button onclick="stop=true">Zastavit výuku</button>
+ | <button onclick="init()">Aktualizuj</button>
+<div name="twoWords"></div>
+<span name="wordsList"></span>
+<BR>
+<textarea>1 krát 2
+1 times 2
+1 раз 2
+2
+2 krát 2
+2 times 2
+2 раз 2
+4
+3 krát 2
+3 times 2
+3 раз 2
+6
+4 krát 2
+4 times 2
+4 раз 2
+8
+5 krát 2
+5 times 2
+5 раз 2
+10
+6 krát 2
+6 times 2
+6 раз 2
+12
+7 krát 2
+7 times 2
+7 раз 2
+14
+8 krát 2
+8 times 2
+8 раз 2
+16
+9 krát 2
+9 times 2
+9 раз 2
+18
+10 krát 2
+10 times 2
+10 раз 2
+20
+1 krát 3
+1 times 3
+1 раз 3
+3
+2 krát 3
+2 times 3
+2 раз 3
+6
+3 krát 3
+3 times 3
+3 раз 3
+9
+4 krát 3
+4 times 3
+4 раз 3
+12
+5 krát 3
+5 times 3
+5 раз 3
+15
+6 krát 3
+6 times 3
+6 раз 3
+18
+7 krát 3
+7 times 3
+7 раз 3
+21
+8 krát 3
+8 times 3
+8 раз 3
+24
+9 krát 3
+9 times 3
+9 раз 3
+27
+10 krát 3
+10 times 3
+10 раз 3
+30
+1 krát 4
+1 times 4
+1 раз 4
+4
+2 krát 4
+2 times 4
+2 раз 4
+8
+3 krát 4
+3 times 4
+3 раз 4
+12
+4 krát 4
+4 times 4
+4 раз 4
+16
+5 krát 4
+5 times 4
+5 раз 4
+20
+6 krát 4
+6 times 4
+6 раз 4
+24
+7 krát 4
+7 times 4
+7 раз 4
+28
+8 krát 4
+8 times 4
+8 раз 4
+32
+9 krát 4
+9 times 4
+9 раз 4
+36
+10 krát 4
+10 times 4
+10 раз 4
+40
+1 krát 5
+1 times 5
+1 раз 5
+4
+2 krát 5
+2 times 5
+2 раз 5
+10
+3 krát 5
+3 times 5
+3 раз 5
+15
+4 krát 5
+4 times 5
+4 раз 5
+20
+5 krát 5
+5 times 5
+5 раз 5
+25
+6 krát 5
+6 times 5
+6 раз 5
+30
+7 krát 5
+7 times 5
+7 раз 5
+35
+8 krát 5
+8 times 5
+8 раз 5
+40
+9 krát 5
+9 times 5
+9 раз 5
+45
+10 krát 5
+10 times 5
+10 раз 5
+50
+1 krát 6
+1 times 6
+1 раз 6
+6
+2 krát 6
+2 times 6
+2 раз 6
+12
+3 krát 6
+3 times 6
+3 раз 6
+18
+4 krát 6
+4 times 6
+4 раз 6
+24
+5 krát 6
+5 times 6
+5 раз 6
+30
+6 krát 6
+6 times 6
+6 раз 6
+36
+7 krát 6
+7 times 6
+7 раз 6
+42
+8 krát 6
+8 times 6
+8 раз 6
+48
+9 krát 6
+9 times 6
+9 раз 6
+54
+10 krát 6
+10 times 6
+10 раз 6
+60
+1 krát 7
+1 times 7
+1 раз 7
+7
+2 krát 7
+2 times 7
+2 раз 7
+14
+3 krát 7
+3 times 7
+3 раз 7
+21
+4 krát 7
+4 times 7
+4 раз 7
+28
+5 krát 7
+5 times 7
+5 раз 7
+35
+6 krát 7
+6 times 7
+6 раз 7
+42
+7 krát 7
+7 times 7
+7 раз 7
+49
+8 krát 7
+8 times 7
+8 раз 7
+56
+9 krát 7
+9 times 7
+9 раз 7
+63
+10 krát 7
+10 times 7
+10 раз 7
+70
+1 krát 8
+1 times 8
+1 раз 8
+8
+2 krát 8
+2 times 8
+2 раз 8
+16
+3 krát 8
+3 times 8
+3 раз 8
+24
+4 krát 8
+4 times 8
+4 раз 8
+32
+5 krát 8
+5 times 8
+5 раз 8
+40
+6 krát 8
+6 times 8
+6 раз 8
+48
+7 krát 8
+7 times 8
+7 раз 8
+56
+8 krát 8
+8 times 8
+8 раз 8
+64
+9 krát 8
+9 times 8
+9 раз 8
+72
+10 krát 8
+10 times 8
+10 раз 8
+80
+1 krát 9
+1 times 9
+1 раз 9
+9
+2 krát 9
+2 times 9
+2 раз 9
+18
+3 krát 9
+3 times 9
+3 раз 9
+27
+4 krát 9
+4 times 9
+4 раз 9
+36
+5 krát 9
+5 times 9
+5 раз 9
+45
+6 krát 9
+6 times 9
+6 раз 9
+54
+7 krát 9
+7 times 9
+7 раз 9
+63
+8 krát 9
+8 times 9
+8 раз 9
+72
+9 krát 9
+9 times 9
+9 раз 9
+81
+10 krát 9
+10 times 9
+10 раз 9
+90
+1 krát 10
+1 times 10
+1 раз 10
+10
+2 krát 10
+2 times 10
+2 раз 10
+20
+3 krát 10
+3 times 10
+3 раз 10
+30
+4 krát 10
+4 times 10
+4 раз 10
+40
+5 krát 10
+5 times 10
+5 раз 10
+50
+6 krát 10
+6 times 10
+6 раз 10
+60
+7 krát 10
+7 times 10
+7 раз 10
+70
+8 krát 10
+8 times 10
+8 раз 10
+80
+9 krát 10
+9 times 10
+9 раз 10
+90
+10 krát 10
+10 times 10
+10 раз 10
+100</textarea>
+</body>
+</html>
