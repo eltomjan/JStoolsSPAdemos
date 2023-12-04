@@ -39,7 +39,7 @@ cvd = JSON.parse(this.responseText);
 loadNo++;
 if (loadNo++ > 1) init();
 }};
-xhttp.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/kraj-okres-nakazeni-vyleceni-umrti.min.json", true);
+xhttp.open("GET", "./kraj-okres-nakazeni-vyleceni-umrti.min.json", true);
 xhttp.send();
 
 var latest, xhttp2 = new XMLHttpRequest();
@@ -49,7 +49,7 @@ latest = JSON.parse(this.responseText);
 loadNo++;
 if (loadNo++ > 1) init();
 }};
-xhttp2.open("GET", "https://onemocneni-aktualne.mzcr.cz/api/v2/covid-19/nakazeni-vyleceni-umrti-testy.min.json", true);
+xhttp2.open("GET", "./nakazeni-vyleceni-umrti-testy.min.json", true);
 xhttp2.send();
 var doNotShow = 'Praha';
 var structures = {
