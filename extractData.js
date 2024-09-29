@@ -159,12 +159,14 @@
      let data = JSON.stringify(values);
      let link = location.href.split('/').pop();
      link = link.replace(/\.\S+$/g, "")
-     link = "<a href onclick=opener.saveChanged(this) download='" + link + ".json" + "'>Download form data as JSON</a>" +
-        " | <a href onclick=opener.saveChangedCSV(this) download='" + link + ".csv" + "'>Responsive data as CSV</a>";
+     link = "<a href onclick=saveChanged(this) download='" + link + ".json" + "'>Download form data as JSON</a>" +
+        " | <a href onclick=saveChangedCSV(this) download='" + link + ".csv" + "'>Responsive data as CSV</a>";
      let resp = responsive2CSV();
      w.document.write(link + "<textarea style='width:100%;height:calc("+(resp?"50% - 10px)'>":"100% - 17px)'>") + data + "</textarea>" +
         (resp?"<textarea style='width:100%;height:calc(50% - 10px)'>" + resp + "</textarea>":""));
      w.document.close();
+     w.saveChanged = saveChanged;
+     w.saveChangedCSV = saveChangedCSV;
   }
   function saveChanged(t)
   {
