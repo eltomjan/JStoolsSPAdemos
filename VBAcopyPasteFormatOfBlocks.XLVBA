@@ -1,0 +1,66 @@
+Sub KopieFormatuPodpisuLoop()
+    Dim foundCell As Range
+    Dim firstFound As Boolean
+    Dim currentCell As Range
+    Dim hledanyText As String
+   
+    ActiveSheet.Cells(1, 1).Activate
+    ' Dotaz na hledaný text
+    hledanyText = InputBox("Zadejte text pro hledání (část obsahu buňky):", "Hledaný text", "předvolenýText:")
+   
+    ' Pokud uživatel nezadá žádný text, ukončíme makro
+    If hledanyText = "" Then
+        MsgBox "Nebyl zadán žádný text pro hledání."
+        Exit Sub
+    End If
+
+    ' Začneme hledáním první buňky s textem
+    Set foundCell = Cells.Find(What:=hledanyText, After:=ActiveCell, LookIn:=xlFormulas, _
+                               LookAt:=xlPart, SearchOrder:=xlByRows, SearchDirection:=xlNext, _
+                               MatchCase:=False, SearchFormat:=False)
+   
+    ' Pokud byl text nalezen, pokračujeme
+    If Not foundCell Is Nothing Then
+        ' Nastavíme, že první nalezený text bude tím, na který budeme aplikovat formát
+        firstFound = True
+       
+        ' Začneme smyčku pro hledání všech výskytů
+        Set currentCell = foundCell
+        Do
+            ' Pokud jde o první výskyt, kopírujeme formát
+            If firstFound Then
+                ' Kopírování formátu z prvního nalezeného
+                Range(currentCell, currentCell.End(xlDown)).Select
+                Range(Selection, Selection.End(xlToRight)).Select
+                Selection.Copy
+
+                firstFound = False ' Zajistíme, že formát bude zkopírován pouze jednou
+            End If
+           
+            ' Hledáme další výskyt z aktuální buňky
+            Set currentCell = Cells.FindNext(currentCell)
+            Range(currentCell, currentCell.End(xlDown)).Select
+            Range(Selection, Selection.End(xlToRight)).Select
+           
+            ' Zajistíme, že se okno MsgBox ukáže správně (DoEvents)
+            DoEvents
+           
+            userResponse = MsgBox("Chcete pokračovat a vložit formát?", vbYesNo, "Pokračovat?")
+            If userResponse = vbNo Then
+                MsgBox "Operace byla zrušena."
+                Exit Sub ' Ukončíme makro, pokud uživatel vybere 'Ne'
+            End If
+           
+            'Range(Selection).PasteSpecial Paste:=xlPasteFormats
+            Selection.PasteSpecial Paste:=xlPasteFormats, Operation:=xlNone, _
+                    SkipBlanks:=False, Transpose:=False
+
+            Selection.Cells(2, 2).Select
+            ' Pokud jsme zpět na původní buňce, ukončíme smyčku
+        Loop While Not currentCell Is Nothing And currentCell.Address <> foundCell.Address
+       
+        MsgBox "Hledání bylo dokončeno!"
+    Else
+        MsgBox "Text '" & hledanyText & "' nebyl nalezen!"
+    End If
+End Sub
