@@ -236,7 +236,7 @@ const defaultOptions = {
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
   defaultUrl: {
-    value: "compressed.tracemonkey-pldi-09.pdf",
+    value: "802023.pdf",
     kind: OptionKind.VIEWER
   },
   defaultZoomValue: {
@@ -11526,8 +11526,8 @@ class TextLayerBuilder {
     els.sort((a, b) => {
       if (Math.abs(a.y - b.y) <= 1) {
           if (Math.abs(a.x - b.x) <= 1) return 0;
-          else return a.x - b.x;
-      } else return a.y - b.y;
+          else return ((a.x + a.w) - (b.x + b.w))/2;
+      } else return ((a.y + a.h) - (b.y + b.h))/2;
     });
     let elMin = els[0];
     for (let i = 1; i < els.length; i++) {

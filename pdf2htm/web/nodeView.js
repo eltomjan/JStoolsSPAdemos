@@ -9,7 +9,7 @@ datauri(pdf, (err, content, meta) => {
     }
     const viewerJSpath = path.join(__dirname, './viewer');
     let wp = fs.readFileSync(viewerJSpath + 'Src.js', 'utf-8');
-    const pdfName = 'compressed.tracemonkey-pldi-09.pdf';
+    const pdfName = '802023.pdf';
     const srcPos = [wp.indexOf(pdfName)];
     srcPos.push(srcPos[0] + pdfName.length);
     let HOSTED_VIEWER_ORIGINS = wp.indexOf('HOSTED_VIEWER_ORIGINS');
