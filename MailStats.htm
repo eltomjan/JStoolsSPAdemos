@@ -1,0 +1,101 @@
+<style>
+textarea {
+    width: 100%; height: 100%;
+}
+</style>
+<script>
+var sizeCol = 3;
+function processCSV(TA, res) {
+res.errors = [];
+var csv = TA.value.split('\n');
+if (csv.length == 0) return;
+var prev = 0;
+for(var r of csv) {
+    var a = r.split('\t');
+    r = r.split('\t');
+    if (res.header) {
+        if (prev) {
+            r = prev.concat(r.slice(1));
+            prev = 0;
+        } else if (a.length < res.header.length) {
+            prev = a;
+            continue;
+        }
+    }
+    if (res.header && r.length > res.header.length) {
+        r = [r[0],
+            r.slice(1, r.length - res.header.length + sizeCol - 1).join('[TAB]')]
+            .concat(r.slice(r.length - res.header.length + sizeCol - 1));
+    }
+    var size = r[sizeCol];
+    if (size === undefined)
+        break;
+    if (size.endsWith(" kB")) {
+        size = parseInt(size) * 1024;
+    } else if (size.endsWith(" MB")) {
+        size = parseInt(size) * 1048576;
+    } else if (size.endsWith(" GB")) {
+        size = parseInt(size) * 1073741824;
+    } else if (isNaN(size.replace(/(\d+)\s+\S+/,"$1"))) {
+        res.header = r;
+        continue;
+    }
+    for(var c=0;c<r.length;c++) {
+        if (c == sizeCol)
+            continue;
+        var data = r[c];
+        var label = res.header[c];
+        if (label.length > 10)
+            break;
+        if (!label.length) continue;
+        if (size.constructor === String) {
+            res.errors.push("Size " + size + " ignored !" + r.join('|'));
+            break;
+        }
+        res[label] ||= {};
+        res[label][data] ||= { sum:0, count:0 };
+        res[label][data].count++
+        res[label][data].sum += size;
+    }
+}
+function compareSizesDesc(a, b) {
+  if (a[1] < b[1]) {
+    return 1;
+  } else if (a[1] > b[1]) {
+    return -1;
+  }
+  var avgs = [a[1] / a[2], b[1] / b[2]];
+  if (avgs[0] < avgs[1]) {
+    return 1;
+  } else if (avgs[0] > avgs[1]) {
+    return -1;
+  }
+  return 0;
+}
+const formatter = new Intl.NumberFormat('cs');
+for(var cat of res.header) {
+    if (cat.length == 0 || cat == res.header[sizeCol])
+        continue;
+    var toBsorted = [];
+    for(var cat2 in res[cat]) {
+        if (res[cat][cat2].count == 1)
+            continue;
+        toBsorted.push([cat2, res[cat][cat2].sum, res[cat][cat2].count]);
+    }
+    res[cat] = toBsorted.sort(compareSizesDesc).slice(0, 20);
+    for(var r of res[cat]) {
+        r[1] = formatter.format(r[1]);
+    }
+}
+delete res.header;
+if (res.errors.length == 0)
+    delete res.errors;
+TA.value = JSON.stringify(res)
+    .replace(/\],\[/g, "],\n[")
+    .replace(/\],"/g, '],\n\n"');
+}
+</script>
+<body onload="document.body.firstElementChild.focus()">
+<textarea onchange="processCSV(this, {})">
+</textarea>
+</body>
