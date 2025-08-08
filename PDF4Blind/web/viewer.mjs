@@ -11725,12 +11725,26 @@ class PDFPageView extends BasePDFPageView {
     for (let j = 0; j < src.length; j++) {
       const i = src[j];
       if (i.className === 'endOfContent' || i.constructor === HTMLBRElement) continue;
+      let box = [scale * parseFloat(i.style.x), 
+        scale * parseFloat(i.style.y),
+        scale * parseFloat(i.style.width.match(/[\d\.]+/g)),
+        i.offsetHeight];
+      var rotation = i.style.transform.match(/rotate\(([-])*90deg\)/);
+      if (rotation) {
+        let sw = box[3]; box[3] = box[2]; box[2] = sw;
+        if (rotation.slice(-1) == '-') {
+            box[1] -= box[3];
+        }
+      }
+      if (isNaN(box[0]) || isNaN(box[1]) || isNaN(box[2]) && i.innerText.length == 0) {
+          continue;
+      }
       els.push({
-        x: scale * parseFloat(i.style.x),
-        y: scale * parseFloat(i.style.y),
-        w: scale * parseFloat(i.style.width.match(/[\d\.]+/g)),
+        x: box[0],
+        y: box[1],
+        w: box[2],
         wc: i.style.width,
-        h: i.offsetHeight,
+        h: box[3],
         text: i.innerText,
         ff: i.style.fontFamily,
         fs: i.style.fontSize,
@@ -11743,7 +11757,7 @@ class PDFPageView extends BasePDFPageView {
       if (elMin.x + elMin.w + 1 >= els[i].x && Math.abs(elMin.y - els[i].y) < 1 && elMin.h === els[i].h && elMin.ff === els[i].ff && elMin.fs === els[i].fs) {
         let i2 = i;
         if (++i2 < els.length) {
-          if (elMin.x + elMin.w > els[i2].x || els[i].w / els[i].text.length > elMin.w / elMin.text.length) {
+          if (elMin.x + elMin.w > els[i2].x) {
             if (elDest[elDest.length - 1] !== elMin) elDest.push(elMin);
             if (els[i].text === " ") {
               continue;
@@ -11754,6 +11768,11 @@ class PDFPageView extends BasePDFPageView {
           }
         }
         elMin.text += els[i].text;
+        var spaces = els[i].text.match(/\s+/);
+        if (spaces && spaces.length) {
+            var avg = Math.max(3, elMin.w / elMin.text.length / 2);
+            els[i].w = Math.max(els[i].w, spaces.length * avg);
+        }
         elMin.w += els[i].w;
         elMin.wc = elMin.w;
         if (els[i].text === " " && i2 < els.length && elMin.x + elMin.w > els[i2].x) {
@@ -11766,8 +11785,13 @@ class PDFPageView extends BasePDFPageView {
       elMin = els[i];
     }
     if (elDest[elDest.length - 1] !== elMin) elDest.push(elMin);
+    els = _src.firstElementChild;
+    var next;
+    while (next = els.nextElementSibling) {
+        _src.removeChild(els);
+        els = next;
+    }
     els = _src;
-    while (els.lastChild) els.removeChild(els.lastChild);
     const elList = [];
     if (window.elLists === undefined) window.elLists = {};
     const uqIdx = {
@@ -11778,7 +11802,12 @@ class PDFPageView extends BasePDFPageView {
       const o = document.createElement('INPUT');
       o.value = o.title = elDest[i].text;
       o.readOnly = true;
-      o.setAttribute('style', elDest[i].cssText + 'width:' + elDest[i].w + 'px;position:absolute;');
+      let style = elDest[i].cssText;
+      if (!elDest[i].cssText.match(/rotate\([-]*90deg\)/)) {
+          if (elDest[i].w) style += 'width:' + elDest[i].w + 'px;';
+      }
+      style += 'position:absolute;'
+      o.setAttribute('style', style);
       els.appendChild(o);
       elList.push([elDest[i].x, elDest[i].x + elDest[i].wc, o, elDest[i].y, elDest[i].y + elDest[i].h, elDest[i].text]);
       if (uqIdx.x.indexOf(elDest[i].x) < 0) uqIdx.x.push(elDest[i].x);
@@ -11794,22 +11823,30 @@ class PDFPageView extends BasePDFPageView {
       return a - b;
     }
     function boxCmp(a, b) {
-      const overlapY = Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h);
       const dy = a.y - b.y;
-      if (overlapY > 0) {
-        const overlapX = Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w);
-        if (overlapX < 0) {
-          return dy;
-        }
-        const dx = a.x - b.x;
+      const dx = a.x - b.x;
+      if ((b.y > a.y && a.y + a.h > b.y) ||
+        (b.y < a.y && b.y + b.h > a.y)) {
         if (Math.abs(dx) <= 1) {
           return 0;
         } else {
-          return dx;
+            if (dx < 0)
+                return -1;
+            else if (dx > 0)
+                return 1;
         }
       } else {
-        return dy;
+        if (dy < 0)
+            return -1;
+        else if (dy > 0)
+            return 1;
+        if (dx < 0)
+            return -1;
+        else if (dx > 0)
+            return 1;
+        return 0;
       }
+      debugger;
     }
     var me;
     function propagate(el, key, page, dir) {
