@@ -11799,8 +11799,8 @@ class PDFPageView extends BasePDFPageView {
       y: []
     };
     for (let i = 0; i < elDest.length; i++) {
-      const o = document.createElement('INPUT');
-      o.value = o.title = elDest[i].text;
+      const o = document.createElement('SPAN');
+      o.innerText = elDest[i].text;
       o.readOnly = true;
       let style = elDest[i].cssText;
       if (!elDest[i].cssText.match(/rotate\([-]*90deg\)/)) {
@@ -11816,7 +11816,6 @@ class PDFPageView extends BasePDFPageView {
     uqIdx.x.sort(num);
     uqIdx.y.sort(num);
     _src.ondblclick = XL;
-    _src.onkeydown = moveEl;
     src[0].focus();
     elLists[this.div.getAttribute("data-page-Number")] = elList;
     function num(a, b) {
@@ -11849,85 +11848,6 @@ class PDFPageView extends BasePDFPageView {
       debugger;
     }
     var me;
-    function propagate(el, key, page, dir) {
-      let dest;
-      switch (dir) {
-        case 0:
-          dest = elLists[page][0];
-          dest[2].focus();
-          return;
-        case -1:
-          dest = elLists[page];
-          dest = dest[dest.length - 1];
-          dest[2].focus();
-          return;
-      }
-      dest.target.scrollIntoView();
-      moveEl(dest);
-    }
-    function moveEl(event) {
-      event.stopPropagation();
-      const el = event.target;
-      let page = parseInt(event.target.parentElement.parentElement.getAttribute("data-page-Number"));
-      let elList = elLists[page];
-      if (event.target.tagName !== 'INPUT') return;
-      let i = 0;
-      while (i < elList.length && elList[i][2] !== el) i++;
-      me = elList[i];
-      const flw = [];
-      if (event.key.indexOf('PageDown') > -1) {
-        if (++i < elList.length) elList[i][2].focus();else {
-          page++;
-          me[2].scrollIntoView();
-          if (elLists[page]) return propagate(0, event.key, page, 0);
-        }
-        return;
-      } else if (event.key.indexOf('PageUp') > -1) {
-        if (i) {
-          i--;
-          elList[i][2].focus();
-        } else {
-          if (page--) {
-            propagate(0, event.key, page, -1);
-            let fix = elLists[page];
-            fix[fix.length - 1][2].scrollIntoView();
-          }
-        }
-        return;
-      } else if (event.key.indexOf('Left') > -1) {
-        while (i--) {
-          if (elList[i][0] < me[0] && me[3] <= elList[i][4]) flw.push(elList[i]);else break;
-        }
-        flw.sort(distanceX);
-      } else if (event.key.indexOf('Right') > -1) {
-        while (++i < elList.length) {
-          if (elList[i][0] > me[0] && me[4] >= elList[i][3]) flw.push(elList[i]);else break;
-        }
-        flw.sort(distanceX);
-      } else if (event.key.indexOf('Down') > -1) {
-        while (++i < elList.length) if (elList[i][3] > me[3]) flw.push(elList[i]);
-        flw.sort(distance);
-        if (!flw.length && elLists[++page]) return propagate(0, event.key, page, 0);
-      } else if (event.key.indexOf('Up') > -1) {
-        while (i--) if (elList[i][3] < me[3]) flw.push(elList[i]);
-        flw.sort(distance);
-        if (!flw.length && page--) return propagate(0, event.key, page, -1);
-      } else return;
-      if (!flw.length) return;
-      flw[0][2].focus();
-    }
-    function distance(a, b) {
-      const ac0 = Math.abs(me[0] - a[0]) + Math.abs(me[3] - a[3]);
-      const ac1 = Math.abs(me[1] - a[1]) + Math.abs(me[4] - a[4]);
-      const bc0 = Math.abs(me[0] - b[0]) + Math.abs(me[3] - b[3]);
-      const bc1 = Math.abs(me[1] - b[1]) + Math.abs(me[4] - b[4]);
-      return Math.min(ac0, ac1) - Math.min(bc0, bc1);
-    }
-    function distanceX(a, b) {
-      const ac = Math.abs(me[0] - a[0]);
-      const bc = Math.abs(me[0] - b[0]);
-      return ac - bc;
-    }
     function XL() {
       let xl = elList[0][5];
       let xOld = elList[0];
