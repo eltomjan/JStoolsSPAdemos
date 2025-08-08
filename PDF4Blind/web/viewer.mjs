@@ -11794,9 +11794,22 @@ class PDFPageView extends BasePDFPageView {
       return a - b;
     }
     function boxCmp(a, b) {
-      if (Math.abs(a.y - b.y) <= 1) {
-        if (Math.abs(a.x - b.x) <= 1) return 0;else return a.x - b.x;
-      } else return a.y - b.y;
+      const overlapY = Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h);
+      const dy = a.y - b.y;
+      if (overlapY > 0) {
+        const overlapX = Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w);
+        if (overlapX < 0) {
+          return dy;
+        }
+        const dx = a.x - b.x;
+        if (Math.abs(dx) <= 1) {
+          return 0;
+        } else {
+          return dx;
+        }
+      } else {
+        return dy;
+      }
     }
     var me;
     function propagate(el, key, page, dir) {
