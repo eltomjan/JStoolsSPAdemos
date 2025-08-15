@@ -1,0 +1,781 @@
+<html>
+<head>
+<style>
+* {
+    box-sizing: border-box
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    background: #001830
+}
+
+@font-face {
+    font-family: TV Sans Screen;
+    src: url(font/tv_sans_screen_regular-webfont.woff?14ef2ead51d48c11df91b65783002c60) format("woff"),url(font/tv_sans_screen_regular-webfont.ttf?3ea2776c349a8c43eeae972eef85e23e) format("truetype");
+    font-weight: 400;
+    font-style: normal
+}
+
+@font-face {
+    font-family: Source Sans Pro;
+    src: url(font/soruce-sans-pro.ttf?aaa655ec16da31f0bbf517b363c28843) format("truetype");
+    font-weight: 400;
+    font-style: normal
+}
+
+button {
+    touch-action: manipulation
+}
+
+.w-100 {
+    width: 100%
+}
+
+.text-center {
+    text-align: center
+}
+
+.relative {
+    position: relative
+}
+
+.t__background {
+    padding-bottom: 48px;
+    background: #101622
+}
+
+.t__body {
+    padding: 0 0 8px;
+    font-family: Source Sans Pro;
+    max-width: 1136px
+}
+
+@media (min-width: 768px) {
+    .t__body {
+        padding:8px 60px
+    }
+}
+
+@media (min-width: 960px) {
+    .t__body {
+        display:grid;
+        grid-template-columns: 2fr 1fr;
+        grid-column-gap: 20px;
+        margin: 0 auto;
+        padding: 16px;
+        grid-column-gap: 48px
+    }
+}
+
+.t__text-version {
+    display: flex;
+    justify-content: center;
+    color: white;
+    white-space: pre;
+    font-family: monospace;
+    font-size: 20px;
+}
+
+.t__text-version pre {
+    font-size: 13px;
+    color: #fff;
+    max-width: 100%
+}
+
+@media (min-width: 640px) {
+    .t__text-version pre {
+        font-size:20px
+    }
+}
+
+.t__main-image {
+    width: 100%
+}
+
+.t__main-image-wrap {
+    max-width: 658px
+}
+
+@media (min-width: 768px) {
+    .t__main-image-wrap {
+        min-width:100%
+    }
+}
+
+.t__main-image-wrap--wrong {
+    padding-bottom: 87.5%
+}
+
+.t__subtitle,.t__title {
+    display: flex;
+    justify-content: center;
+    max-width: calc(100% - 72px);
+    margin: 0 auto;
+    color: #fff;
+    font-family: TV Sans Screen,Helvetica,Arial,sans-serif
+}
+
+.t__subtitle-text,.t__title-text {
+    display: inline-block
+}
+
+.t__subtitle-wrong-page,.t__title-wrong-page {
+    display: inline-block;
+    color: #fff;
+    font-family: TV Sans Screen,Helvetica,Arial,sans-serif;
+    font-size: 24px
+}
+
+.t__subtitle-wrong-page-wrap,.t__title-wrong-page-wrap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    background: rgba(16,22,34,.7)
+}
+
+.t__subtitle-wrong-page-button,.t__title-wrong-page-button {
+    display: inline-block;
+    height: 40px;
+    margin-top: 16px;
+    padding: 8px;
+    border-radius: 4px;
+    background: #293347;
+    border: none;
+    color: #fff;
+    font-family: TV Sans Screen,Helvetica,Arial,sans-serif;
+    font-size: 24px;
+    cursor: pointer
+}
+
+.t__title {
+    display: none;
+    margin: 24px auto 16px;
+    font-style: 20px;
+    line-height: 1.4
+}
+
+@media (min-width: 768px) {
+    .t__title {
+        display:block;
+        text-align: center
+    }
+}
+
+.t__title-svg {
+    display: inline-block;
+    margin-right: 8px
+}
+
+.t__subtitle {
+    font-size: 24px;
+    line-height: 1;
+    padding-bottom: 32px
+}
+
+.t__keyboard {
+    padding-top: 16px;
+    font-size: 24px
+}
+
+@media (min-width: 768px) {
+    .t__keyboard {
+        padding-top:0
+    }
+}
+
+.t__keyboard-inner {
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto
+}
+
+.t__keyboard-delete,.t__keyboard-favourite,.t__keyboard-key,.t__keyboard-result {
+    border-radius: 4px;
+    border: 0;
+    text-align: center;
+}
+
+.t__keyboard-delete,.t__keyboard-favourite,.t__keyboard-result {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: #43506a
+}
+
+.t__keyboard-result {
+    position: relative;
+    flex-grow: 1;
+    max-width: 110px;
+    height: 40px;
+    margin-right: -1px;
+    font-family: TV Sans Screen,Helvetica,Arial,sans-serif;
+    line-height: 1.4;
+    text-transform: uppercase
+}
+
+.t__keyboard-result-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 10px auto 4px
+}
+
+.t__keyboard-delete,.t__keyboard-favourite {
+    cursor: pointer;
+    border: none
+}
+
+.t__keyboard-keys {
+    display: grid;
+    margin-bottom: 4px;
+    -moz-column-gap: 4px;
+    column-gap: 4px
+}
+
+.t__keyboard-keys--1-1-1 {
+    grid-template-columns: 1fr 1fr 1fr
+}
+
+.t__keyboard-key {
+    display: inline-block;
+    padding: 0;
+    background: #293347;
+    font-family: TV Sans Screen,Helvetica,Arial,sans-serif;
+    font-size: 24px
+}
+
+.t__keyboard-key,.t__keyboard-text-switch {
+    height: 40px;
+    border: none;
+    color: #fff;
+    cursor: pointer
+}
+
+.t__keyboard-text-switch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #43506a;
+    border-radius: 4px;
+    font-size: 20px;
+    width: 100%
+}
+
+.t__subpages {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding-top: 8px;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto
+}
+
+@media (min-width: 960px) {
+    .t__subpages {
+        padding-top:48px
+    }
+}
+
+.t__subpages-key {
+    display: block;
+    height: 12px;
+    width: 12px;
+    margin: 4px 8px 0;
+    padding: 0;
+    background-color: #fff;
+    border-radius: 2px;
+    border: 0;
+    cursor: pointer
+}
+
+.t__subpages-key--active {
+    background-color: #ed1c24
+}
+
+.t__arrow {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: #293347;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer
+}
+
+.t__arrow svg {
+    fill: #929eb6
+}
+
+.t__arrow--spacing {
+    margin: 0 10px
+}
+
+.t__arrow--inactive {
+    opacity: .6;
+    cursor: auto
+}
+
+.t__favourites {
+    display: inline-block;
+    padding: 4px 40px 4px 16px;
+    margin: 6px auto;
+    background: #293347;
+    border: none;
+    border-radius: 24px;
+    cursor: pointer
+}
+
+.t__favourites-wrap {
+    max-width: calc(100% - 72px);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+.t__favourites-modal {
+    margin-top: 48px
+}
+
+.t__favourites-close {
+    position: absolute;
+    right: 0;
+    top: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 4px;
+    border: none;
+    background-color: #ed1c24;
+    cursor: pointer
+}
+
+.t__favourites-close svg {
+    display: inline-block;
+    width: 19px;
+    height: 19px
+}
+
+.t__favourites-edit-mode {
+    display: flex;
+    align-items: center;
+    margin: 6px auto
+}
+
+.t__favourites-btn {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+    border: none;
+    border-radius: 2px;
+    background: transparent;
+    cursor: pointer
+}
+
+.t__favourites-edit-page-number {
+    position: absolute;
+    display: inline-block;
+    height: 20px;
+    right: 75px;
+    top: calc(50% - 10px);
+    line-height: 18px
+}
+
+.t__favourites-edit-icon {
+    position: absolute;
+    right: 10px;
+    top: calc(50% - 10px)
+}
+
+.t__favourites-name,.t__favourites-page {
+    display: inline-block;
+    color: #fff;
+    font-size: 16px;
+    background: transparent
+}
+
+.t__favourites-name {
+    margin-right: 12px
+}
+
+.t__favourites-input {
+    padding: 2px 8px;
+    color: #efefef;
+    background: #101622;
+    font-size: 16px;
+    line-height: 1.5;
+    border: none;
+    border-bottom: 1px solid #efefef
+}
+
+.t__favourites-input-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 30px 10px 20px
+}
+
+.t__favourites-input--edit-mode {
+    margin-right: 10px;
+    padding: 2px 66px 4px 16px;
+    line-height: 1;
+    border: none;
+    border-radius: 24px;
+    background-color: #efefef;
+    color: #101622
+}
+
+.t__favourites-input--edit-mode:active,.t__favourites-input--edit-mode:focus {
+    border: none;
+    outline: none
+}
+
+.t__favourites-save {
+    position: absolute;
+    right: 50px;
+    top: calc(50% - 10px)
+}
+
+.t__favourites-delete {
+    margin-right: 16px;
+    padding: 0;
+    background: #ed1c24;
+    border: none;
+    cursor: pointer
+}
+
+.t__favourites-add {
+    margin-left: 8px;
+    background: #43506a
+}
+
+.t__loader-bar {
+    height: 3px;
+    width: 100%;
+    background-color: #ed1c24;
+    border-radius: 2px;
+    animation: animation-width 3s cubic-bezier(.5,0,.5,1) infinite
+}
+
+.t__loader-bar-wrap {
+    padding: 0 8px
+}
+
+@keyframes animation-width {
+    0% {
+        transform: scaleX(0)
+    }
+
+    to {
+        transform: scaleX(1)
+    }
+}
+</style>
+<script>
+function readTextFile(file, callback) {
+    var rawFile = new XMLHttpRequest();
+    rawFile.overrideMimeType("application/json");
+    rawFile.open("GET", file, true);
+    rawFile.onreadystatechange = function() {
+        if (rawFile.readyState === 4 && rawFile.status == "200") {
+            callback(rawFile.responseText);
+        }
+    }
+    rawFile.send(null);
+}
+var settings = {
+    data: {},
+    page: "100",
+    sub: 'A',
+    obj: { text:{}},
+    pages: {}
+}
+async function loadPage(pg, sub) {
+    const response = await fetch(`https://api.allorigins.win/get?url=${
+     encodeURIComponent('https://api-teletext.ceskatelevize.cz/services-old/teletext/picture.php?channel=CT2&page=')}${pg}${sub}`);
+    if (response.ok) {
+      const data = await response.json();
+      settings.obj.text[pg + sub] = await OCR(data.contents)
+    }
+}
+async function setPage(pg, sub)
+{
+    if (pg) settings.page = pg;
+    else pg = settings.page;
+    if (sub) settings.sub = sub;
+    else sub = settings.sub;
+    if (settings.pages[pg].subpages.length) {
+        if (!isNaN(sub)) sub = settings.pages[pg].subpages[sub];
+    } else sub = "";
+    var text = settings.obj.text[pg + sub];
+    if (text === undefined) {
+        await loadPage(pg, sub);
+    }
+    var text = settings.obj.text[sub] || settings.obj.text[pg + sub];
+    document.getElementsByClassName("t__text-version")[0].innerText = text;
+    document.getElementsByTagName("input")[0].value = pg + sub;
+}
+function updatePage(el)
+{
+    var decode = el.value.match(/(\d+)([a-z]){0,1}/i);
+    setPage(decode[1], decode[2]);
+}
+function btn(no)
+{
+    var pages = Object.keys(settings.pages);
+    if (no == -2) {
+        var current = pages.indexOf(settings.page.toString())
+        if (current > 0) {
+            current = pages[--current];
+            settings.page = current;
+            settings.sub = 'A';
+        }
+     } else if (no == -1) {
+        var current = settings.pages[settings.page].subpages.indexOf(settings.sub.toString());
+        if (current > 0) settings.sub = settings.pages[settings.page].subpages[--current];
+     } else if (no == 1) {
+        var current = settings.pages[settings.page].subpages.indexOf(settings.sub.toString());
+        current++;
+        if (current < settings.pages[settings.page].subpages.length)
+            settings.sub = settings.pages[settings.page].subpages[current];
+     } else {
+        var current = pages.indexOf(settings.page);
+        if (++current < pages.length) {
+            current = pages[current];
+            settings.page = current;
+            settings.sub = 'A';
+        }
+     }
+     setPage();
+}
+function init()
+{
+    readTextFile("https://api-teletext.ceskatelevize.cz/teletext-api/?t=" + new Date().getTime().toString().slice(0,-3),
+        function(text) {
+            settings.pages = JSON.parse(text).data;
+            setPage();
+        }
+    );
+}
+function shortcut()
+{
+    let shortCut = {
+        PageUp:-2,
+        '-':-1,
+        '+':1,
+        PageDown:2
+    }[event.key];
+    if (!isNaN(shortCut)) btn(shortCut);
+}
+</script>
+<script>
+var font = [
+                "!\"#%&'()*+,-./012345",
+"                                                                                                                                                                ",
+"                                                                                                                                                                ",
+"                                                                                                                                                                ",
+"   ██    ██  ██                   ███     ██        ██    ██                                                      ███      ██    █████   █████      ██  ██████  ",
+"   ██    ██  ██  ██ ██  ██   ██  ██ ██    ██       ██      ██    ██ ██     ██                                ██  ██ ██    ███   ██   ██ ██   ██    ███  ██      ",
+"   ██     █  █  ███████     ██    ███    ██       ██        ██    ███      ██                               ██  ██   ██  ████       ██       ██   ████  █████   ",
+"   ██            ██ ██     ██    ███ ██           ██        ██  ███████  ██████         ███████            ██   ██   ██    ██      ██     ████   ██ ██      ██  ",
+"   ██            ██ ██    ██    ██ ███            ██        ██    ███      ██                             ██    ██   ██    ██     ██         ██ ███████      ██ ",
+"                ███████  ██     ██ ███             ██      ██    ██ ██     ██      ██              ██    ██      ██ ██     ██    ██  ██ ██   ██     ██  ██  ██  ",
+"   ██            ██ ██  ██   ██  ███ ██             ██    ██                       ██              ██   ██        ███      ██   ███████  █████     ████  ████   ",
+"                                                                                  ██                                                                            ",
+"                                                                                                                                                                ",
+                "6789:;<=>?ABCDEFGHIJ",
+"                                                                                                                                                                ",
+"                                                                                                                                                                ",
+"                                                                                                                                                                ",
+"  ███   ███████  █████   █████                                            ████     █    ██████    ████  █████   ███████ ███████   ████  ██   ██   ████     ████ ",
+" ██     ██   ██ ██   ██ ██   ██    ██      ██      ██    ██████    ██    ██  ██   ███    ██  ██  ██  ██  ██ ██   ██   █  ██   █  ██  ██ ██   ██    ██       ██  ",
+"██           ██ ██   ██ ██   ██    ██      ██     ██                ██      ██   ██ ██   ██  ██ ██       ██  ██  ██      ██     ██      ██   ██    ██       ██  ",
+"██████      ██   █████   ██████                  ██                  ██    ██   ██   ██  █████  ██       ██  ██  ████    ████   ██      ███████    ██       ██  ",
+"██   ██    ██   ██   ██      ██                   ██     ██████     ██     ██   ███████  ██  ██ ██       ██  ██  ██      ██     ██  ███ ██   ██    ██   ██  ██  ",
+"██   ██   ██    ██   ██     ██     ██      ██      ██              ██           ██   ██  ██  ██  ██  ██  ██ ██   ██   █  ██      ██  ██ ██   ██    ██   ██  ██  ",
+" █████    ██     █████    ███      ██      ██                              ██   ██   ██ ██████    ████  █████   ███████ ████      ████  ██   ██   ████   ████   ",
+"                                          ██                                                                                                                    ",
+"                                                                                                                                                                ",
+                "KLMNOPQRSTUVWXYZ",
+"                                                                                                                                ",
+"                                                                                                                                ",
+"                                                                                                                                ",
+"███  ██ ████    ██   ██ ██   ██  █████  ██████   █████  ██████   █████   ██████ ██   ██ ██   ██ ██   ██ ██   ██  ██  ██ ███████ ",
+" ██  ██  ██     ███ ███ ███  ██ ██   ██  ██  ██ ██   ██  ██  ██ ██   ██  █ ██ █ ██   ██ ██   ██ ██   ██  ██ ██   ██  ██ ██   ██ ",
+" ██ ██   ██     ███████ ████ ██ ██   ██  ██  ██ ██   ██  ██  ██  ██        ██   ██   ██ ██   ██ ██   ██   ███    ██  ██ █   ██  ",
+" ████    ██     ██ █ ██ ██ ████ ██   ██  █████  ██   ██  █████    ███      ██   ██   ██ ██   ██ ██   ██   ███     ████     ██   ",
+" ██ ██   ██   █ ██   ██ ██  ███ ██   ██  ██     ██   ██  ██ ██      ██     ██   ██   ██  ██ ██  ██ █ ██   ███      ██     ██  █ ",
+" ██  ██  ██  ██ ██   ██ ██   ██ ██   ██  ██     ██ █ ██  ██  ██ ██   ██    ██   ██   ██   ███   ███████  ██ ██     ██    ██  ██ ",
+"███  ██ ███████ ██   ██ ██   ██  █████  ████     ██████ ███  ██  █████    ████   █████     █     ██ ██  ██   ██   ████  ███████ ",
+"                                                     ██                                                                         ",
+"                                                                                                                                ",
+                "abcdefghijklmnopqrst",
+"                                                                                                                                                                ",
+"                                                                                                                                                                ",
+"                                                                                                                                                                ",
+"        ███                ███            ███           ███        ██        ██ ███       ███                                                              █    ",
+"         ██                 ██           ██ ██           ██                      ██        ██                                                             ██    ",
+" ████    █████   █████   █████   █████   ██  █   ███ ██  █████    ███       ███  ██  ██    ██   ███ ██  ██ ███   █████  ██ ███   ███ ██ ██ ███   █████   ████   ",
+"    ██   ██  ██ ██   ██ ██  ██  ██   ██ ████    ██  ██   ██  ██    ██        ██  ██ ██     ██   ███████  ██  ██ ██   ██  ██  ██ ██  ██   ███ ██ ██        ██    ",
+" █████   ██  ██ ██      ██  ██  ███████  ██     ██  ██   ██  ██    ██        ██  ████      ██   ██ █ ██  ██  ██ ██   ██  ██  ██ ██  ██   ██  ██  █████    ██    ",
+"██  ██   ██  ██ ██   ██ ██  ██  ██       ██     ██  ██   ██  ██    ██        ██  ██ ██     ██   ██ █ ██  ██  ██ ██   ██  ██  ██ ██  ██   ██          ██   ██ ██ ",
+" █████   █████   █████   ███ ██  █████   ██      █████  ███  ██   ████   ██  ██ ███  ██   ████  ██ █ ██  ██  ██  █████   █████   █████  ████     █████     ███  ",
+"                                                    ██                    ████                                           ██         ██                          ",
+"                                                 ████                                                                   ████       ████                         ",
+                "uvwxyzáčďéěíňóřšť",
+"                                                                                                                                        ",
+"                                                                      ██                                                                ",
+"                                                   ██    ██ ██        ██   ██    ██ ██     ██    ██ ██     ██    ██ ██   ██ ██        ██",
+"                                                  ██      ███      ████   ██      ███     ██      ███     ██      ███     ███      █ ██ ",
+"                                                                    ██                                                            ██    ",
+"██  ██   ██  ██ ██   ██ ██   ██  ██  ██  ██████  ████    █████   █████   █████   █████    ███   ██ ███   █████  ██ ███   █████   ████   ",
+"██  ██   ██  ██ ██   ██  ██ ██   ██  ██     ██      ██  ██   ██ ██  ██  ██   ██ ██   ██    ██    ██  ██ ██   ██  ███ ██ ██        ██    ",
+"██  ██   ██  ██ ██ █ ██   ███    ██  ██    ██    █████  ██      ██  ██  ███████ ███████    ██    ██  ██ ██   ██  ██  ██  █████    ██    ",
+"██  ██    ████  ███████  ██ ██   ██  ██   ██    ██  ██  ██   ██ ██  ██  ██      ██         ██    ██  ██ ██   ██  ██          ██   ██ ██ ",
+" ███ ██    ██    ██ ██  ██   ██   █████  ██████  █████   █████   ███ ██  █████   █████    ████   ██  ██  █████  ████     █████     ███  ",
+"                                     ██                                                                                                 ",
+"                                  ████                                                                                                  ",
+                "úůýžäöôü°ßÁČĎÉĚÍŇÓŘŠŤ",
+"                                                                                    ██    ██ ██  ██ ██      ██   ██ ██      ██   ██ ██      ██   ██ ██   ██ ██   ██ ██  ",
+"                                                                                   ██      ██     ██      ██      ██       ██     ███      ██      ██      ██      ██   ",
+"   ██     ██       ██    ██ ██                    ███             ███              █                                                                                    ",
+"  ██     █  █     ██      ███   ██  ██  ██   ██  ██ ██  ██  ██   ██ ██            ███     ████  █████   ███████ ███████   ████  ██   ██  █████  ██████   █████   ██████ ",
+"          ██                                                     ██ ██   ████    ██ ██   ██  ██  ██ ██   ██   █  ██   █    ██   ███  ██ ██   ██  ██  ██ ██   ██  █ ██ █ ",
+"██  ██  ██  ██   ██  ██  ██████  ████    █████   █████  ██  ██    ███   ██  ██  ██   ██ ██       ██  ██  ██      ██        ██   ████ ██ ██   ██  ██  ██  ██        ██   ",
+"██  ██  ██  ██   ██  ██     ██      ██  ██   ██ ██   ██ ██  ██          ██ ██   ██   ██ ██       ██  ██  ████    ████      ██   ██ ████ ██   ██  █████    ███      ██   ",
+"██  ██  ██  ██   ██  ██    ██    █████  ██   ██ ██   ██ ██  ██          ██  ██  ███████ ██       ██  ██  ██      ██        ██   ██  ███ ██   ██  ██ ██      ██     ██   ",
+"██  ██  ██  ██   ██  ██   ██    ██  ██  ██   ██ ██   ██ ██  ██          ██   ██ ██   ██  ██  ██  ██ ██   ██   █  ██   █    ██   ██   ██ ██   ██  ██  ██ ██   ██    ██   ",
+" ███ ██  ███ ██   █████  ██████  █████   █████   █████   ███ ██         ██  ██  ██   ██   ████  █████   ███████ ███████   ████  ██   ██  █████  ███  ██  █████    ████  ",
+"                     ██                                                                                                                                                 ",
+"                  ████                                                                                                                                                  ",
+                "ŮÚÝŽÄÖÜ",
+                "   █        ██      ██   ██ ██                          ",
+                "  █ █      ██      ██     ███                           ",
+                "   █                            ██   ██ ██   ██ ██   ██ ",
+                "██   ██ ██   ██  ██  ██ ███████    █                    ",
+                "██   ██ ██   ██  ██  ██ ██   ██   ███    █████  ██   ██ ",
+                "██   ██ ██   ██  ██  ██ █   ██   ██ ██  ██   ██ ██   ██ ",
+                "██   ██ ██   ██   ████     ██   ██   ██ ██   ██ ██   ██ ",
+                "██   ██ ██   ██    ██     ██  █ ███████ ██   ██ ██   ██ ",
+                "██   ██ ██   ██    ██    ██  ██ ██   ██ ██   ██ ██   ██ ",
+                " █████   █████    ████  ███████ ██   ██  █████   █████  ",
+                "                                                        ",
+                "                                                        "
+    ];
+
+    var txt = "";
+    var toChar = {};
+    for (var i = 0; i < font.length;)
+    {
+        var pos = i % 13;
+        if (pos == 0)
+        {
+            txt = font[i++];
+            continue;
+        }
+        for (var c = 0; c < txt.length; c++)
+        {
+            var key = "";
+            for (var j = 0; j < 12; j++)
+            {
+                key += font[i + j].substr(c * 8, 8) + "\n";
+            }
+            toChar[key] = txt[c];
+        }
+        i += 12;
+    }
+
+    function OCR(base64PNG) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = base64PNG;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+            
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+
+            var text = "";
+            for (var y = 0; y < img.height; y += 12)
+            {
+                for (var x = 0; x < img.width; x += 8)
+                {
+                    var first = null, box = "";
+                    for (var yc = 0; yc < 12; yc++)
+                    {
+                        for (var xc = 0; xc < 8; xc++)
+                        {
+                            var idx = ((y + yc)*320 + x + xc)*4;
+                            var c = pixels.slice(idx, idx + 4).join(',');
+                            if (first === null)
+                            {
+                                first = c;
+                                box = " ";
+                            }
+                            else
+                            {
+                                box += (c != first) ? "█" : " ";
+                            }
+
+                        }
+                        box += "\n";
+                    }
+                    text += toChar[box] || " ";
+                }
+                text += '\n';
+            }
+            resolve(text);
+        };
+
+        img.onerror = (error) => {
+            reject('Chyba při načítání obrázku: ' + error);
+        };
+      });
+    }
+</script>
+</head>
+<body onload="init()" onkeydown="shortcut()">
+    <div class="t__main-image-wrap relative "><div class="t__text-version" tabindex="0">
+
+    </div></div>
+    <div class="t__keyboard-inner t__keyboard-result-wrap">
+        <button onclick="btn(-2)" class="t__arrow t__arrow--left" title="Předchozí stránka" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="19.9" height="16" viewBox="0 0 19.9 16">
+            <path d="M10 7.2L16.6.4a1.2 1.2 0 011.7 0l1.2 1a1.2 1.2 0 010 1.8L14.8 8l4.8 4.8a1.2 1.2 0 010 1.7l-1.2 1.1a1.2 1.2 0 01-1.6 0L10 8.8a1.2 1.2 0 010-1.7zM.2 8.9l6.8 6.8a1.2 1.2 0 001.7 0l1.2-1.2a1.2 1.2 0 000-1.7L5.2 8 10 3.2a1.2 1.2 0 000-1.7L8.8.4a1.2 1.2 0 00-1.6 0L.4 7.2a1.2 1.2 0 000 1.7z" fill="#efefef"></path></svg>
+        </button>
+        <button onclick="btn(-1)" class="t__arrow t__arrow--left t__arrow--spacing " title="Předchozí podstránka" aria-disabled="false" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="10.3" height="16" viewBox="0 0 10.3 16">
+            <path d="M.4 7.2L7.2.4a1.2 1.2 0 011.6 0l1.2 1a1.2 1.2 0 010 1.8L5.2 8l4.8 4.8a1.2 1.2 0 010 1.7l-1.2 1.1a1.2 1.2 0 01-1.6 0L.4 8.8a1.2 1.2 0 010-1.7z" fill="#efefef"></path>
+            </svg>
+        </button>
+            <input class="t__keyboard-result" onchange="updatePage(this)">
+        <button onclick="btn(1)" class="t__arrow t__arrow--right t__arrow--spacing " title="Následující podstránka" aria-disabled="false" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="10.3" height="16" viewBox="0 0 10.3 16">
+            <path d="M10 8.9l-6.8 6.8a1.2 1.2 0 01-1.7 0L.4 14.5a1.2 1.2 0 010-1.7L5.2 8 .4 3.2a1.2 1.2 0 010-1.7l1-1.1a1.2 1.2 0 011.8 0L10 7.2a1.2 1.2 0 010 1.7z" fill="#efefef"></path></svg>
+        </button>
+        <button onclick="btn(2)" class="t__arrow t__arrow--right" title="Následující stránka" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="19.9" height="16" viewBox="0 0 19.9 16">
+            <path d="M10 8.9l-6.8 6.8a1.2 1.2 0 01-1.7 0L.4 14.5a1.2 1.2 0 010-1.7L5.2 8 .4 3.2a1.2 1.2 0 010-1.7l1-1.1a1.2 1.2 0 011.8 0L10 7.2a1.2 1.2 0 010 1.7zm9.6-1.7L12.8.4a1.2 1.2 0 00-1.7 0l-1.1 1a1.2 1.2 0 000 1.8L14.8 8l-4.9 4.8a1.2 1.2 0 000 1.7l1.2 1.1a1.2 1.2 0 001.7 0l6.8-6.8a1.2 1.2 0 000-1.7z" fill="#efefef"></path></svg>
+        </button>
+    </div>
+</body>
+</html>
