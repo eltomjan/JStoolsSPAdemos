@@ -1,0 +1,29 @@
+name: Build Pecivo
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run build script
+        run: node Pecivo/build.js
+
+      - name: Commit built file back
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add Pecivo.htm
+          git commit -m "Auto-build Pecivo.htm" || echo "No changes"
+          git push

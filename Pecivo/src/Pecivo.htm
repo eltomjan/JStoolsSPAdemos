@@ -1,0 +1,1734 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+body > div {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+}
+body {
+    background-color: black;
+    color:white;
+}
+input {
+    margin: 20 5 15 5;
+}
+button {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    background-color: darkblue;;
+    height: 40px;
+}
+div.true {
+    background-color: chartreuse;
+}
+span {
+    color:#ffff00;
+    font-size: 14px;
+    font-weight: bold;
+}
+pre {
+    margin: 0;
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5 */
+    font-size: 32px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+pre > div {
+    display: inline-block;
+    margin: 5 0;
+}
+div#No {
+    float: right;
+    color: lightgreen;
+    font-size: 32px;
+}
+</style>
+<script>
+var filters = {list:[], Druh:["Akce"]};
+var specs = {
+    Unique: ["Tvar","Váha"],
+    Prefix: {
+        "Hmotnost": "H"
+    }
+}
+function includes(arr, el)
+{
+    for(var e of arr) {
+        if (e==el) return true;
+    }
+    return false;
+}
+function editRow() {
+    if (this.lastElementChild.constructor !== HTMLTextAreaElement) {
+        var d = document.createElement("textarea");
+        d.cols = 60;
+        var name = this.innerText.slice(1, -1);
+        var val = JSON.stringify(json[name],0,3)
+            .split('\n').slice(1, -1);
+        d.rows = val.length + 1;
+        val[0] = `"${name}":{\n${val[0]}`;
+        d.value = val.join('\n');
+        d.name = name;
+        this.appendChild(d);
+        d.onchange = saveRow;
+        d.focus();
+    }
+}
+function encodeFileName(n) {
+    return encodeURIComponent(n).replace(/%20/g, ' ');
+}
+function saveRow() {
+    var obj = JSON.parse(`{${this.value}}}`);
+    var name;
+    for(name in obj) break;
+    if (name != this.name) {
+        delete json[this.name];
+        var escName = encodeFileName(name);
+        var escNameOld = encodeFileName(this.name)
+        delete Object.assign(imgs, {[escName]: imgs[escNameOld] })[escNameOld];
+    }
+    this.previousElementSibling.previousSibling.data = name;
+    json[name] = obj[name];
+    obj = document.getElementsByName("images")[0];
+    obj.innerHTML = `var imgs=${JSON.stringify(imgs)};`
+    this.parentElement.removeChild(this);
+}
+function build() {
+try {
+var labels;
+for(var o in json) {
+    labels = Object.keys(json[o]);
+    break;
+}
+var counts = {Akce:0};
+var sum = 0;
+for(var r in json) {
+    var cols = json[r];
+    var spec = {
+        label: r,
+        json: json[r],
+        attributes: { Akce:(cols.Cena.constructor === Array) }
+    };
+    for(var p in specs.Prefix) {
+        cols[p] = specs.Prefix[p] + cols[p];
+    }
+    filters.list.push(spec);
+    for(var l of labels) {
+        if(!filters[l]) filters[l] = [];
+        var items = cols[l];
+        if (!items) continue;
+        if (items.constructor === Array) {
+            for(var sl of items) {
+                spec.attributes[sl] = 1;
+                if (!includes(filters[l],sl)) {
+                    filters[l].push(sl);
+                    counts[sl] = 1;
+                } else counts[sl]++;
+            }
+        }
+        else {
+            spec.attributes[items] = 1;
+            if (!includes(filters[l], items)) {
+                filters[l].push(items);
+                counts[items] = 1;
+            } else counts[items]++;
+        }
+        filters[l].sort();
+    }
+    filters.Váha.sort(function(a, b) {
+        return a - b;
+    });
+    filters.Cena.sort(function(a, b) {
+        return a - b;
+    });
+    var s = document.createElement("span");
+    spec.obj = s;
+    if (spec.attributes.Akce) counts.Akce++;
+    var i = document.createElement("img");
+    i.src = "data:image/jpeg;base64," + imgs[encodeFileName(r)];
+    sum++;
+    s.appendChild(i);
+    s.appendChild(document.createElement("br"));
+    s.appendChild(document.createTextNode(r));
+    s.appendChild(document.createElement("br"));
+    s.ondblclick = editRow;
+    document.body.appendChild(s);
+}
+document.getElementById("No").innerText = sum;
+var uq = {};
+for(var l of labels) {
+    //if (l == "Cena") continue;
+    for(var i in filters[l]) {
+        if (uq[filters[l][i]]) 
+            alert("!UQ "+filters[l][i]);
+        else uq[filters[l][i]] = 1;
+    }
+}
+var btns = document.body.firstElementChild;
+var b = btns;
+while(b) {
+    if (b.nodeType != 3 &&
+        b.tagName.toLowerCase() == "button")
+    {
+    var lst = b.textContent;
+    for(var c of filters[lst.replace(/^\s/,"")]) {
+        var chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.onchange = showHide;
+        var div = document.createElement("div");
+        div.onclick = showHide2;
+        div.appendChild(chk);
+        if (counts[c] > 1) c += '(' + counts[c] + ')'
+        div.appendChild(document.createTextNode(c));
+        b.nextElementSibling.appendChild(div);
+    }
+}
+    if (b.tagName.toLowerCase() == "div") {
+        b = b.firstElementChild;
+    } else
+        b = b.nextElementSibling;
+}
+var div = document.querySelector("div > pre:first-of-type > div")
+div.onclick = showHide2;
+div.firstElementChild.onchange = showHide;
+} catch (e) {
+    alert(e.message + '\n' + e.stack);
+}
+}
+var objarr;
+function getInputs(root)
+{
+  if (root)
+  {
+    for (var i = 0; i < root.childNodes.length; i++){
+        if (root.childNodes[i] && root.childNodes[i].tagName &&
+        root.childNodes[i].tagName.toLowerCase() == "input")
+            objarr.push(root.childNodes[i]);
+        getInputs(root.childNodes[i]);
+    }
+    return objarr;
+  }
+}
+/*function akce()
+{
+    if (event.target.firstElementChild) {
+        event.target.firstElementChild.click();
+        return;
+    }
+    var state = event.target.checked;
+    for(var el of filters.list) {
+        for(var a of active) {
+        }
+        el.obj.style.display = (having == active.length) ? "" : "none";
+    }
+}*/
+function showHide2()
+{
+    if (event.target == this)
+        this.firstElementChild.click();
+}
+function showHide()
+{
+try {
+    if (specs.Unique.includes(this.parentElement.parentElement.previousElementSibling.innerText)) {
+        var div = this.parentElement;
+        var siblings = div.parentElement.querySelectorAll("div.true > input[type=checkbox]")
+        for(var inp of siblings) {
+            if (this != inp)
+                inp.click();
+        }
+    }
+    this.parentElement.className = this.checked;
+    objarr = [];
+    getInputs(document.body);
+    var els = objarr;
+    var cat, inp, state = {};
+    for(var el of els) {
+        if (el.nodeType == 3) continue;
+        var cat = el.nextSibling.textContent.replace(/\(\d+\)$/, "");
+        state[cat] = el;
+    }
+    var active = [];
+    for(var cat in state) {
+        if (state[cat].checked) {
+            active.push(cat)
+            continue;
+        }
+    }
+    var sum = 0;
+    for(var el of filters.list) {
+        var having = 0;
+        for(var a of active) {
+            if (el.attributes[a])
+                having++;
+        }
+        if (!(el.obj.style.display = (having == active.length) ? "" : "none"))
+            sum++;
+    }
+    document.getElementById("No").innerText = sum;
+} catch (e) {
+    alert(e.message + '\n' + e.stack);
+}
+}
+function preSwitch()
+{
+    var pre = event.srcElement.nextElementSibling;
+    if (pre.style.display) pre.style.display = "";
+    else pre.style.display = "none";
+}
+function download() {
+    var el = event.srcElement;
+    el.previousElementSibling.innerText = "";
+    var next = el.nextElementSibling;
+    while (next) {
+        el = next;
+        next = el.nextElementSibling;
+        el.parentElement.removeChild(el);
+    }
+    next = document.getElementsByTagName("PRE");
+    for(var pre of next) {
+        el = pre.firstElementChild;
+        while(el) {
+            pre.removeChild(el);
+            el = pre.firstElementChild;
+        }
+    }
+    var storage = document.getElementsByName("json")[0];
+    storage.innerHTML = `var json = (function(){ var myStatic = ${JSON.stringify(json)};return myStatic;})();`;
+    var a = document.createElement("a");
+    a.href = "data:text/html;charset=UTF-8," + encodeURIComponent(document.firstElementChild.outerHTML);
+    a.download = location.href.split('/').slice(-1)[0];
+    a.click();
+    build();
+}
+</script>
+<script name="json">
+var json = (function(){
+  var myStatic = {
+    "Anglický rohlík extra 110g": {
+        "Hmotnost": 110,
+        "Váha": 100,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Uzenina", "Sýr"],
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 23.9
+    },
+    "Bageta barra s cibulí 250g": {
+        "Hmotnost": 250,
+        "Váha": ["Podobné", 250],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 28.9
+    },
+    "Bagetka malá světlá 65g": {
+        "Hmotnost": 65,
+        "Váha": ["Podobné", 50],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 3.9
+    },
+    "Bochník chalupářský 800g": {
+        "Hmotnost": 800,
+        "Váha": 800,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Mouka", "Kmín", "Pruhy"],
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 48.5
+    },
+    "Bramborový pletenec s kváskem 110g": {
+        "Hmotnost": 110,
+        "Váha": 100,
+        "Tvar": "Kulatý",
+        "Povrch": "Pletení",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 15.9
+    },
+    "Buchta s pudingovým krémem 100g": {
+        "Hmotnost": 100,
+        "Váha": ["Podobné", 100],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Puding", "Drobenka", "Tvaroh"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Švýcarka s ořechy 90g": {
+        "Hmotnost": 90,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Švýcarka se skořicí 90g": {
+        "Hmotnost": 90,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Bulka pizza 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Sýr", "Uzenina"],
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 14.9
+    },
+    "Bulka s dýní a sýrem 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 10.9
+    },
+    "Bulka s kandovaným ovocem 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Cukr", "Mandle", "Lesk"],
+        "Druh": ["Světlé", "Sladké", "Houska"],
+        "Cena": 11.9
+    },
+    "Brioška s kandovaným ovocem 270g": {
+        "Hmotnost": 270,
+        "Váha": 250,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Cukr", "Mandle", "Lesk"],
+        "Druh": ["Světlé", "Sladké", "Houska"],
+        "Cena": 29.9
+    },
+    "Burek se špenátem a sýrem feta 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Pruhy",
+        "Druh": ["Světlé", "Slané", "Tyčinka"],
+        "Cena": 15.9
+    },
+    "Dřevorubecký chléb 405g": {
+        "Hmotnost": 405,
+        "Váha": ["Podobné", 425],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": 33.9
+    },
+    "Chléb havíř 450g": {
+        "Hmotnost": 450,
+        "Váha": 425,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 31.9
+    },
+    "Chléb kmínový n 500g": {
+        "Hmotnost": 500,
+        "Váha": 500,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 21.9
+    },
+    "Chléb konzumní 1200g": {
+        "Hmotnost": 1200,
+        "Váha": 1200,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 42.5
+    },
+    "Kváskový tmavý kořen 300g": {
+        "Hmotnost": 300,
+        "Váha": ["Podobné", 300],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 29.9
+    },
+    "Chléb pecánek 600g": {
+        "Hmotnost": 600,
+        "Váha": 500,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 35.9
+    },
+    "Chléb sedlácký 900g": {
+        "Hmotnost": 900,
+        "Váha": 900,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 48.5
+    },
+    "Chléb šumavský bochník 500g": {
+        "Hmotnost": 500,
+        "Váha": 500,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 21.9
+    },
+    "Oskar pšenično špaldový chléb 505g": {
+        "Hmotnost": 505,
+        "Váha": 500,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Prasklina", "Špalda"],
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": 59.9
+    },
+    "Pastýřský chléb 405 g": {
+        "Hmotnost": 405,
+        "Váha": 425,
+        "Tvar": "Kulatý",
+        "Povrch": "Pletení",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 38.9
+    },
+    "Podmáslový chléb 420 g": {
+        "Hmotnost": 420,
+        "Váha": ["Podobné", 425],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": 36.9
+    },
+    "Pšeničnožitný chléb se špaldovou moukou 450g": {
+        "Hmotnost": 450,
+        "Váha": 425,
+        "Tvar": "Obdélník",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 44.9
+    },
+    "Rustikální bramborový chléb 400g": {
+        "Hmotnost": 400,
+        "Váha": ["Podobné", 425],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": [37.9, 44.9]
+    },
+    "Rustikální světlý chléb 300g": {
+        "Hmotnost": 300,
+        "Váha": ["Podobné", 300],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": 27.9
+    },
+    "TF Krystal chléb z kamenné pece 460 g": {
+        "Hmotnost": 460,
+        "Váha": ["Podobné", 425],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": [49.9, 39.9]
+    },
+    "Tesco chléb konzumní 800g": {
+        "Hmotnost": 800,
+        "Váha": 800,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Mouka", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 29.9
+    },
+    "TF Pšeničný chléb s kváskem a slunečnicovými semínky 450 g": {
+        "Hmotnost": 450,
+        "Váha": ["Podobné", 500],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": [44.9, 37.9]
+    },
+    "TF rustikální chléb z kamenné pece 490 g": {
+        "Hmotnost": 490,
+        "Váha": ["Podobné", 500],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": 48.5
+    },
+    "TF Chlebík s brusinkami z kamen.pece 350 g": {
+        "Hmotnost": 350,
+        "Váha": 300,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta", "Chleba"],
+        "Cena": 42.9
+    },
+    "TS chléb kvásk. 800g": {
+        "Hmotnost": 800,
+        "Váha": 800,
+        "Tvar": "Kulatý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 33.9
+    },
+    "TS chléb žitan 450g": {
+        "Hmotnost": 450,
+        "Váha": 425,
+        "Tvar": "Kulatý",
+        "Povrch": "Mouka",
+        "Druh": ["Tmavé", "Slané", "Chleba"],
+        "Cena": 28.9
+    },
+    "Žitný chléb 450g": {
+        "Hmotnost": 450,
+        "Váha": 425,
+        "Tvar": "Obdélník",
+        "Povrch": "Hnědý",
+        "Druh": ["Tmavé", "Slané", "Chleba"],
+        "Cena": 24.9
+    },
+    "TF kroucený chléb 440g": {
+        "Hmotnost": 440,
+        "Váha": 425,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Hnědý",
+        "Druh": ["Tmavé", "Slané", "Chleba"],
+        "Cena": 34.9
+    },
+    "Celozrnná bageta s kváskem 135g": {
+        "Hmotnost": 135,
+        "Váha": 125,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Semínka", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 15.9
+    },
+    "Ciabatta s cibulí 70 g": {
+        "Hmotnost": 70,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Obdélník",
+        "Povrch": "Mouka",
+        "Druh": ["Tmavé", "Slané", "Chleba"],
+        "Cena": 10.9
+    },
+    "Cop s máslovou drobenkou 250g": {
+        "Hmotnost": 250,
+        "Váha": 250,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Drobenka", "Lesk"],
+        "Druh": ["Světlé", "Sladké", "Houska"],
+        "Cena": 28.9
+    },
+    "Croissant máslový 52g": {
+        "Hmotnost": 52,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Pruhy",
+        "Druh": ["Světlé", "Slané", "Croissant"],
+        "Cena": 12.5
+    },
+    "Croissant s oříškovokakaovou náplní 72 g": {
+        "Hmotnost": 72,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Kakao",
+        "Druh": ["Světlé", "Sladké", "Croissant"],
+        "Cena": 17.5
+    },
+    "Croissant s párkem 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Sýr", "Párek"],
+        "Druh": ["Světlé", "Slané", "Croissant"],
+        "Cena": 19.9
+    },
+    "Croissant s šunkou a goudou 85 g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Sýr", "Uzenina"],
+        "Druh": ["Světlé", "Slané", "Croissant"],
+        "Cena": [14.9, 19.5]
+    },
+    "Česneková bageta 165g": {
+        "Hmotnost": 165,
+        "Váha": 150,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Řezy",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 18.9
+    },
+    "Čokoládové cookies 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Čokoláda"],
+        "Druh": ["Tmavé", "Sladké"],
+        "Cena": 22.9
+    },
+    "Čokorolka s pudinkem 66g": {
+        "Hmotnost": 66,
+        "Váha": 50,
+        "Tvar": "Obdélník",
+        "Povrch": "Čokoláda",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.5
+    },
+    "Dalamánek 82 g": {
+        "Hmotnost": 82,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Kmín", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 9.5
+    },
+    "TF Dalamánek se solí a kmínem 160g": {
+        "Hmotnost": 160,
+        "Váha": 150,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Kmín", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 17.9
+    },
+    "Donut bílý s vločkami 56g": {
+        "Hmotnost": 56,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Donut buenissimo 69g": {
+        "Hmotnost": 69,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Hnědý",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": [14.9, 19.9]
+    },
+    "Donut tmavý s náplní lotus biscoff 69g": {
+        "Hmotnost": 69,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Hnědý",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 19.9
+    },
+    "Donut dubai s vločkami 77g": {
+        "Hmotnost": 77,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Pruhovaný"],
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 24.9
+    },
+    "Donut červený s číslicemi 56g": {
+        "Hmotnost": 56,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 15.9
+    },
+    "Donut oranžový Halloween 56g": {
+        "Hmotnost": 56,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Donut s kakaovou polevou 55g": {
+        "Hmotnost": 55,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Kakao", "Oříšky"],
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Kitkat donut 77g": {
+        "Hmotnost": 77,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Hnědý",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 34.9
+    },
+    "Donut kakaový s višňovou náplní 71g": {
+        "Hmotnost": 71,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Pruhovaný"],
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 16.9
+    },
+    "Donut s lískooříškovou náplní 71g": {
+        "Hmotnost": 71,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Oříšky"],
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 16.9
+    },
+    "Donut s maracujovou náplní 71g": {
+        "Hmotnost": 71,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 16.9
+    },
+    "Donut meruňkový plněný 71g": {
+        "Hmotnost": 71,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": [14.9, 18.9]
+    },
+    "Donut s plameňáky 59g": {
+        "Hmotnost": 59,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Donut s polevou s príchutí jahod 56g": {
+        "Hmotnost": 56,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Donut s safari 60g": {
+        "Hmotnost": 60,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "Pruhovaný",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Donut zimní les 57g": {
+        "Hmotnost": 57,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Donut premium marshmallows 58g": {
+        "Hmotnost": 58,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": [15.9,12.9]
+    },
+    "Mini donut růžový 22g": {
+        "Hmotnost": 22,
+        "Váha": 25,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 7.5
+    },
+    "Vánoční donut 56g": {
+        "Hmotnost": 56,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 14.9
+    },
+    "Mini donut s hvězdičkami 22g": {
+        "Hmotnost": 22,
+        "Váha": 25,
+        "Tvar": "Kulatý",
+        "Povrch": "Pruhovaný",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 7.9
+    },
+    "Mini koblížek s nugátem 25g": {
+        "Hmotnost": 25,
+        "Váha": 25,
+        "Tvar": "Kulatý",
+        "Povrch": "Cukr",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 9.9
+    },
+    "Mini koblížek růžový s bílou čokoládou 25g": {
+        "Hmotnost": 25,
+        "Váha": 25,
+        "Tvar": "Kulatý",
+        "Povrch": "Cukr",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 9.9
+    },
+    "Dvoubarevný croissant s čoko náplní 74g": {
+        "Hmotnost": 74,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Hnědý",
+        "Druh": ["Světlé", "Sladké", "Croissant"],
+        "Cena": 15.9
+    },
+    "Fit bagetka s kváskem 72g": {
+        "Hmotnost": 72,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Tmavé", "Slané", "Bageta"],
+        "Cena": 8.5
+    },
+    "Fit kornbageta cereální s kváskem 115g": {
+        "Hmotnost": 115,
+        "Váha": 100,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Tmavé", "Slané", "Bageta"],
+        "Cena": 14.9
+    },
+    "Francouzská bageta s kváskem 110g": {
+        "Hmotnost": 110,
+        "Váha": 100,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": [8.5, 10.9]
+    },
+    "Hamburgerová brioška 85g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Lesk",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 11.9
+    },
+    "Hamburgerová bulka se sezamem 80 g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 11.9
+    },
+    "Houska staročeská 60g": {
+        "Hmotnost": 60,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "Pletení",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 3.5
+    },
+    "Houska staročeská s mákem 60g": {
+        "Hmotnost": 60,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": ["Pletení", "Mák"],
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 3.5
+    },
+    "Houska staročeská se solí a kmínem 60g": {
+        "Hmotnost": 60,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": ["Sůl", "Kmín", "Pletení"],
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 3.5
+    },
+    "Kaiserka cereální 60g": {
+        "Hmotnost": 60,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "Hvězdice",
+        "Druh": ["Tmavé", "Slané", "Houska"],
+        "Cena": 4.9
+    },
+    "Kaiserka podmáslová 60g": {
+        "Hmotnost": 60,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hvězdice", "Lesk"],
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 5.5
+    },
+    "Kapsa s mákem 100g": {
+        "Hmotnost": 100,
+        "Váha": 100,
+        "Tvar": "Obdélník",
+        "Povrch": ["Drobenka", "Mák"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Hřeben duo mák a višeň 105g": {
+        "Hmotnost": 105,
+        "Váha": 100,
+        "Tvar": "Podkova",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 18.9
+    },
+    "Kapsa s tvarohem 100g": {
+        "Hmotnost": 100,
+        "Váha": ["Podobné", 100],
+        "Tvar": "Obdélník",
+        "Povrch": ["Drobenka", "Tvaroh"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Kobliha s kakao lískooříškovou náplní 95g": {
+        "Hmotnost": 95,
+        "Váha": 100,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Kobliha s meruňovým džemem 65g": {
+        "Hmotnost": 65,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "Cukr",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 9.6
+    },
+    "Kobliha s náplní mango a maracuja 65g": {
+        "Hmotnost": 65,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "Cukr",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 10.5
+    },
+    "Pistáciová kobliha 90g": {
+        "Hmotnost": 90,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 24.9
+    },
+    "Koláč borůvkový s máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Drobenka",
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 12.9
+    },
+    "Koláč jablkový se skořicí a máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Drobenka", "Skořice"],
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Koláč jahodový s máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Drobenka",
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Koláč makový s máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Drobenka",
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Koláč ořechový s máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Drobenka",
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Koláč s kiwi náplní a máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Drobenka",
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Koláč s tvarohem jahodami a máslovou 130g": {
+        "Hmotnost": 130,
+        "Váha": 125,
+        "Tvar": "Kulatý",
+        "Povrch": ["Drobenka", "Tvaroh", "Ovoce"],
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Koláč sváteční 260g": {
+        "Hmotnost": 260,
+        "Váha": 300,
+        "Tvar": "Kulatý",
+        "Povrch": ["Tvaroh", "Drobenka"],
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 34.9
+    },
+    "Koláč sváteční s makovou náplní a švestkami 310g": {
+        "Hmotnost": 310,
+        "Váha": 300,
+        "Tvar": "Kulatý",
+        "Povrch": ["Drobenka", "Mák", "Ovoce"],
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 34.9
+    },
+    "Koláč tvarohový s máslovou drobenkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Drobenka", "Tvaroh"],
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 15.9
+    },
+    "Moravský koláč s mandlovou a viš.náplní 120g": {
+        "Hmotnost": 120,
+        "Váha": 125,
+        "Tvar": "Kulatý",
+        "Povrch": ["Drobenka", "Tvaroh", "Ovoce"],
+        "Druh": ["Světlé", "Sladké", "Koláč"],
+        "Cena": 21.9
+    },
+    "Korn žemle 80g": {
+        "Hmotnost": 80,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Kmín", "Sůl", "Pletení"],
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 7.9
+    },
+    "Kornspitz 80g": {
+        "Hmotnost": 80,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Kmín", "Sůl", "Pletení"],
+        "Druh": ["Světlé", "Slané", "Bageta", "Rohlík"],
+        "Cena": 7.9
+    },
+    "Kvásková provensálská foccacia 120 g": {
+        "Hmotnost": 120,
+        "Váha": 125,
+        "Tvar": "Obdélník",
+        "Povrch": "Koření",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 14.9
+    },
+    "TF Focaccia s cheddarem 180g": {
+        "Hmotnost": 180,
+        "Váha": 200,
+        "Tvar": "Obdélník",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 24.9
+    },
+    "Foccacia s rozmarýnem 300g": {
+        "Hmotnost": 300,
+        "Váha": 300,
+        "Tvar": "Obdélník",
+        "Povrch": "Koření",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 39.9
+    },
+    "TF Ciabatta s dýní 210g": {
+        "Hmotnost": 210,
+        "Váha": 200,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 24.9
+    },
+    "Ciabatta s provensálským kořením 300g": {
+        "Hmotnost": 300,
+        "Váha": 300,
+        "Tvar": "Obdélník",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 29.9
+    },
+    "Kváskový delikant premium 405g": {
+        "Hmotnost": 405,
+        "Váha": ["Podobné", 425],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": 36.9
+    },
+    "Kváskový chlém s restovanou cibulkou 400g": {
+        "Hmotnost": 400,
+        "Váha": 425,
+        "Tvar": "Obdélník",
+        "Povrch": "Mouka",
+        "Druh": ["Světlé", "Slané", "Chleba"],
+        "Cena": [44.9, 37.9]
+    },
+    "Makovka 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Podkova",
+        "Povrch": ["Mák", "Lesk"],
+        "Druh": ["Světlé", "Sladké", "Rohlík"],
+        "Cena": 9.9
+    },
+    "Makovka XXL 160g": {
+        "Hmotnost": 160,
+        "Váha": 150,
+        "Tvar": "Podkova",
+        "Povrch": ["Mák", "Lesk"],
+        "Druh": ["Světlé", "Sladké", "Rohlík"],
+        "Cena": 19.9
+    },
+    "Maxi francouzská bageta 252g": {
+        "Hmotnost": 252,
+        "Váha": 250,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 18.9
+    },
+    "Meruňková taštička 103g": {
+        "Hmotnost": 103,
+        "Váha": 100,
+        "Tvar": "",
+        "Povrch": "Řezy",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Diamant vícezrný 70g": {
+        "Hmotnost": 70,
+        "Váha": 75,
+        "Tvar": "",
+        "Povrch": ["Prasklina"],
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 11.9
+    },
+    "Mini pizza sunk. s kukur.75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Uzenina", "Kukuřice"],
+        "Druh": ["Světlé", "Slané", "Pizza"],
+        "Cena": 17.9
+    },
+    "Pinsa se salámem calabria 147g": {
+        "Hmotnost": 147,
+        "Váha": 150,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Uzenina",
+        "Druh": ["Světlé", "Slané", "Pizza"],
+        "Cena": 34.9
+    },
+    "Mřížka pudink a jahody 85g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Obdélník",
+        "Povrch": "Puding",
+        "Druh": ["Světlé", "Sladké", "Mřížka"],
+        "Cena": [12.9, 16.9]
+    },
+    "Mřížka pudinková s granátovým jablkem 85g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Obdélník",
+        "Povrch": ["Puding", "Řezy"],
+        "Druh": ["Světlé", "Sladké", "Mřížka"],
+        "Cena": 16.9
+    },
+    "Borůvkový muffin 100g": {
+        "Hmotnost": 100,
+        "Váha": 100,
+        "Tvar": "Kulatý",
+        "Povrch": "Ovoce",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 27.9
+    },
+    "Halloween muffin 100g": {
+        "Hmotnost": 100,
+        "Váha": 100,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Pruhovaný", "Čokoláda"],
+        "Druh": ["Tmavé", "Sladké"],
+        "Cena": 28.9
+    },
+    "Vánoční muffin se skoř. a šves. náplní 112g": {
+        "Hmotnost": 112,
+        "Váha": 100,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Ovoce"],
+        "Druh": ["Tmavé", "Sladké"],
+        "Cena": 27.9
+    },
+    "Čokoládový muffin 100g": {
+        "Hmotnost": 100,
+        "Váha": 100,
+        "Tvar": "Kulatý",
+        "Povrch": ["Hnědý", "Čokoláda"],
+        "Druh": ["Tmavé", "Sladké"],
+        "Cena": 27.9
+    },
+    "Multicereální croissant s máslem 65g": {
+        "Hmotnost": 65,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Semínka"],
+        "Druh": ["Tmavé", "Slané", "Croissant"],
+        "Cena": 13.9
+    },
+    "Pagac skvarkovy 71g": {
+        "Hmotnost": 71,
+        "Váha": 75,
+        "Tvar": "Pětiúhelník",
+        "Povrch": "",
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 14.5
+    },
+    "Panini 100g": {
+        "Hmotnost": 100,
+        "Váha": 100,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Pruhovaný",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 9.9
+    },
+    "Pizza klobása a mozzarella 135g": {
+        "Hmotnost": 135,
+        "Váha": 125,
+        "Tvar": "Kulatý",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané", "Pizza"],
+        "Cena": 29.9
+    },
+    "Pizza šunka a mozzarella 150g": {
+        "Hmotnost": 150,
+        "Váha": 150,
+        "Tvar": "Kulatý",
+        "Povrch": ["Sýr", "Uzenina"],
+        "Druh": ["Světlé", "Slané", "Pizza"],
+        "Cena": 29.9
+    },
+    "Pizzový trojúhelník 90g": {
+        "Hmotnost": 90,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "Řezy",
+        "Druh": ["Světlé", "Slané", "Pizza"],
+        "Cena": 17.9
+    },
+    "Pletenec pekanový 84g": {
+        "Hmotnost": 84,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Obdélník",
+        "Povrch": ["Oříšky", "Řezy"],
+        "Druh": ["Světlé", "Sladké", "Mřížka"],
+        "Cena": 17.5
+    },
+    "Pletenec s lískooříškovou náplní 81": {
+        "Hmotnost": 81,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Obdélník",
+        "Povrch": ["Oříšky", "Řezy"],
+        "Druh": ["Světlé", "Sladké", "Mřížka"],
+        "Cena": 17.5
+    },
+    "Proteinové večerní pečivo 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Obdélník",
+        "Povrch": ["Hnědý", "Semínka"],
+        "Druh": ["Tmavé", "Slané", "Chleba"],
+        "Cena": 11.9
+    },
+    "Rohlík grahamo - špaldový 80 g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Špalda",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 4.5
+    },
+    "Rohlík slunečnicový 60g": {
+        "Hmotnost": 60,
+        "Váha": ["Podobné", 50],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 8.9
+    },
+    "Rohlík sojový TM 65g": {
+        "Hmotnost": 65,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 7.5
+    },
+    "Rohlík staročeský 50g": {
+        "Hmotnost": 50,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 3.1
+    },
+    "Rohlík staročeský s mákem 50g": {
+        "Hmotnost": 50,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Mák",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 3.1
+    },
+    "Rohlík staročeský se solí a kmínem 50g": {
+        "Hmotnost": 50,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Sůl", "Kmín"],
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 3.1
+    },
+    "Rohlík sýrový s goudou 85g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 12.9
+    },
+    "Rohlík tukový 43g": {
+        "Hmotnost": 43,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Slané", "Rohlík"],
+        "Cena": 2.8
+    },
+    "Rohlík vícezrnný 60g": {
+        "Hmotnost": 60,
+        "Váha": ["Podobné", 50],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Semínka", "Pletení"],
+        "Druh": ["Světlé", "Slané", "Bageta", "Rohlík"],
+        "Cena": 8.9
+    },
+    "Skořicový donut s jablečnou náplní 65g": {
+        "Hmotnost": 65,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": "Skořice",
+        "Druh": ["Světlé", "Sladké", "Donut"],
+        "Cena": 16.9
+    },
+    "Vrut se skořicovým cukrem 50g": {
+        "Hmotnost": 50,
+        "Váha": 50,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Skořice",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 9.9
+    },
+    "Sladká houska s mandlemi 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Pletení", "Mandle"],
+        "Druh": ["Světlé", "Sladké", "Houska"],
+        "Cena": 11.9
+    },
+    "Houska s čokoládou 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": ["Pletení", "Čokoláda", "Lesk"],
+        "Druh": ["Světlé", "Sladké", "Houska"],
+        "Cena": 12.9
+    },
+    "Sladký rohlík s rozinkami 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Lesk", "Ovoce"],
+        "Druh": ["Světlé", "Sladké", "Rohlík"],
+        "Cena": 9.9
+    },
+    "Snack bageta s párkem a sýrem 130g": {
+        "Hmotnost": 130,
+        "Váha": ["Podobné", 125],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Párek", "Sýr"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": [19.9, 24.9]
+    },
+    "Snack bageta s párkem, bbq om. A čedarem 130g": {
+        "Hmotnost": 130,
+        "Váha": ["Podobné", 125],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Párek",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 28.9
+    },
+    "Snack madeland se šunkou 75g": {
+        "Hmotnost": 75,
+        "Váha": 75,
+        "Tvar": "Obdélník",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané", "Mřížka"],
+        "Cena": 18.9
+    },
+    "Snack se škvarky 85g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Kulatý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 15.9
+    },
+    "Snack s náplní tacos 69g": {
+        "Hmotnost": 69,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Semínka", "Řezy"],
+        "Druh": "Světlé",
+        "Cena": 15.9
+    },
+    "Snack s tuňákem a pikantní omáčkou 115g": {
+        "Hmotnost": 115,
+        "Váha": 100,
+        "Tvar": "Kulatý",
+        "Povrch": "Kukuřice",
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 24.9
+    },
+    "Sýrový pagáč 72 g": {
+        "Hmotnost": 72,
+        "Váha": 75,
+        "Tvar": "Pětiúhelník",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 14.5
+    },
+    "Sýrový šnek 85 g": {
+        "Hmotnost": 85,
+        "Váha": 75,
+        "Tvar": "Šnek",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 16.9
+    },
+    "Duo šnek se sýrovou náplní s jalapeňos 88g": {
+        "Hmotnost": 88,
+        "Váha": 75,
+        "Tvar": "Šnek",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané"],
+        "Cena": 16.9
+    },
+    "Šnek rozinkový 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Šnek",
+        "Povrch": "Ovoce",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.5
+    },
+    "Šnek skořicový 91g": {
+        "Hmotnost": 91,
+        "Váha": 100,
+        "Tvar": "Šnek",
+        "Povrch": "Skořice",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.9
+    },
+    "Špenátová mřížka se sýrem 73g": {
+        "Hmotnost": 73,
+        "Váha": 75,
+        "Tvar": "Obdélník",
+        "Povrch": "Sýr",
+        "Druh": ["Světlé", "Slané", "Mřížka"],
+        "Cena": 14.9
+    },
+    "Řemeslná maxi bageta 300g": {
+        "Hmotnost": 300,
+        "Váha": ["Podobné", 300],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Prasklina",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": [19.9, 24.9]
+    },
+    "TF Pane s čedarem z kamenné pece300g": {
+        "Hmotnost": 300,
+        "Váha": ["Podobné", 300],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Mouka", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 35.9
+    },
+    "TF kroucený kořen se slunečnicí 250g": {
+        "Hmotnost": 250,
+        "Váha": 250,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Semínka", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 24.9
+    },
+    "TF špaldová bageta z kamenné pece 80 g": {
+        "Hmotnost": 80,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Prasklina", "Špalda"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 14.5
+    },
+    "Tiger staročeská houska k pivu 65g": {
+        "Hmotnost": 65,
+        "Váha": 50,
+        "Tvar": "Kulatý",
+        "Povrch": ["Pletení", "Koření"],
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 4.9
+    },
+    "Tiger veka premium 200g": {
+        "Hmotnost": 200,
+        "Váha": 200,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Koření",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 17.9
+    },
+    "Tyčinka olivy Castelvetrano 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Slané", "Tyčinka"],
+        "Cena": 17.9
+    },
+    "Tyčinka s cheddarem 80g": {
+        "Hmotnost": 80,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "",
+        "Druh": ["Světlé", "Slané", "Tyčinka"],
+        "Cena": 17.9
+    },
+    "Twister s pudingem a čokoládou 72g": {
+        "Hmotnost": 72,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Puding", "Čokoláda"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 17.5
+    },
+    "Vánočka 400g": {
+        "Hmotnost": 400,
+        "Váha": 425,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Pletení", "Mandle", "Lesk"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 46.9
+    },
+    "Máslový Vánoční rohlíček 120g": {
+        "Hmotnost": 120,
+        "Váha": 125,
+        "Tvar": "Podkova",
+        "Povrch": ["Cukr", "Pletení", "Mandle", "Lesk"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 46.9
+    },
+    "Máslová Vánočka s rozinkami 230 g": {
+        "Hmotnost": 230,
+        "Váha": 250,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Pletení", "Mandle", "Lesk"],
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 33.9
+    },
+    "Venkovská bageta s kváskem 110g": {
+        "Hmotnost": 110,
+        "Váha": 100,
+        "Tvar": "Podlouhlý",
+        "Povrch": ["Semínka", "Prasklina"],
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 14.9
+    },
+    "Vícezrnná bageta se záparou a kváskem 140 g": {
+        "Hmotnost": 140,
+        "Váha": ["Podobné", 150],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 14.9
+    },
+    "Vícezrnná houska se záparou a kváskem 70 g": {
+        "Hmotnost": 70,
+        "Váha": 75,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 8.9
+    },
+    "Vícezrnný rohlík se záparou a kváskem 70g": {
+        "Hmotnost": 70,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Podlouhlý",
+        "Povrch": "Semínka",
+        "Druh": ["Světlé", "Slané", "Bageta"],
+        "Cena": 8.9
+    },
+    "XL pletýnka 160g": {
+        "Hmotnost": 160,
+        "Váha": 150,
+        "Tvar": "Podlouhlý",
+        "Povrch": "Pletení",
+        "Druh": ["Světlé", "Slané", "Houska"],
+        "Cena": 9.9
+    },
+    "Závitek s čokoládou a máslem 70g": {
+        "Hmotnost": 70,
+        "Váha": 75,
+        "Tvar": "Obdélník",
+        "Povrch": "Čokoláda",
+        "Druh": ["Světlé", "Sladké"],
+        "Cena": 15.5
+    },
+    "Žitná kostka s vysokým obsahem vlákniny 70g": {
+        "Hmotnost": 70,
+        "Váha": ["Podobné", 75],
+        "Tvar": "Obdélník",
+        "Povrch": ["Hnědý", "Mouka"],
+        "Druh": ["Tmavé", "Slané", "Chleba"],
+        "Cena": 12.5
+    },
+}
+    return myStatic;
+})();
+</script>
+<script name="images"></script>
+</head>
+<body onload="build()">
+<div>
+<button onclick="preSwitch()">Druh</button><pre></pre>
+<button onclick="preSwitch()">Tvar</button><pre></pre>
+<button onclick="preSwitch()">Váha</button><pre></pre>
+<button onclick="preSwitch()">Povrch</button><pre></pre>
+<button style="display:none">Cena</button><pre style="display:none"></pre>
+</div>
+<div id="No"></div>
+<button style="float: right;" onclick="download()">Download</button>
+</body>
+</html>
