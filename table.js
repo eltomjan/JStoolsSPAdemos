@@ -98,11 +98,13 @@ var Sort = (function(){
 	};
 	sort.date.formats = [
 		// YY[YY]-MM-DD
-		{ re:/(\d{2,4})-(\d{1,2})-(\d{1,2})/ , f:function(x){ return (new Date(sort.date.fixYear(x[1]),+x[2],+x[3])).getTime(); } }
+		{ re:/(\d{2,4})-(\d{1,2})-(\d{1,2})/ , f:function(x){ return (new Date(sort.date.fixYear(x[1]),x[2]-1,+x[3])).getTime(); } }
 		// MM/DD/YY[YY] or MM-DD-YY[YY]
-		,{ re:/(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/ , f:function(x){ return (new Date(sort.date.fixYear(x[3]),+x[1],+x[2])).getTime(); } }
+		,{ re:/(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/ , f:function(x){ return (new Date(sort.date.fixYear(x[3]),x[1]-1,+x[2])).getTime(); } }
+		// Czech DD.MM.YY[YY]
+		,{ re:/(\d{1,2})\.(\d{1,2})\.(\d{2,4})/ , f:function(x){ return (new Date(sort.date.fixYear(x[3]),x[2]-1,+x[1])).getTime(); }}
 		// Any catch-all format that new Date() can handle. This is not reliable except for long formats, for example: 31 Jan 2000 01:23:45 GMT
-		,{ re:/(.*\d{4}.*\d+:\d+\d+.*)/, f:function(x){ var d=new Date(x[1]); if(d){return d.getTime();} } }
+		,{ re:/(.*\d{4}.*\d+:\d+\d+.*)/, f:function(x){ var d=new Date(x[1]); if(d){return d.getTime();} }}
 	];
 	sort.date.convert = function(val) {
 		var m,v, f = sort.date.formats;
@@ -224,7 +226,7 @@ var Table = (function(){
 
 		AutoSortClassName:"table-autosort",
 		AutoSortColumnPrefix:"table-autosort:",
-		AutoSortTitle:"Click to sort",
+		AutoSortTitle:"Klikněte pro třídění",
 		SortedAscendingClassName:"table-sorted-asc",
 		SortedDescendingClassName:"table-sorted-desc",
 		SortableClassName:"table-sortable",
@@ -236,7 +238,7 @@ var Table = (function(){
 		FilterableClassName:"table-filterable",
 		FilteredRowcountPrefix:"table-filtered-rowcount:",
 		RowcountPrefix:"table-rowcount:",
-		FilterAllLabel:"Filter: All",
+		FilterAllLabel:"Filtr: Vše",
 
 		AutoPageSizePrefix:"table-autopage:",
 		AutoPageJumpPrefix:"table-page:",
@@ -592,13 +594,38 @@ var Table = (function(){
 			tdata.filters = null;
 		}
 		else {
+
 			// Allow for passing a select list in as the filter, since this is common design
-			if (filters.nodeName=="SELECT" && filters.type=="select-one" && filters.selectedIndex>-1) {
-				filters={ 'filter':filters.options[filters.selectedIndex].value };
+			if (filters.nodeName == "SELECT") {
+				var emptyFilter = "/^()$/";
+				if (filters.type == "select-one" && filters.selectedIndex > -1) {
+					if (filters.selectedIndex == 1 && filters.options[1].text == "Multi")
+						o.multiple = "multiple";
+					else {
+						filters = { 'filter': filters.options[filters.selectedIndex].value || emptyFilter };
+					}
+				}
+				if (filters.type == "select-multiple" && filters.selectedIndex > -1) {
+					var filterList = "/"
+					var allSelectied = filters.selectedIndex;
+					for (var i = 0; i < filters.options.length; i++) if (filters.options[i].selected)
+						filterList += "(" + filters.options[i].value.replace(/\*/g, "\\*") + ")|"
+					filterList = filterList.substr(0, filterList.length - 1).replace(/\(\)/g, "^()$") + "/";
+					if (filterList == emptyFilter) {
+						if (allSelectied == 0)
+							o.multiple = false;
+						else
+							filters = { 'filter': filterList };
+					} else
+						filters = { 'filter': filterList };
+				}
 			}
 			// Also allow for a regular input
-			if (filters.nodeName=="INPUT" && filters.type=="text") {
+			if (filters.nodeName=="INPUT" && filters.type=="text" && filters.value) {
 				filters={ 'filter':"/^"+filters.value+"/" };
+			}
+			if (filters.nodeName == 'INPUT' && filters.type == 'radio' && filters.checked) {
+				filters = { filter: '/.*' + filters.value + '.*/' };
 			}
 			// Force filters to be an array
 			if (typeof(filters)=="object" && !filters.length) {
@@ -611,8 +638,12 @@ var Table = (function(){
 				if (typeof(filter.filter)=="string") {
 					// If a filter string is like "/expr/" then turn it into a Regex
 					if (filter.filter.match(/^\/(.*)\/$/)) {
-						filter.filter = new RegExp(RegExp.$1);
-						filter.filter.regex=true;
+						try {
+							filter.filter = new RegExp(RegExp.$1);
+							filter.filter.regex=true;
+						} catch (e) {
+							filter.filter = "";
+						}
 					}
 					// If filter string is like "function (x) { ... }" then turn it into a function
 					else if (filter.filter.match(/^function\s*\(([^\)]*)\)\s*\{(.*)}\s*$/)) {
@@ -966,12 +997,19 @@ var Table = (function(){
 						func.insert(cell,colValues);
 					}
 					else {
-						var sel = '<select onchange="Table.filter(this,this)" onclick="Table.cancelBubble(event)" class="'+table.AutoFilterClassName+'"><option value="">'+table.FilterAllLabel+'</option>';
+						var sel = '<select onchange="Table.filter(this,this)" onclick="Table.cancelBubble(event)" class="'+table.AutoFilterClassName+'"><option value="">'+table.FilterAllLabel+'</option><option>Multi</option>';
 						for (var i=0; i<colValues.length; i++) {
 							sel += '<option value="'+colValues[i]+'">'+colValues[i]+'</option>';
 						}
 						sel += '</select>';
-						cell.innerHTML += "<br>"+sel;
+						var place = cell;
+						while (place
+							&& (place.nodeName != 'DIV'
+								|| (place.lastElementChild && place.lastElementChild.nodeName != 'BR'))) {
+							place = place.lastElementChild;
+						}
+						if(place) place.innerHTML += sel;
+
 					}
 				}
 			}
