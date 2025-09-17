@@ -1,0 +1,124 @@
+/* Based on https://github.com/PELock/Total-Commander-FTP-Password-Recovery-Tool/blob/main/TotalCommanderPasswordDecoder.php
+- GPT translated to Node.js
+- adjusted to work in client JS
+*/
+<script>
+class TotalCommanderPasswordDecoder {
+  constructor() {
+    // keep seed as BigInt (0..2^32-1)
+    this.random_seed = 0n;
+  }
+
+  // convert hex string to array of byte values (0-255)
+  static hexstr2bytearray(str) {
+    if (typeof str !== 'string') return false;
+    const s = str.trim();
+    if (s.length === 0 || (s.length & 1) !== 0) return false;
+    if (!/^[0-9a-fA-F]+$/.test(s)) return false;
+    const out = [];
+    for (let i = 0; i < s.length; i += 2) {
+      out.push(parseInt(s.slice(i, i + 2), 16) & 0xFF);
+    }
+    return out;
+  }
+
+  // initialize random generator with specified seed
+  srand(seed) {
+    // store as 32-bit unsigned BigInt
+    this.random_seed = BigInt(Number(seed) >>> 0);
+  }
+
+  // generate pseudo-random number from the specified seed
+  rand_max(nMax) {
+    // PHP: $this->random_seed = (( ($this->random_seed * 0x8088405) & 0xFFFFFFFF) + 1) & 0xFFFFFFFF;
+    // return ($this->random_seed * $nMax) >> 32;
+    const MULT = 0x8088405n; // BigInt
+    // ensure 32-bit arithmetic
+    this.random_seed = (((this.random_seed * MULT) & 0xFFFFFFFFn) + 1n) & 0xFFFFFFFFn;
+    const prod = this.random_seed * BigInt(nMax);
+    // high 32 bits
+    const res = Number((prod >> 32n) & 0xFFFFFFFFn);
+    return res;
+  }
+
+  // rotate bits left for 8-bit value
+  static rol8(v, counter) {
+    v = v & 0xFF;
+    const c = counter & 7; // only 0..7 matters
+    return (( (v << c) | (v >>> (8 - c)) ) & 0xFF) >>> 0;
+  }
+
+  // decrypt Total Commander FTP password (hex string -> decoded string)
+  decryptPassword(passwordHexString) {
+    const password_hex = TotalCommanderPasswordDecoder.hexstr2bytearray(passwordHexString);
+    if (!password_hex) return false;
+
+    let password_length = password_hex.length;
+    if (password_length <= 4) return false;
+
+    // minus checksum (last 4 bytes)
+    password_length -= 4;
+
+    // Step 1: rol8 each byte with rand_max(8), seed=849521
+    this.srand(849521);
+    for (let i = 0; i < password_length; i++) {
+      const r = this.rand_max(8);
+      password_hex[i] = TotalCommanderPasswordDecoder.rol8(password_hex[i], r);
+    }
+
+    // Step 2: shuffle using rand_max(password_length), seed=12345 (256 iterations)
+    this.srand(12345);
+    for (let i = 0; i < 256; i++) {
+      const x = this.rand_max(password_length);
+      const y = this.rand_max(password_length);
+      const c = password_hex[x];
+      password_hex[x] = password_hex[y];
+      password_hex[y] = c;
+    }
+
+    // Step 3: XOR with rand_max(256), seed=42340
+    this.srand(42340);
+    for (let i = 0; i < password_length; i++) {
+      password_hex[i] = password_hex[i] ^ this.rand_max(256);
+      password_hex[i] &= 0xFF;
+    }
+
+    // Step 4: subtract rand_max(256), seed=54321
+    this.srand(54321);
+    for (let i = 0; i < password_length; i++) {
+      password_hex[i] = (password_hex[i] - this.rand_max(256)) & 0xFF;
+    }
+
+    // Build final password string (use latin1 so each byte maps to single char)
+    //const buf = Buffer.from(password_hex.slice(0, password_length));
+    //return buf.toString('latin1'); // latin1 preserves raw byte values
+    return String.fromCharCode.apply(null, password_hex).substr(0, password_length);
+  }
+}
+
+// Simple INI extractor for lines like Password=... or Password0=...
+function extractPasswordsFromIni(text) {
+  const lines = text.split(/\r?\n/);
+  const found = [];
+  for (const line of lines) {
+    const m = line.match(/^\s*(?:Password|Pass|Password\d+)\s*=\s*(.+)\s*$/i);
+    if (m) found.push(m[1].trim());
+  }
+  return found;
+}
+
+// CLI
+function main() {
+
+  const decoder = new TotalCommanderPasswordDecoder();
+
+  const hex = prompt("Enter TC Encrypted password")
+  const dec = decoder.decryptPassword(hex);
+  if (dec === false) {
+    alert('Invalid hex string or unsupported format.');
+  }
+  prompt("Decrypted:",dec);
+}
+
+main();
+</script>
