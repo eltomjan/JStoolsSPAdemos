@@ -50,7 +50,7 @@ async function learn() {
         let result = slovnik[(pos * 4) + 3];
         await langs[ord](text);
         els[0].innerText += " → ";
-        await sayCs(result);
+        await langs[ord](result);
 		els[1].innerText += text + " → " + result + "\n";
 	}
 
@@ -96,11 +96,7 @@ function sayUA(w) {
 <div name="twoWords"></div>
 <span name="wordsList"></span>
 <BR>
-<textarea>1 krát 2
-1 times 2
-1 раз 2
-2
-2 krát 2
+<textarea>2 krát 2
 2 times 2
 2 раз 2
 4
@@ -136,10 +132,6 @@ function sayUA(w) {
 10 times 2
 10 раз 2
 20
-1 krát 3
-1 times 3
-1 раз 3
-3
 2 krát 3
 2 times 3
 2 раз 3
@@ -176,10 +168,6 @@ function sayUA(w) {
 10 times 3
 10 раз 3
 30
-1 krát 4
-1 times 4
-1 раз 4
-4
 2 krát 4
 2 times 4
 2 раз 4
@@ -216,10 +204,6 @@ function sayUA(w) {
 10 times 4
 10 раз 4
 40
-1 krát 5
-1 times 5
-1 раз 5
-4
 2 krát 5
 2 times 5
 2 раз 5
@@ -256,10 +240,6 @@ function sayUA(w) {
 10 times 5
 10 раз 5
 50
-1 krát 6
-1 times 6
-1 раз 6
-6
 2 krát 6
 2 times 6
 2 раз 6
@@ -296,10 +276,6 @@ function sayUA(w) {
 10 times 6
 10 раз 6
 60
-1 krát 7
-1 times 7
-1 раз 7
-7
 2 krát 7
 2 times 7
 2 раз 7
@@ -336,10 +312,6 @@ function sayUA(w) {
 10 times 7
 10 раз 7
 70
-1 krát 8
-1 times 8
-1 раз 8
-8
 2 krát 8
 2 times 8
 2 раз 8
@@ -376,10 +348,6 @@ function sayUA(w) {
 10 times 8
 10 раз 8
 80
-1 krát 9
-1 times 9
-1 раз 9
-9
 2 krát 9
 2 times 9
 2 раз 9
@@ -416,10 +384,6 @@ function sayUA(w) {
 10 times 9
 10 раз 9
 90
-1 krát 10
-1 times 10
-1 раз 10
-10
 2 krát 10
 2 times 10
 2 раз 10

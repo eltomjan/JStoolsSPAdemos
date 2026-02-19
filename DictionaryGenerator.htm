@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>SPA Dictionary Generator</title>
+<script>
+function generateSPA() {
+    const dataEntryObject = document.getElementById('dataInput');
+    const input = dataEntryObject.value.trim();
+    if (!input) return alert('Vložte data!');
+
+    const lines = input.split('\n');
+    langs = lines[0].split('\t').map(h => h.trim());
+    let fileName = document.getElementById('fileName').value || ('slovnik ' + langs.join(' ')) ;
+
+    slovnik = {};
+    for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split('\t');
+        slovnik[cols[0]] = //[cols[1]];
+            cols.slice(1).filter(text => text !== "");
+    }
+
+    document.title = fileName;
+    document.body.className = "generated";
+    const mark = "//gene"+"rated";
+    const backupInput = dataEntryObject.value;
+    dataEntryObject.value = "";
+    let template = document.body.parentElement.outerHTML.split(mark);
+    template[1] = `\nlet langs=["${langs[0]}","${langs[1]}"];let slovnik=${JSON.stringify(slovnik)};\n`
+    dataEntryObject.value = backupInput;
+
+    const blob = new Blob([template.join(mark)], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName + '.html';
+    link.click();
+    init();
+}
+//generated
+let langs = ["en","cs"];
+let slovnik = {};
+//generated
+function switchToGen() {
+    document.body.className = "empty";
+    stop = true;
+}
+let l1, els, stop;
+function init() {
+	l1 = Object.keys(slovnik);
+    if (!l1.length) return;
+	els = [document.getElementsByName("twoWords")[0],
+		document.getElementsByName("wordsList")[0],
+		document.getElementsByName("no")[0]
+	];
+	document.getElementsByName("repeat")[0].value = l1.length;
+}
+async function learn() {
+	stop = false;
+	let repeats = parseInt(document.getElementsByName("repeat")[0].value);
+    els[1].innerText = ""; 
+	let last;
+	for(let i=0;repeats < 1 || i < repeats;i++) {
+		let pos = parseInt(Math.random() * l1.length);
+		if (last === pos) {
+			i--;
+			continue;
+		}
+		last = pos;
+		let ord = parseInt(Math.random() + 0.5);
+		els[2].innerText = (i+1);
+		els[0].innerText = "";
+		if(stop) {
+			els[1].innerText += '──────────────\n';
+			return;
+		}
+		let ew = l1[pos] + ';', cs = [];
+		for(let e of slovnik[l1[pos]]) {
+			if (e.indexOf('/') > 0) {
+				if (ew.substr(-1) === ';') ew = ew.substr(0, ew.length-1);
+				ew += ',' + e.replace(/\//g, ',');
+			} else cs.push(e);
+		}
+		if (ew.substr(-1) === ';') ew = ew.substr(0, ew.length-1);
+		if (ord) {
+			await sayL1(ew);
+			els[0].innerText += " → ";
+			await sayL2(cs);
+		} else {
+			await sayL2(cs);
+			els[0].innerText += " → ";
+			await sayL1(ew);
+		}
+		els[1].innerText += ew + " " + "←→"[ord] + " " + cs + "\n";
+	}
+
+}
+function sayL1(w) {
+	els[0].innerText += w;
+	let m = new SpeechSynthesisUtterance(w);
+	m.lang=langs[0];
+	let p = new Promise(resolve => {
+    	m.onend = () => resolve();
+  	});
+	speechSynthesis.speak(m)
+	return p;
+}
+function sayL2(w) {
+	w = w.join(',').replace(/\//g, ',');
+	els[0].innerText += w;
+	let m = new SpeechSynthesisUtterance(w.replace(/,/g, ' '));
+	m.lang=langs[1];
+	let p = new Promise(resolve => {
+    	m.onend = () => resolve();
+  	});
+	speechSynthesis.speak(m)
+	return p;
+}
+function switchData() {
+    slovnik = {};
+    document.body.className = "empty";
+}
+</script>
+    <style>
+        body.empty { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; line-height: 1.6; }
+        textarea { width: 100%; height: 200px; margin-bottom: 10px; }
+        button { padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none; border-radius: 5px; }
+        .info { background: #f4f4f4; padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+
+        #sectionLearn { display: none; }
+        body.generated #sectionLearn { display: block; }
+        body.generated #sectionGenerator { display: none; }
+        body.generated { font-size: 12px; background-color: #2c3e50; color: white; }
+        .generated div { font-weight: bold; font-size: 18px; }
+        body.generated a { color: #3498db; }
+        input { width: 50px; }
+    </style>
+</head>
+<body onload="init()" class="empty">
+<span id="sectionGenerator">
+    <h1>Generátor Slovníku</h1>
+    <div class="info">
+        <strong>Návod:</strong> V Excelu označte sloupce (např. 'en' a 'cs' <a target="_blank" href="https://en.wikipedia.org/wiki/IETF_language_tag#List_of_common_primary_language_subtags">wikipedia/IETF_language_tag</a>), zkopírujte je (Ctrl+C) a vložte sem. 
+        První řádek musí obsahovat kódy jazyků.
+    </div>
+    
+    <textarea id="dataInput" placeholder="en	cs
+Apple	Jablko	Jabko
+Car	Auto
+(případně)
+es	cs
+casa	dům
+comida	jídlo"></textarea>
+    <br>
+    <input type="text" id="fileName" placeholder="Název souboru (/slovnik es cs)" style="padding: 9px; width: 250px;">
+    <button onclick="generateSPA()">Vygenerovat a stáhnout SPA slovník</button>
+</span>
+<span id="sectionLearn">
+<span name="no"></span> / <input name="repeat">x <button onclick="learn()">Spusť výuku</button>
+<button onclick="stop=true">Zastavit výuku</button>
+ | <button onclick="switchData()">Nová data</button>
+<div name="twoWords"></div>
+<span name="wordsList"></span>
+<BR>
+<a href="https://stackoverflow.com/questions/47379725/how-do-i-add-a-voice-language-to-speechsynthesis#47485786">Přidání jazyků TTS do Windows 10</a><BR>
+</span>
+</body>
+</html>

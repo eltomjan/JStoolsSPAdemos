@@ -18,7 +18,6 @@
 "A snowball's chance in hell": ["Naprosto bez šance"],
 "A stitch in time saves nine": ["Problémy je nejlepší řešit včas"],
 "A storm in a teacup":["bouře ve sklenici vody"],
-"Accidents will happen":["nehody se stávají; měli byste počítat se vším"],
 "Accidents will happen.":["Nehody se stávají. Měli byste počítat se vším."],
 "Actions speak louder than words": ["Skutky jsou víc než slova"],
 "Add insult to injury": ["Celé to ještě víc zhoršit"],

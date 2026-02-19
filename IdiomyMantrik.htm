@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Mantrik 2026 - Anglické idiomy</title>
+    <style>
+        :root { --neon: #00ff00; }
+        body { background: #000; color: var(--neon); font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #monitor { width: 95%; max-width: 650px; height: 420px; border: 4px solid #333; padding: 15px; position: relative; background: #000; box-sizing: border-box; display: none; border-radius: 10px; box-shadow: 0 0 30px #111; }
+        
+        #header { display: flex; justify-content: space-between; font-size: 18px; border-bottom: 1px solid #222; padding-bottom: 5px; margin-bottom: 15px; position: relative; }
+        .currency { color: #fff; font-weight: bold; text-shadow: 0 0 5px #fff; z-index: 10; }
+        
+        #translation-main { color: #ffca28; font-size: 1.1em; margin-bottom: 5px; min-height: 1.2em; }
+        #translation-literal { color: #0088ff; font-size: 0.85em; font-style: italic; margin-bottom: 20px; min-height: 1.2em; }
+        #text-area { font-size: 22px; line-height: 1.4; letter-spacing: 2px; min-height: 120px; white-space: pre-wrap; }
+
+        /* Saxana ruka v úrovni hlavičky */
+        #hand-wrap { 
+            position: absolute; left: 0; top: -11px; white-space: nowrap; overflow: hidden; 
+            width: 0; z-index: 5; font-size: 30px; pointer-events: none; display: flex; align-items: center;
+            background: black; /* Aby ruka zakrývala text pod sebou při sběru */
+        }
+
+        @keyframes saxana-collect {
+            0% { width: 0; left: 0; }
+            50% { width: 100%; left: 0; }
+            100% { width: 0; left: 0; }
+        }
+
+        .hole { color: #111; min-width: 1ch; color: var(--neon); display: inline-block; }
+        @keyframes blink {
+            0%, 100% { opacity: 1; background: #004400; }
+            50% { opacity: 0.3; background: #002200; }
+        }
+        .hole.active {
+            animation: blink 1s infinite;
+            color: var(--neon);
+            font-weight: bold;
+        }
+        .filled { color: #fff; }
+        #zle { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            font-size: 60px; color: red; font-weight: bold; display: none; z-index: 400; 
+            background: black; padding: 20px; border: 6px double red; 
+        }
+        
+        #mobile-input { position: absolute; opacity: 0; pointer-events: none; }
+        #start-screen { text-align: center; }
+        #start-btn { padding: 20px 40px; font-size: 24px; background: var(--neon); color: #000; border: none; font-family: inherit; cursor: pointer; border-radius: 8px; box-shadow: 0 5px 0 #008800; }
+        .hint { margin-top: 20px; font-size: 14px; color: #666; text-transform: uppercase; }
+    </style>
+</head>
+
+<body>
+
+    <div id="start-screen">
+        <button id="start-btn">START [ . ]</button>
+        <div class="hint">Tečka zahájí • Enter zrychlí náhled • Tečka v náhledu = START DRILL</div>
+    </div>
+
+    <div id="monitor">
+        <div id="header">
+            <div id="hand-wrap">===============================👉</div>
+            <span class="currency"></span>
+            <span id="index">J 1:1</span>
+            <span id="score">(-)</span>
+            <span class="currency">€</span>
+        </div>
+        <div id="zle">CHYBA&nbsp;!</div>
+        <div id="translation-main"></div>
+        <div id="translation-literal"></div>
+        <div id="text-area"></div>
+        <input type="text" id="mobile-input" autocomplete="off" spellcheck="false">
+    </div>
+
+    <script>
+const Bible = {"Idiomy":[["A bird in the hand is worth two in the bush"],["A blessing in disguise"],["A dime a dozen"],
+["A gift from the gods"],["A little bird told me."],["A little learning is a dangerous thing"],["A load of rubbish"],
+["A mine of information"],["A needle in a haystack"],["A nervous wreck"],["A penny for your thoughts"],
+["A penny saved is a penny earned"],["A perfect storm"],["A picture is worth 1000 words"],["A safe bet"],
+["A snowball effect"],["A snowball's chance in hell"],["A stitch in time saves nine"],["A storm in a teacup"],
+["Accidents will happen."],["Actions speak louder than words"],["Add insult to injury"],
+["All good things must come to an end."],["All talk, no action."],["An apple a day keeps the doctor away"],
+["An ounce of prevention is worth a pound of cure"],["Another cup of tea"],["Answer the door!"],["Ants in pants"],
+["Ants in pants."],["Are you finished?"],["Are you serious"],["As a matter of fact / in the matter of fact"],
+["As like as two peas"],["As right as rain"],["As soon as you can"],["As sure as eggs are eggs."],["Ask for the moon"],
+["At the end of the day"],["At what time"],["Attention"],["Awesome"],["Bad form"],["Bag of bones"],["Bag of nerves"],
+["Bark up the wrong tree"],["Bark up the wrong tree."],["Barking up the wrong tree"],["Be (a) chicken"],["Be a lemon"],
+["Be a pain in the neck"],["Be a turkey"],["Be as cool as a cucumber"],["Be in a jack"],["Be more considerate!"],
+["Be off at once"],["Be out of the question"],["Be that as it may"],["Beat about the bush."],["Beat around the bush"],
+["Beating a dead horse."],["Better buy"],["Better late than never"],["Better safe than sorry."],["Big fish"],["Bill"],
+["Birds of a feather flock together"],["Bite off more than you can chew"],["Bite the bullet"],["Bite your tongue."],
+["Bolt from the blue"],["Booze"],["Break a leg!"],["Break a leg"],["Break the ice"],["Bucks"],["Bullshit"],["Burn bridges"],
+["Burn one's bridges behind one"],["Bury the past"],["Business, you know"],["Butter wouldn't melt in her mouth"],
+["Butterflies in your stomach"],["By the skin of your teeth"],["By the way"],["Call it a day"],["Calm before the storm"],
+["Can you beat it?"],["Can you fix it"],["Chicken out"],["Chicken"],["Come along with me and have a drink"],
+["Come rain or shine"],["Come right in"],["Come, come Lady Astor"],["Comparing apples to oranges"],["Copycat"],
+["Costs an arm and a leg"],["Could you show me?"],["Cry me a river."],["Cry wolf."],["Curiosity killed the cat"],
+["Cut somebody some slack"],["Cut the crap!"],["Cut the mustard"],["Cutting corners"],["Dead as a doornail."],["Dear Mr."],
+["Dear me"],["Decline and fall"],["Detour"],["Did you enjoy the meals"],["Did you read that ad /advertisement/"],
+["Do something at the drop of a hat"],["Do unto others as you would have them do unto you"],["Do you mind"],
+["Do you remember something in particular"],["Do you smoke?"],["Dog's life"],["Don't beat a dead horse"],
+["Don't count your chickens before they hatch"],["Don't cry over spilt milk"],["Don't get me wrong."],
+["Don't give up your day job"],["Don't judge a book by its cover."],["Don't put all your eggs in one basket"],
+["Don't put all your eggs in one basket."],["Dorky"],["Down to the wire."],["Dry run"],["Eager beaver"],
+["Early bird catches the worm."],["Early bird"],["Easy does it"],["Every cloud has a silver lining"],["Every dog has his day"],
+["Every man is the architect of his own fortune."],["Every rose has its thorn."],["Face the music."],["Face up to a failure"],
+["Familiarity breeds contempt"],["Feel something in one's bones"],["Fishy"],["Fit as a fiddle"],["For God’s sake"],
+["Fortune favours the bold"],["Get a second wind"],["Get a taste of your own medicine"],["Get ahead"],
+["Get hold of the wrong end of the stick"],["Get out of hand"],["Get something out of your system"],["Get wind of something"],
+["Get your act together"],["Give me a hand please!"],["Give rein"],["Give someone the benefit of the doubt"],
+["Give someone the cold shoulder"],["Go back to the drawing board"],["Go down in flames"],["Go on a wild goose chase"],
+["Good things come to those who wait"],["Hang in there"],["Has the cat got your tongue?"],["Haste makes waste"],
+["Have a bee in one's bonnet"],["Have ants in one's pants"],["Have the guts"],["Have your head in the clouds"],
+["He has bigger fish to fry"],["He who laughs last laughs loudest"],["He's a chip off the old block"],
+["He's not playing with a full deck"],["He's off his rocker"],["He's sitting on the fence"],
+["Hear something straight from the horse's mouth"],["Heaven on earth"],["Hit the nail on the head"],["Hit the nail on the head."],
+["Hit the sack"],["Hold your horses!"],["Holy cow!"],["How about you?"],["How was the movie?"],["Hunger is the best sauce."],
+["I am full"],["I am going to ..."],["I am going to"],["I am hungry as a horse"],["I am in a hurry"],["I am not very well"],
+["I am on a diet"],["I am short of /out of/ money"],["I am sick of everything"],["I am sorry for you"],["I am sorry"],
+["I am sorry, really I am"],["I am sory to say"],["I am sure you are right"],["I am sure"],["I am thhrough with it"],
+["I am through with you"],["I am to see Mr. XY."],["I am very busy"],["I am wondering"],["I beg to request"],
+["I beg your pardon"],["I can't get it started"],["I changed my mind"],["I don't know what to do first"],["I don't think so"],
+["I doubt it"],["I have no fancy for"],["I haven't got any money left"],["I haven't seen you for ages"],["I like you"],
+["I mean it!"],["I must be going"],["I must go for shopping"],["I remain yours very sincerely"],["I shall manage myself"],
+["I shall think it over"],["I want as well"],["I want you to have a good look around"],["I wasn't born yesterday."],
+["I will pick you up"],["I wish I were you"],["I wish to inform you"],["I won't be long / I will not"],
+["I wonder who that can be"],["I wonder"],["Ignorance is bliss"],["Is it drinkable water?"],
+["It ain't over till the fat lady sings"],["It cost me an arm and a leg"],["It doesn't make any difference."],
+["It doesn't ring a bell."],["It is a poor workman who blames his tools"],["It is always darkest before the dawn"],
+["It takes one to know one"],["It takes two to tango"],["It ́s not good crying over spilt milk."],["It's a piece of cake"],
+["It's a storm in teacup."],["It's about as broad as it's long"],["It's all Greek tome."],["It's always darkest before the dawn."],
+["It's my turn."],["It's none of your business."],["It's not my cup of tea."],["It's not rocket science"],
+["It's raining cats and dogs"],["It's raining cats and dogs."],["It’s a mixed blessing"],["Jump on the bandwagon"],["Keep left"],
+["Keep right"],["Keep to the right"],["Keep trying"],["Kill two birds with one stone"],["Kill two birds with one stone."],
+["Know which way the wind is blowing"],["Lame"],["Last straw"],["Leave no stone unturned"],["Leave no stone unturned."],
+["Let me have some lines"],["Let me know"],["Let me see"],["Let sleeping dogs lie"],["Let sleeping dogs lie."],
+["Let someone off the hook"],["Let the cat out of the bag"],["Let us go / let's go!"],["Let's get started"],["Let's have it"],
+["Life is not a bowl of cherries."],["Like a bolt from the blue"],["Like riding a bicycle"],["Like two peas in a pod"],
+["Live and learn"],["Live in clover"],["Loaded"],["Look at me"],["Look before you leap"],["Look here Mom"],["Look here"],
+["Look out"],["Lose heart"],["Lower one's sights"],["Make a beeline"],["Make a long story short"],
+["Make a mountain out of a molehill."],["Make hay while the sun shines"],["Make it forty dollars"],["Make one‘s day"],
+["Make up your mind"],["Make yourself comfortable"],["Maximum speed 55 miles"],["Mind what you're saying"],
+["Mind your own business"],["Minimum speed 40 miles"],["Miss the boat"],["Mr. X. reporting Sir"],["Mr. X. to see you"],
+["My Goodness"],["My hairs standing on end"],["My time is up"],["Never say never."],["No U turn"],["No matter whether..."],
+["No pain, no gain"],["No pain, no gain."],["Nobody cares two hoots about it."],["Not for all the tea in China."],
+["Not to have anything between the ears"],["Nothing doing"],["Nothing like that"],["Nothing ventured, nothing gained"],
+["Offering you again our apology"],["Oh I see!"],["Oh my gosh!"],["Oh please do!"],["On cloud nine"],["On second thought"],
+["On the ball"],["On the dot"],["On thin ice"],["On this occasion"],["Once bitten, twice shy"],["Once in a blue moon"],
+["Once upon a time there was ..."],["One by one"],["Out of the frying pan and into the fire"],["Pigheaded"],
+["Play devil's advocate"],["Please sit down and join us"],["Please"],["Promise the moon"],["Pull someone's leg"],
+["Pull yourself together"],["Put it in a nutshell"],["Put something on ice"],["Put the cart before the horse."],
+["Rain on someone's parade"],["Relieve one's feelings"],["Rest on one's laurels"],["Rookie"],["Round the bend"],
+["Run like the wind"],["Saving for a rainy day"],["Shake like leaf"],["Shame on you!"],["Shape up or ship out"],
+["Sing a different song"],["Sink or swim."],["Slow and steady wins the race"],["Snowed under"],["So far so good"],
+["Speak of the devil"],["Spill the beans"],["Take a rain check"],["Take forty winks"],["Take it with a grain of salt"],
+["Take the reins"],["Takes one to know one."],["Taste your own medicine."],["That ship has sailed"],
+["That's a different kettle of fish."],["That's a good idea."],["That's about the limit."],["That's the last straw"],
+["That’s not my cup of tea"],["The apple of discort"],["The appleof discort"],["The back of beyond"],
+["The ball is in your court"],["The best of both worlds"],["The best thing since sliced bread"],["The common knowledge"],
+["The devil is in the details"],["The early bird gets the worm"],["The elephant in the room"],["The lion's share"],
+["The moment of truth"],["The pot calling the kettle black"],["The rat race"],["The whole nine yards"],
+["There are clouds on the horizon"],["There are other fish in the sea"],["There's a method to his madness"],
+["There's no such thing as a free lunch"],["Things are going from bad to worse."],
+["Those who live in glass houses shouldn't throw stones"],["Through thick and thin"],["Throw caution to the wind"],
+["Time flies when you're having fun"],["Time is money"],["Time's up!"],["To be a lemon"],["To be a peach"],
+["To be a piece of cake"],["To be a rat"],["To be a smart cookie"],["To be a turkey"],["To be as cool as a cucumber"],
+["To be chicken"],["To be foxy"],["To be hot-headed"],["To be hot-headed. "],["To be in the black"],["To be in the pink"],
+["To be in the red"],["To be the top banana"],["To be the top banana."],["To be white as a sheet"],["To be yellow"],
+["To bite your tongue"],["To bring home the bacon"],["To bring home the bacon."],["To cry over splilled milk"],
+["To eat like a bird"],["To eat like a horse"],["To eat like a pig"],["To feel blue"],["To feel blue."],
+["To feel something in one's bones."],["To get bent out of shape"],["To get the chop"],["To go the dogs."],
+["To have a lot on one's plate"],["To have goose pimples/bumps."],["To have heart in mouth."],
+["To have one's fingers in many pies"],["To hold one's tongue"],["To keep in the dark"],["To kick the bucket"],
+["To kick the bucket."],["To knock your soft off"],["To lead someone by the nose"],["To lend someone an ear"],
+["To lend someone an ear."],["To lose heart."],["To make a mountain out of a molehill."],["To make matters worse"],
+["To promise the Moon."],["To pull one's leg"],["To push up daisies"],["To push up daisies."],["To see red"],
+["To sell like hot cakes"],["To sell like hot cakes."],["To spill the beans"],["To walk on eggshells"],["To walk on eggshells."],
+["To wear your heart on your sleeve"],["To wear your heart on your sleeve."],["To work like adog"],["Under the weather"],
+["Walk on eggshells"],["Waste not, want not"],["We see eye to eye"],["We'll cross that bridge when we come to it"],
+["Wear your heart on your sleeve"],["Weather the storm"],["Well begun is half done"],["Well done steak"],["What a shame"],
+["What about ..."],["What about me"],["What about you?"],["What can I do for you"],["What do I do with it"],["What do you do"],
+["What do you make of it?"],["What is the time?"],["What of it"],["What was on?"],["What was the matter"],
+["What was wrong with it?"],["What will the people think about us"],["What will you have"],["What's happened"],
+["What's his phone number"],["What's on your mind"],["What's that?"],["What's the big idea"],["What's up"],["What's up?"],
+["What's use of"],["When it rains it pours"],["Where are you from?"],["Where can I withdraw money?"],
+["Where would you like to go?"],["Which is the way"],["Who is starring?"],["Will that be of any help to you?"],
+["Wolf in sheep's clothing."],["Work like a dog"],["Work upon"],["Wrap your head around something"],["You are my only friend"],
+["You are right / As for the ..."],["You are right to do so"],["You are right to do so."],["You are shadowed"],
+["You are telling me"],["You bet"],["You can catch more flies with honey than you can with vinegar"],
+["You can lead a horse to water, but you can't make him drink"],["You can say that again"],
+["You can't have your cake and eat it too"],["You can't have your cake and eat it."],["You can't judge a book by its cover"],
+["You can't make an omelet without breaking some eggs"],["You don't have to be !"],["You know what they say."],
+["You knowwhat they say."],["You may leave now to carry on your duty"],["You'll laugh on the other side of your face."],
+["You're barking up the wrong tree."],["You're kidding"],["You're welcome"],["Your guess is as good as mine"],
+["Your letter in hand"],["keep the change"],["not at all"],["what is it"]]};
+const Ekumenka = {"Idiomy":[["Lepší vrabec v hrsti nežli holub na střeše"],["Štěstí v neštěstí"],["Něco obyčejného, běžného"],
+["dar od boha; nečekaná výhoda"],["Štěbetají si to vrabci na střeše."],["Ze všeho nejhorší jsou amatéři"],
+["snůška nesmyslů (žvástů)"],["chodící kniha;všechno ví"],["jehla v kupce sena"],["uzlíček nervů;nervák"],
+["Řekni mi, co si myslíš"],["Co ušetřím, nemusím vydělat"],["Horší to už být nemohlo"],["Jeden obrázek řekne víc než tisíc slov"],
+["sázka na jistotu;tutovka"],["Efekt sněhové koule"],["Naprosto bez šance"],["Problémy je nejlepší řešit včas"],
+["bouře ve sklenici vody"],["Nehody se stávají. Měli byste počítat se vším."],
+["Skutky jsou víc než slova"],["Celé to ještě víc zhoršit"],["Všechno dobré jednou končí."],["Skutek utek."],["jablka jsou zdravá"],
+["Prevence je základ"],["jiná věc; mimo téma"],["jděte otevřít dveře!"],["mít roupy / neposedět"],["Mít roupy. / Neposedět."],
+["Už jsi skončil?"],["myslíte to vážně"],["ve skutečnosti, vlastně I've got it"],
+["v doslovném překladu než dvě fazole, v přeneseném podobný jako vejce vejci"],["Dokonalost sama"],
+["co nejdříve, jak nejdříve budeš moci"],["Tak jako, že se xxx jmenuju."],["požadovat nemožné"],["na konec; ve výsledku"],
+["v kolik hodin"],["pozor"],["úžasné, dělo"],["nezdvořilý"],["kost a kůže, hodně hubený"],["uzlíček nervů; nervák"],
+["plakat na špatném hrobě"],["Plakat na špatném hrobě."],["Plakat na špatném hrobě"],["být strašpytel"],
+["Je to krám.; Je to k ničemu."],["jít někomu na nervy"],["být hloupý"],["chladnokrevný; nic ho nerozhází"],["být v průšvihu"],
+["trochu víc uvažuj !"],["koukejte zmizet!"],["vyloučeno; nepřichází v úvahu"],["ať je tomu jakkoliv"],["Chodit okolo horké kaše."],
+["Chodit kolem horké kaše"],["Házet na stěnu hrách. Házet perly sviním."],["nebo totéž"],["Lépe pozdě než vůbec"],
+["Opatrnosti nikdy nezbývá. Dvakrát měř a jednou řež."],["tedy velká ryba, se používá k označení důležité osoby"],
+["William"],["Vrána k vráně sedá (obvykle negativně)"],["Vzít si příliš velké sousto"],
+["Kousnout do kyselého jablka (muset udělat něco nepříjemného)"],["Držet jazyk za zuby."],["Blesk z čistého nebe"],
+["alkohol, chlast"],["Zlom vaz! Hodně štěstí!"],["Zlom vaz"],["Prolomit ledy, napětí mezi lidmi"],["peníze, prachy"],
+["hloupost, blbost"],["Pálit za sebou mosty"],["pálit za sebou mosty"],["udělat tlustou čáru za minulostí;začít znova"],
+["to víte, obchod"],["vypadá jako neviňátko"],["někdo je kvůli něčemu nervózní; běhají po něm mravenci"],["O vlásek, jen tak tak"],
+["mimochodem"],["Zapíchnout to, zabalit to (skončit práci)"],["Ticho před bouří"],["Dokážete to překonat ? / hovor."],
+["umíte to spravit?"],["zbaběle vycouvat"],["zbabělec"],["pojď se se mnou něčeho napít"],["I kdyby trakaře padaly"],
+["jen pojďte dál"],["ale, ale lejdy Astorová"],["Srovnávat hrušky s jablky"],["napodobenina / opičící se papoušek"],
+["Stát fůru peněz"],["Mohli byste mi to ukázat?"],["Klidně se snaž, ale moje sympatie nedostaneš."],["Vyvolávat planý poplach."],
+["Kdo se moc ptá, moc se dozví"],["Nebýt k někomu tak kritický, být shovívavější"],["Neříkej nesmysly!"],
+["Podat očekávaný výkon (udělat to správně)"],["Něco odbýt, odfláknout"],["Nepoužitelný."],
+["Vážený pane / oslovení v úvodu dopisu"],["to mne podržte!"],["vzestup a pád"],["objížďka"],["chutnalo Vám?"],
+["četl jsi ten inzerát?"],["Okamžitě, bez rozmýšlení něco udělat"],
+["Nedělej druhým, co nechceš, aby dělali tobě. Známé rovněž jako 'The Golden Rule'"],
+["máte něco proti tomu /odpovíte-li yes, znamená to, že máte námitky"],["vzpomínáte si na něco zvláštního"],
+["Kouříte?"],["psí život"],["Házet hrách na zeď, zbytečně se snažit"],["Neříkej hop..."],["Naříkat nad rozlitým mlékem"],
+["Nechápej mě špatně."],["Tohle není zrovna tvoje parketa (=moc ti to nejde)"],["Nesuď knihu podle obalu."],
+["Nesázej všechno na jednu kartu (=příliš riskuješ)"],["Nesázej na jednoho koně. Nevsázej vše na jednu kartu."],
+["hlupák, hňup"],["Za 5 minut 12."],["nanečisto"],["horlivec"],["Ranní ptáče dál doskáče."],["ranní ptáče"],["Opatrně! Pomalu!"],
+["Všechno zlé je k něčemu dobré"],["Na každého se jednou dostane (=každý má aspoň jednu šanci)"],["Každý svého štěstí strůjce."],
+["Každá růže má svůj trn."],["Převzít zodpovědnost za činy."],["smířit se s porážkou"],
+["Znát někoho až příliš dobře (tj. i jeho špatné vlastnosti)"],["cítit to v kostech"],["divný;podezřelý"],["Zdravý jako rybička"],
+["Panebože! Proboha!"],["Odvážnému štěstí přeje"],["Nabrat čerstvý vítr do plachet"],
+["Chovat se k někomu tak, jak se k druhým chová on – aby si zkusil, jaké to je (negat.)"],["dělat kariéru"],
+["vzít věc za špatný konec"],["Vymknout se z rukou"],["Udělat něco, co mám už nějakou dobu v plánu – abych se mohl posunout dál"],
+["Dozvědět se, doslechnout se (něco tajného)"],["Buď to dělej pořádně, nebo toho radši nech"],["Pomoz mi prosím!"],
+["nechat volnou ruku"],["Věřit někomu něco"],["Někoho záměrně ignorovat"],["A zpátky na start... musíme začít zase od začátku"],
+["Vyhořet na něčem (=neuspět)"],["Marná snaha, nic než ztráta času"],["Trpělivost růže přináší"],["Nevzdávej to"],
+["Došli ti slova? Oněměl jsi?"],["Spěch je špatný rádce"],["mít brouka v hlavě"],["mít roupy;být neposedný"],["mít odvahu"],
+["Nesoustředit se, být duchem mimo"],["Takovéhle věci on neřeší. Má jiné (větší) starosti"],
+["Kdo se směje naposled, ten se směje nejlíp"],["Jablko nepadá daleko od stromu"],["Je to trouba"],
+["Zbláznil se (=chová se velmi podivně)"],["Nedokáže se rozhoupat (=rozhodnout)"],["Mít něco (nějakou informaci) přímo od zdroje"],
+["ráj na zemi"],["Uhodit hřebíček na hlavičku"],["Uhodit hřebík na hlavičku."],["Jít na kutě, zapadnout do postele"],
+["Brzdi, Nežeň, Neukvapuj se! Zadrž!"],["Ty jo!"],["A co ty?"],["Jaký byl film?"],["Hlad je nejlepší kuchař."],["Jsem plný"],
+["mám v úmyslu, hodlám /viz. faleš. budoucí čas/"],["hodlám /něco udělat, tzv. falešný budoucí čas/"],["mám hlad jako vlk"],
+["jsem ve spěchu, pospíchám"],["moc dobře se mi nevede"],["držím dietu"],["nemám dost peněz"],["mám všeho dost /po krk/"],
+["lituji Vás"],["lituji, je mi líto"],["je mi líto, opravdu líto"],["lituji, že musím říci..."],
+["jistě (jsem si jist, že...), máte pravdu"],["jsem si jist, určitě"],["už jsem s tím skoncoval"],["už jsem s Vámi skoncoval"],
+["přišel jsem navštívit pana XY."],["mám hrozně moc práce"],["1. rád bych věděl, 2. to se divím, 3. to mi leží v hlavě"],
+["dovoluji si požádat"],["prosím?"],["nemohu to nastartovat"],["rozmyslel jsem si to"],["nevím co dříve dělat"],["myslím, že ne"],
+["o tom pochybuji, to se mi nezdá"],["neoblibuji ..."],["nezbyly mi žádné peníze"],["neviděl jsem Vás hrozně dlouho"],
+["Mám tě rád"],["Myslím to vážně."],["musím jít"],["musím jít nakupovat"],["zůstávám v upřímné úctě /fráze v dopise/"],
+["zařídím to sám"],["budu o tom přemýšlet, rozmyslím si to"],["Chci také"],["ale, aby se dobře rozhlédl"],["nejsem včerejší"],
+["Vyzvednu tě"],["rád bych byl na Vašem místě Not really?"],["dovoluji si Vás informovat"],["nebudu tam dlouho"],
+["to b...i přejete!"],["1. divím se"],["Nejlepší je nic nevědět"],["Je to pitná voda?"],["Ještě není konec, ještě se uvidí"],
+["peněz jak za kozu"],["Nehraje to žádnou roli."],["To mi nic neříká."],["Svádět vlastní neschopnost na někoho/něco jiného"],
+["Nakonec se všechno v dobré obrátí; zase bude líp"],["Nejsi o nic lepší než já"],["Svůj podíl na tom mají oba"],
+["Neplač nad rozlitým mlékem."],["Je to brnkačka (to se dá zvládnout levou zadní)"],["Z toho mráčku nezaprší."],
+["to je jako prašť a uhoď"],["Je to pro mě španělská vesnice."],["Nic není tak zlé, jak to vypadá."],["Jsem na řadě."],
+["Do toho tě nic není."],["Není to můj šálek kávy."],["Není to žádná věda"],["Lije jako z konve"],
+["padají trakaře; žení se všichni čerti"],["má to svá plus i mínus"],["Dělat něco, protože je to právě v módě"],
+["držte se vlevo"],["držte se vpravo"],["držte se vpravo"],["stále se pokoušej"],["Zabít dvě mouchy jednou ranou"],
+["Zabít dvě mouchy jednou ranou."],["Vědět, odkud vítr vane (obvykle míněno negativně)"],["trapné, suché"],["poslední kapka"],
+["Obrátit všechno vzhůru nohama (=dívat se po něčem všude)"],["Nenechat kámen na kameni."],["pošli mi /napiš mi/ pár řádků"],
+["dejte mi vědět"],["počkejte, počkejte"],["Nepíchat do vosího hnízda"],["Nedráždi hada bosou nohou."],
+["Sejmout z někoho zodpovědnost"],["Prozradit tajemství"],["pojd'me"],["Tak začneme ne?"],["tak ven s tím"],
+["Život není procházka růžovým sadem."],["jako blesk z čistého nebe"],["Něco, co se člověk naučí a už nikdy nezapomene"],
+["Nerozlučná dvojka"],["Člověk se pořád učí (=udělal jsem chybu)"],["žít jako v bavlnce"],["bohatý, zazobaný"],
+["podívejte se na mne"],["Dvakrát měř, jednou řež"],["podívej se mami.."],
+["podívejte, hleďte, hele, pohleďte (zdvořilé \"hele\")"],["pozor"],["ztrácet odvahu"],["slevit z nároků"],
+["namířit si to přímo (vzdušnou čarou)"],["Abych to zkrátil..."],["Dělat z komára velblouda."],["Kout železo, dokud je žhavé"],
+["doslova 	udělejte to na 40 dolarů"],["udělat někoho šťastným"],["rozhodněte se"],["udělejte si pohodlí"],["max. rychlost 88 km"],
+["dejte si pozor na to, co říkáte"],["Starej se o své. Hleď si svého."],["nejmenší rychlost 64 km"],["Propásnout něco"],
+["hlásí se pan iks pane"],["pan iks přišel, aby Vás navštívil a podobně"],["ty má dobroto, proboha"],
+["vlasy hrůzou stávají na hlavě"],["můj čas vypršel"],["Nikdy neříkej nikdy."],["zákaz otáčení"],["bez ohledu na to zda..."],
+["Bez práce nejsou koláče"],["Bez práce nejsou koláče. / Žádná bolest, žádný zisk."],["Po tom ani pes neštěkne."],
+["Ani za nic na světě."],["být hloupý"],["/slang/ ne, to nepřichází v úvahu, to nejde"],["nic takového"],["risk je zisk"],
+["znovu se Vám omlouvajíce"],["aha"],["jemináčku!"],["jenom, prosím Vás, to udělejte"],["V sedmém nebi"],
+["když ale tak o tom přemýšlím, napadá mne, když jsem o tom znovu přemýšlel, při správné myšlence"],["Dělat něco dobře"],
+["dochvilný; na minutu přesný"],["Na tenkém ledě"],["při této příležitosti"],["Kdo se jednou spálí..."],["Jednou za uherský rok"],
+["byl jednou jeden"],["jedno po druhém"],["Z deště pod okap"],["tvrdohlavý"],["Dělat ďáblova advokáta"],
+["prosím posaďte se a připojte se k nám"],["prosím! neodpovídá se na fenk jů"],["slíbit modré z nebe"],
+["Utahovat si z někoho, vodit ho za nos"],["Zklidni se, hoď se do klidu"],["jednoduše řečeno; v kostce"],
+["Dát nějakou věc k ledu (odložit)"],["Stavět dům bez střechy."],["Zkazit někomu něco"],["nechat průchod citům"],
+["usnout na vavřínech"],["začátečník, zelenáč"],["nemít všech pět pohromadě"],["Běžet jak s větrem o závod"],
+["Schovat něco pro strýčka Příhodu"],["třást se jako osika"],["Styď se!"],["Dělej to pořádně, nebo to nech být"],["změnit názor"],
+["Buď, anebo. Hop nebo trop."],["Spolehlivost je víc než rychlost"],["Zavalený (prací)"],["Zatím se to vyvíjí dobře"],
+["My o vlku..."],["Vyklopit něco (=prozradit tajemství)"],["Odložit něco na později"],["Dát si dvacet."],
+["Brát něco se špetkou soli"],["převzít vedení"],["Ty máš co říkat. / Kdo to říká, ten to je."],["Spadnout do vlastní jámy."],
+["Pozdě honit bycha"],["To je něco jiného. / To je jiná káva."],["To je dobrý nápad."],["To je totální nestydatost."],
+["Už toho mám dost, ztratil jsem trpělivost"],["to není můj šálek čaje; to není nic pro mě"],["kámen úrazu"],["kámen úrazu"],
+["zapadákov"],["Míč je teď na tvé straně"],["Ideální situace, nejlepší varianta"],["Geniální vynález"],["všeobecné znalosti"],
+["Ďábel tkví v detailech"],["Ranní ptáče dál doskáče"],["Problém, o kterém nikdo nechce mluvit"],["největší podíl"],
+["okamžik pravdy"],["Kritizovat někoho a přitom nebýt o nic lepší"],["pachtění se za penězi"],["Celou cestu/dobu; všechno"],
+["Z toho kouká malér"],["Tohle určitě není poslední příležitost"],["Vypadá jako blázen, ale to je jenom zdání"],
+["Nic není nikdy zadarmo"],["Jde to od desíti k pěti."],["Kdo má máslo na hlavě..."],["Kamarád 'do deště'"],["Zariskovat"],
+["Zapomenout na čas (když se člověk dobře baví, nevnímá, jak rychle čas běží)"],["Čas jsou peníze"],["Čas vypršel."],
+["je to krám; je to k ničemu(většinou o přístroji, stroji)"],["být velmi příjemný"],["být snadné; to je hračka"],
+["být krysa; špatný člověk; dělat podrazy"],["být bystrý,pohotový"],["být hloupý, natvrdlý"],
+["studený jako ryba; nic ho nerozhází; chladnokrevný"],["bát se; být vystrašený"],["být přitažlivý"],
+["být horkokrevný; horká hlava; výbušný; rychle se rozzlobit"],["Být horká hlava."],
+["být solventní; mít dost peněz na zaplacení všech závazků"],["být krev a mléko"],
+["mít dluhy; nebýt solventní"],["být nejdůležitější osobou z nějaké skupiny (hlavně vpráci)"],
+["Být nejdůležitější osoba ze skupiny."],["být bílý jako křída"],["bát se"],["držet jazyk za zuby"],
+["vydělávat na chleba, na živobytí"],["Vydělávat na chleba / živobytí."],["plakat na rozlitým mlékem"],
+["jíst jako vrabec; jíst málo"],["jíst hodně"],["neumět se chovat u stolu; jíst jako prase"],["mít deprese"],["Mít deprese."],
+["Cítit to v kostech."],["Naštvat se"],["být propuštěn"],["Jít od desíti k pěti."],
+["mít toho příliš mnoho 'na talíři', pouštět se do hodně věcí"],["Mít husí kůži. Opupínkovat se."],["Být extrémně vyděšený."],
+["dělat mnoho různých věcí najednou"],["držet jazyk za zuby"],["někomu něco zatajit"],["zaklepat bačkorami; zemřít"],
+["Zemřít."],["vyrazit dech"],["vodit někoho za nos"],["poslouchat někoho"],["Naslouchat někomu."],["Ztratit odvahu."],
+["Dělat z komára velblouda."],["Zhoršit nějaký problém"],["Slibem nezarmoutíš."],["táhnout někoho za nos, natahovat"],
+["být po smrti"],["Být po smrti."],["vidět rudě; být rozzuřený"],["jít na dračku"],["Jde to na dračku."],
+["vykecat něco, prozradit tajemství"],["chodit kolem po špičkách; velice opatrně"],["Chodit okolo po špičkách / opatrně."],
+["mít srdce na dlani"],["Mít srdce na dlani."],["dřít jako kůň"],["Nebýt ve své kůži"],["chodit kolem po špičkách; velice opatrně"],
+["Když nebudeš plýtvat, budeš mít vždycky dost"],["V tom jsme zajedno"],["Nač stahovat kalhoty, brod je ještě daleko"],
+["mít srdce na dlani"],["Vyčkat, až se to přežene / procházet něčím těžkým"],["Dobře začít je půl úspěchu"],
+["propečený biftek medium done"],["jaká škoda"],["a co ..."],["a co já?, nebo	a co pro mne?"],["no a co Vy,"],
+["co mohu pro Vás udělat, čím mohu sloužit"],["What am I to do with it"],["co děláte?"],["co z toho usuzujete?"],
+["kolik je hodin?"],["no a co z toho"],["co se dělo nebo co se hrálo?"],["co se stalo"],["co s tím bylo?"],
+["co si o nás lidi pomyslí"],["co si dáte? co račte poroučet?"],["co se stalo"],["jaké má telefonní číslo"],["co máte na mysli"],
+["co to?"],["co je to za nápad"],["co je?"],["Co se děje? Jak se máš?"],["jaký má smysl..."],
+["Když se daří, tak se daří... (=když se všechno pokazí naráz)"],["Odkud jste?"],["Kde si mohu vybrat peníze?"],
+["Kam bys chtěla jít?"],["kudy se jde...?"],["kdo hraje hlavní roli?"],["pomůže Vám to?"],["Potvora převlečená za kamaráda."],
+["dřít jako kůň"],["razit si cestu vzhůru"],["Přijít něčemu na kloub"],["ty jsi mým jediným přítelem / přítelkyní"],
+["máte pravdu "],["máš právo se tak chovat"],["Máš právo se tak chovat."],["jste sledován, / stopován"],
+["mně to budete povídat ..."],["to se vsaď"],["Slušnost všude otevírá dveře"],["Navést ho můžeš, ale rozhodnout se už musí sám"],
+["To máš recht"],["Člověk nemůže mít všechno"],["Nemůžeš mít všechno. / chtít, aby se vlk nažral a koza zůstala celá."],
+["Nesuď podle zevnějšku"],["Každá legrace něco stojí; nic není zadarmo"],["nemusíte /být/"],["Víš, co se říká."],
+["Víš, co se říká."],["můžete teď odejít, pokračovat ve službě"],["On tě ten smích přejde."],["Pláčeš na špatném hrobě."],
+["/slang/ Vy žertujete, děláte si legraci, srandu"],["jste vítán"],["Nemám ponětí"],["obdrželi jsme Váš dopis"],
+["nechte si drobné (od cesty)"],["není zač"],["co je to ( hovorově	Co je? Co máš nového?)"]]};
+
+const Book2czech = {
+"Numbers": "Numeri",
+"Deuteronomy": "Deuteronomium",
+"Joshua": "Jozue",
+"Judges": "Soudců",
+"Ruth": "Rút",
+"1 Samuel": "1 Samuelova",
+"2 Samuel": "2 Samuelova",
+"1 Kings": "1 Královská",
+"2 Kings": "2 Královská",
+"1 Chronicles": "1 Paralipomenon",
+"2 Chronicles": "2 Paralipomenon",
+"Ezra": "Ezdráš",
+"Nehemiah": "Nehemjáš",
+"Esther": "Ester",
+"Job": "Jób",
+"Psalm": "Žalmy",
+"Proverbs": "Přísloví",
+"Ecclesiastes": "Kazatel",
+"Isaiah": "Izajáš",
+"Jeremiah": "Jeremjáš",
+"Lamentations": "Pláč",
+"Ezekiel": "Ezechiel",
+"Hosea": "Ozeáš",
+"Joel": "Jóel",
+"Amos": "Ámos",
+"Obadiah": "Abdijáš",
+"Jonah": "Jonáš",
+"Micah": "Micheáš",
+"Habakkuk": "Abakuk",
+"Zephaniah": "Sofonjáš",
+"Haggai": "Ageus",
+"Zechariah": "Zacharjáš",
+"Malachi": "Malachiáš",
+"Matthew": "Matouš",
+"Mark": "Marek",
+"Luke": "Lukáš",
+"John": "Jan",
+"Acts": "Skutky apoštolské",
+"Romans": "Římanům",
+"1 Corinthians": "1 Korintským",
+"2 Corinthians": "2 Korintským",
+"Galatians": "Galatským",
+"Ephesians": "Efezským",
+"Philippians": "Filipským",
+"Colossians": "Koloským",
+"1 Thessalonians": "1 Tesalonickým",
+"2 Thessalonians": "2 Tesalonickým",
+"1 Timothy": "1 Timoteovi",
+"2 Timothy": "2 Timoteovi",
+"Titus": "Titovi",
+"Philemon": "Filemonovi",
+"Hebrews": "Židům",
+"James": "Jakubův",
+"1 Peter": "1 Petrův",
+"2 Peter": "2 Petrův",
+"1 John": "1 Janův",
+"2 John": "2 Janův",
+"3 John": "3 Janův",
+"Jude": "Judův",
+"Revelation": "Zjevení Janovo",
+"Song of Solomon": "Píseň písní"
+};
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const mobileInput = document.getElementById('mobile-input');
+const monitor = document.getElementById('monitor');
+const startScreen = document.getElementById('start-screen');
+const startBtn = document.getElementById('start-btn');
+const textArea = document.getElementById('text-area');
+const transMain = document.getElementById('translation-main');
+const transLit = document.getElementById('translation-literal');
+const scoreLabel = document.getElementById('score');
+const handWrap = document.getElementById('hand-wrap');
+
+const books = Object.keys(Bible);
+let BIBLE_DATA;
+let book = 0;
+function pickVerses(pos) {
+    BIBLE_DATA = PrepareBook(books[book], Bible[books[book]], pos);
+}
+pickVerses(0);
+
+let level = 1;
+let currentIdx = 0;
+let holeIndices = [];
+let currentPointer = 0;
+let stats = [0,0];
+let isBusy = false;
+let skipExposition = false;
+let resolveExposition = null;
+
+function playTone(freq, type, duration) {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+}
+
+async function runHandAnimation() {
+    handWrap.style.animation = 'none';
+    handWrap.offsetHeight;
+    handWrap.style.animation = 'saxana-collect 0.8s linear forwards';
+    await new Promise(r => setTimeout(r, 800));
+}
+
+async function runExposition() {
+    isBusy = true;
+    skipExposition = false;
+    for (let i = 0; i < BIBLE_DATA.length; i++) {
+        if (skipExposition) break;
+        const d = BIBLE_DATA[i];
+        document.getElementById('index').innerText = d.ref;
+        transMain.innerText = d.cs;
+        transLit.innerText = d.lit;
+        textArea.innerText = d.en;
+        sayEn(d.en);
+        mobileInput.focus(); // Aby šla tečka hned na mobilu
+        
+        await new Promise(r => {
+            resolveExposition = r;
+            setTimeout(r, 3000);
+        });
+    }
+    startDrill();
+}
+
+function startDrill(say) {
+    isBusy = false;
+    skipExposition = false;
+    const d = BIBLE_DATA[currentIdx];
+    document.getElementById('index').innerText = d.ref;
+    transMain.innerText = d.cs;
+    transLit.innerText = d.lit;
+
+    const text = d.en;
+    // Level 1 začíná velmi zlehka
+    const ratio = 0.05 + (level * 0.08); 
+    holeIndices = [];
+    for (let i = 0; i < text.length; i++) {
+        if (" !\"'(),-.;:?/&+".indexOf(text[i]) < 0 && Math.random() < ratio) holeIndices.push(i);
+    }
+    if (holeIndices.length === 0) holeIndices.push(Math.floor(Math.random() * text.length));
+
+    currentPointer = 0;
+    render();
+    mobileInput.focus();
+}
+
+function render() {
+    const text = BIBLE_DATA[currentIdx].en;
+    let html = "";
+    for (let i = 0; i < text.length; i++) {
+        if (holeIndices.includes(i)) {
+            const hIdx = holeIndices.indexOf(i);
+            if (hIdx < currentPointer) html += `<span class="filled">${text[i]}</span>`;
+            else if (hIdx === currentPointer) html += `<span class="hole active">_</span>`;
+            else html += `<span class="hole">_</span>`;
+        } else {
+            html += `<span>${text[i]}</span>`;
+        }
+    }
+    textArea.innerHTML = html;
+    scoreLabel.innerText = `(${stats.join("/")})`;
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key === '.') {
+        if (startScreen.style.display !== 'none') {
+            startApp();
+        } else if (isBusy) {
+            // Tečka v náhledu = OKAMŽITÝ START DRILLU
+            skipExposition = true;
+            if (resolveExposition) resolveExposition();
+        }
+    }
+    if (e.key === 'Enter' && isBusy && resolveExposition) {
+        resolveExposition(); // Zrychlí aktuální větu
+    }
+});
+
+function startApp() {
+    startScreen.style.display = 'none';
+    monitor.style.display = 'block';
+    audioCtx.resume();
+    runExposition();
+}
+
+mobileInput.addEventListener('input', async (e) => {
+    if (isBusy) return;
+    const char = e.data;
+    mobileInput.value = "";
+    if (!char) return;
+
+    // Pokud uživatel na mobilu napíše tečku během náhledu, zafunguje to taky
+    if (char === '.' /*&& isBusy*/) {
+        skipExposition = true;
+        if (resolveExposition) resolveExposition();
+        return;
+    }
+
+    if (isBusy) return;
+
+    const target = BIBLE_DATA[currentIdx].en[holeIndices[currentPointer]];
+    if (!target) return;
+
+    if (char === target) {
+        playTone(900, 'square', 0.05);
+        currentPointer++;
+        render(); // Překreslíme, aby bylo vidět poslední bílé písmeno
+        if (currentPointer >= holeIndices.length) {
+            stats[0]++;
+            isBusy = true;
+            await runHandAnimation();
+            currentIdx++;
+            if (currentIdx >= BIBLE_DATA.length) {
+                currentIdx = 0; 
+                level++;
+                holeIndices = [];
+                pickVerses((level-1)*3);
+                runExposition();
+            } else {
+                startDrill();
+            }
+        }
+    } else {
+        stats[1]++;
+        playTone(100, 'sawtooth', 0.4);
+        document.getElementById('zle').style.display = 'block';
+        setTimeout(() => { document.getElementById('zle').style.display = 'none'; }, 600);
+        holeIndices = [];
+        render();
+        sayEn(BIBLE_DATA[currentIdx].en);
+        await new Promise(r => setTimeout(r, 3000));
+        currentPointer = 0;
+        if (level > 1) level--;
+        startDrill(1);
+    }
+    render();
+});
+
+startBtn.addEventListener('click', startApp);
+document.addEventListener('touchstart', () => { if (!isBusy) mobileInput.focus(); });
+function PrepareBook(bookName, book, chptr) {
+    let res = [];
+    const ref = `${bookName} `;
+    let czechRef = Book2czech[bookName];
+    if (czechRef === undefined) {
+        czechRef = bookName;
+    }
+    chptr--;
+    for(var cntr=1;cntr<=3;cntr++) {
+        res.push({ref:ref + cntr, en:book[chptr + cntr][0], cs:Ekumenka[czechRef][chptr + cntr][0], lit:""});
+    }
+    return res;
+}
+function sayEn(w) {
+	let m = new SpeechSynthesisUtterance(w);
+	m.lang='en';
+	let p = new Promise(resolve => {
+    	m.onend = () => resolve();
+  	});
+	speechSynthesis.speak(m)
+	return p;
+}
+    </script>
+</body>
+</html>
