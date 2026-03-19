@@ -2,81 +2,108 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>Mantrik 2026 - Anglické idiomy</title>
     <style>
-        :root { --neon: #00ff00; }
-        body { background: #000; color: var(--neon); font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
-        #monitor { width: 95%; max-width: 650px; height: 420px; border: 4px solid #333; padding: 15px; position: relative; background: #000; box-sizing: border-box; display: none; border-radius: 10px; box-shadow: 0 0 30px #111; }
-        
-        #header { display: flex; justify-content: space-between; font-size: 18px; border-bottom: 1px solid #222; padding-bottom: 5px; margin-bottom: 15px; position: relative; }
-        .currency { color: #fff; font-weight: bold; text-shadow: 0 0 5px #fff; z-index: 10; }
-        
-        #translation-main { color: #ffca28; font-size: 1.1em; margin-bottom: 5px; min-height: 1.2em; }
-        #translation-literal { color: #0088ff; font-size: 0.85em; font-style: italic; margin-bottom: 20px; min-height: 1.2em; }
-        #text-area { font-size: 22px; line-height: 1.4; letter-spacing: 2px; min-height: 120px; white-space: pre-wrap; }
+:root { --neon: #00ff00; }
+body { background: #000; color: var(--neon); font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; height: 100vh; margin: 0; overflow: hidden; padding-top: 20px; }
+#monitor { min-height: 200px; border: 4px solid #333; padding: 15px; position: relative; background: #000; box-sizing: border-box; display: none; border-radius: 10px; box-shadow: 0 0 30px #111; }
 
-        /* Saxana ruka v úrovni hlavičky */
-        #hand-wrap { 
-            position: absolute; left: 0; top: -11px; white-space: nowrap; overflow: hidden; 
-            width: 0; z-index: 5; font-size: 30px; pointer-events: none; display: flex; align-items: center;
-            background: black; /* Aby ruka zakrývala text pod sebou při sběru */
-        }
+#header { display: flex; justify-content: space-between; font-size: 18px; border-bottom: 1px solid #222; padding-bottom: 5px; margin-bottom: 15px; position: relative; }
+.currency { color: #fff; font-weight: bold; text-shadow: 0 0 5px #fff; z-index: 10; }
 
-        @keyframes saxana-collect {
-            0% { width: 0; left: 0; }
-            50% { width: 100%; left: 0; }
-            100% { width: 0; left: 0; }
-        }
+#translation-main { color: #ffca28; font-size: 1.7em; margin-bottom: 5px; min-height: 1.2em; }
+#text-area { font-size: 2em; line-height: 1.4; letter-spacing: 2px; white-space: pre-wrap; }
 
-        .hole { color: #111; min-width: 1ch; color: var(--neon); display: inline-block; }
-        @keyframes blink {
-            0%, 100% { opacity: 1; background: #004400; }
-            50% { opacity: 0.3; background: #002200; }
-        }
-        .hole.active {
-            animation: blink 1s infinite;
-            color: var(--neon);
-            font-weight: bold;
-        }
-        .filled { color: #fff; }
-        #zle { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            font-size: 60px; color: red; font-weight: bold; display: none; z-index: 400; 
-            background: black; padding: 20px; border: 6px double red; 
-        }
-        
-        #mobile-input { position: absolute; opacity: 0; pointer-events: none; }
-        #start-screen { text-align: center; }
-        #start-btn { padding: 20px 40px; font-size: 24px; background: var(--neon); color: #000; border: none; font-family: inherit; cursor: pointer; border-radius: 8px; box-shadow: 0 5px 0 #008800; }
-        .hint { margin-top: 20px; font-size: 14px; color: #666; text-transform: uppercase; }
+.kontejner-ruka {
+    display: none; /* Výchozí stav: schováno */
+    background-color: black;
+    align-items: center;
+    font-family: monospace;
+    font-size: 24px;
+    position: absolute;
+    top: -7px;
+    z-index: 5;
+    width: 100%;
+}
+
+/* Tato třída se zapne pomocí JS */
+.kontejner-ruka.aktivni {
+    display: flex;
+}
+
+.cara {
+    display: inline-block;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 0;
+}
+
+/* Animace: 2 vteřiny, tam a zpět (alternate), jen 1 cyklus (2 pohyby) */
+.aktivni .cara {
+    animation: natahuj 2s ease-in-out forwards;
+}
+
+.aktivni .ruka {
+    display: inline-block;
+/* Ruka se nepohybuje, prostě jen sedí na konci flexu */
+}
+
+@keyframes natahuj {
+    0% { width: 0; }
+    50% { width: 100%; } /* Max natažení v půlce času */
+    100% { width: 0; }   /* Návrat na nulu */
+}
+
+.hole { color: #111; min-width: 1ch; color: var(--neon); display: inline-block; }
+@keyframes blink {
+    0%, 100% { opacity: 1; background: #004400; }
+    50% { opacity: 0.3; background: #002200; }
+}
+.hole.active {
+    animation: blink 1s infinite;
+    color: var(--neon);
+    font-weight: bold;
+}
+.filled { color: #fff; }
+#zle { 
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+    font-size: 60px; color: red; font-weight: bold; display: none; z-index: 400; 
+    background: black; padding: 20px; border: 6px double red; 
+}
+
+#mobile-input { position: absolute; opacity: 0; pointer-events: none; font-size: 30px; }
+#start-screen { text-align: center; align-content: center; height: 100%; }
+#start-btn { padding: 20px 40px; font-size: 30px; background: var(--neon); color: #000; border: none; font-family: inherit; cursor: pointer; border-radius: 8px; box-shadow: 0 5px 0 #008800; }
+.hint { margin-top: 20px; font-size: 30px; color: #888; text-transform: uppercase; }
     </style>
 </head>
 
-<body>
+<body onclick="showKeyboard()" onload="adjustMonitorSize()">
 
     <div id="start-screen">
         <button id="start-btn">START [ . ]</button>
-        <div class="hint">Tečka zahájí • Enter zrychlí náhled • Tečka v náhledu = START DRILL</div>
+        <div class="hint">Tečka zahájí • Enter zrychlí náhled<br>Tečka v náhledu = START DRILL</div>
     </div>
 
     <div id="monitor">
         <div id="header">
-            <div id="hand-wrap">===============================👉</div>
+            <div class="kontejner-ruka">
+                <span class="cara">====================================================================</span>
+                <span class="ruka">👉</span>
+            </div>
             <span class="currency"></span>
-            <span id="index">J 1:1</span>
+            <span id="index"></span>
             <span id="score">(-)</span>
             <span class="currency">€</span>
         </div>
         <div id="zle">CHYBA&nbsp;!</div>
         <div id="translation-main"></div>
-        <div id="translation-literal"></div>
         <div id="text-area"></div>
         <input type="text" id="mobile-input" autocomplete="off" spellcheck="false">
     </div>
 
     <script>
-const Bible = {"Idiomy":[["A bird in the hand is worth two in the bush"],["A blessing in disguise"],["A dime a dozen"],
+const Bible = [["A bird in the hand is worth two in the bush"],["A blessing in disguise"],["A dime a dozen"],
 ["A gift from the gods"],["A little bird told me."],["A little learning is a dangerous thing"],["A load of rubbish"],
 ["A mine of information"],["A needle in a haystack"],["A nervous wreck"],["A penny for your thoughts"],
 ["A penny saved is a penny earned"],["A perfect storm"],["A picture is worth 1000 words"],["A safe bet"],
@@ -195,8 +222,8 @@ const Bible = {"Idiomy":[["A bird in the hand is worth two in the bush"],["A ble
 ["You can't make an omelet without breaking some eggs"],["You don't have to be !"],["You know what they say."],
 ["You knowwhat they say."],["You may leave now to carry on your duty"],["You'll laugh on the other side of your face."],
 ["You're barking up the wrong tree."],["You're kidding"],["You're welcome"],["Your guess is as good as mine"],
-["Your letter in hand"],["keep the change"],["not at all"],["what is it"]]};
-const Ekumenka = {"Idiomy":[["Lepší vrabec v hrsti nežli holub na střeše"],["Štěstí v neštěstí"],["Něco obyčejného, běžného"],
+["Your letter in hand"],["keep the change"],["not at all"],["what is it"]];
+const Ekumenka = [["Lepší vrabec v hrsti nežli holub na střeše"],["Štěstí v neštěstí"],["Něco obyčejného, běžného"],
 ["dar od boha; nečekaná výhoda"],["Štěbetají si to vrabci na střeše."],["Ze všeho nejhorší jsou amatéři"],
 ["snůška nesmyslů (žvástů)"],["chodící kniha;všechno ví"],["jehla v kupce sena"],["uzlíček nervů;nervák"],
 ["Řekni mi, co si myslíš"],["Co ušetřím, nemusím vydělat"],["Horší to už být nemohlo"],["Jeden obrázek řekne víc než tisíc slov"],
@@ -333,71 +360,8 @@ const Ekumenka = {"Idiomy":[["Lepší vrabec v hrsti nežli holub na střeše"],
 ["Nesuď podle zevnějšku"],["Každá legrace něco stojí; nic není zadarmo"],["nemusíte /být/"],["Víš, co se říká."],
 ["Víš, co se říká."],["můžete teď odejít, pokračovat ve službě"],["On tě ten smích přejde."],["Pláčeš na špatném hrobě."],
 ["/slang/ Vy žertujete, děláte si legraci, srandu"],["jste vítán"],["Nemám ponětí"],["obdrželi jsme Váš dopis"],
-["nechte si drobné (od cesty)"],["není zač"],["co je to ( hovorově	Co je? Co máš nového?)"]]};
+["nechte si drobné (od cesty)"],["není zač"],["co je to ( hovorově	Co je? Co máš nového?)"]];
 
-const Book2czech = {
-"Numbers": "Numeri",
-"Deuteronomy": "Deuteronomium",
-"Joshua": "Jozue",
-"Judges": "Soudců",
-"Ruth": "Rút",
-"1 Samuel": "1 Samuelova",
-"2 Samuel": "2 Samuelova",
-"1 Kings": "1 Královská",
-"2 Kings": "2 Královská",
-"1 Chronicles": "1 Paralipomenon",
-"2 Chronicles": "2 Paralipomenon",
-"Ezra": "Ezdráš",
-"Nehemiah": "Nehemjáš",
-"Esther": "Ester",
-"Job": "Jób",
-"Psalm": "Žalmy",
-"Proverbs": "Přísloví",
-"Ecclesiastes": "Kazatel",
-"Isaiah": "Izajáš",
-"Jeremiah": "Jeremjáš",
-"Lamentations": "Pláč",
-"Ezekiel": "Ezechiel",
-"Hosea": "Ozeáš",
-"Joel": "Jóel",
-"Amos": "Ámos",
-"Obadiah": "Abdijáš",
-"Jonah": "Jonáš",
-"Micah": "Micheáš",
-"Habakkuk": "Abakuk",
-"Zephaniah": "Sofonjáš",
-"Haggai": "Ageus",
-"Zechariah": "Zacharjáš",
-"Malachi": "Malachiáš",
-"Matthew": "Matouš",
-"Mark": "Marek",
-"Luke": "Lukáš",
-"John": "Jan",
-"Acts": "Skutky apoštolské",
-"Romans": "Římanům",
-"1 Corinthians": "1 Korintským",
-"2 Corinthians": "2 Korintským",
-"Galatians": "Galatským",
-"Ephesians": "Efezským",
-"Philippians": "Filipským",
-"Colossians": "Koloským",
-"1 Thessalonians": "1 Tesalonickým",
-"2 Thessalonians": "2 Tesalonickým",
-"1 Timothy": "1 Timoteovi",
-"2 Timothy": "2 Timoteovi",
-"Titus": "Titovi",
-"Philemon": "Filemonovi",
-"Hebrews": "Židům",
-"James": "Jakubův",
-"1 Peter": "1 Petrův",
-"2 Peter": "2 Petrův",
-"1 John": "1 Janův",
-"2 John": "2 Janův",
-"3 John": "3 Janův",
-"Jude": "Judův",
-"Revelation": "Zjevení Janovo",
-"Song of Solomon": "Píseň písní"
-};
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const mobileInput = document.getElementById('mobile-input');
 const monitor = document.getElementById('monitor');
@@ -405,17 +369,26 @@ const startScreen = document.getElementById('start-screen');
 const startBtn = document.getElementById('start-btn');
 const textArea = document.getElementById('text-area');
 const transMain = document.getElementById('translation-main');
-const transLit = document.getElementById('translation-literal');
 const scoreLabel = document.getElementById('score');
-const handWrap = document.getElementById('hand-wrap');
 
-const books = Object.keys(Bible);
+const books = Bible;
 let BIBLE_DATA;
 let book = 0;
-function pickVerses(pos) {
-    BIBLE_DATA = PrepareBook(books[book], Bible[books[book]], pos);
+let learned = [];
+function pickVerses() {
+    let res = [];
+    let pos;
+    if (learned.length == books.length)
+        return res;
+    for(var cntr=1;cntr<=3;cntr++) {
+        do {
+            pos = parseInt(Math.random() * books.length);
+        } while (learned.includes(pos));
+        res.push({en:books[pos][0], cs:Ekumenka[pos][0], ref:pos});
+    }
+    BIBLE_DATA = res;
 }
-pickVerses(0);
+pickVerses();
 
 let level = 1;
 let currentIdx = 0;
@@ -440,10 +413,17 @@ function playTone(freq, type, duration) {
 }
 
 async function runHandAnimation() {
-    handWrap.style.animation = 'none';
-    handWrap.offsetHeight;
-    handWrap.style.animation = 'saxana-collect 0.8s linear forwards';
-    await new Promise(r => setTimeout(r, 800));
+  const rukaKontejner = document.querySelector('.kontejner-ruka');
+  
+  // 1. Přidáme třídu, která spustí CSS animaci
+  rukaKontejner.classList.add('aktivni');
+
+  // 2. Počkáme, až animace skončí (2000ms = 2s v CSS)
+  setTimeout(() => {
+    rukaKontejner.classList.remove('aktivni');
+    // Volitelně: rukaKontejner.remove(); // Pokud to chceš úplně smazat z HTML
+  }, 2000); 
+//    await new Promise(r => setTimeout(r, 800));
 }
 
 async function runExposition() {
@@ -454,7 +434,6 @@ async function runExposition() {
         const d = BIBLE_DATA[i];
         document.getElementById('index').innerText = d.ref;
         transMain.innerText = d.cs;
-        transLit.innerText = d.lit;
         textArea.innerText = d.en;
         sayEn(d.en);
         mobileInput.focus(); // Aby šla tečka hned na mobilu
@@ -473,20 +452,59 @@ function startDrill(say) {
     const d = BIBLE_DATA[currentIdx];
     document.getElementById('index').innerText = d.ref;
     transMain.innerText = d.cs;
-    transLit.innerText = d.lit;
 
     const text = d.en;
     // Level 1 začíná velmi zlehka
     const ratio = 0.05 + (level * 0.08); 
     holeIndices = [];
-    for (let i = 0; i < text.length; i++) {
-        if (" !\"'(),-.;:?/&+".indexOf(text[i]) < 0 && Math.random() < ratio) holeIndices.push(i);
-    }
-    if (holeIndices.length === 0) holeIndices.push(Math.floor(Math.random() * text.length));
+    holeIndices = generateSmartHoles(text, level);
 
     currentPointer = 0;
     render();
     mobileInput.focus();
+}
+
+function generateSmartHoles(text, level) {
+    let indices = [];
+    const wordRegex = /[\p{L}\p{N}]+/gu;
+    const matches = Array.from(text.matchAll(wordRegex));
+    
+    // 1. Určíme, kolik % slov z věty budeme trápit (např. 30% na levelu 1, až 100% na levelu 5)
+    let wordRatio = Math.min(0.3 + (level * 0.15), 1.0);
+    let wordsToHitCount = Math.ceil(matches.length * wordRatio);
+    
+    // 2. Náhodně vybereme konkrétní slova, která budou mít díry
+    let shuffledMatches = matches.sort(() => 0.5 - Math.random());
+    let selectedMatches = shuffledMatches.slice(0, wordsToHitCount);
+
+    for (const match of selectedMatches) {
+        let word = match[0];
+        let wordStart = match.index;
+        let wordLen = word.length;
+
+        if (wordLen >= 2) {
+            // 3. Počet děr ve vybraném slově (na nízkém levelu jen 1-2 díry i u dlouhých slov)
+            let holeRatio = Math.min(0.2 + (level * 0.1), 0.6); 
+            let numHoles = Math.ceil(wordLen * holeRatio);
+            
+            if (numHoles >= wordLen) numHoles = wordLen - 1;
+
+            let wordIndices = [];
+            while (wordIndices.length < numHoles) {
+                let r = Math.floor(Math.random() * wordLen);
+                if (!wordIndices.includes(r)) {
+                    wordIndices.push(r);
+                }
+            }
+
+            wordIndices.forEach(idx => {
+                indices.push(wordStart + idx);
+            });
+        }
+    }
+
+    // Musíme vrátit seřazené, aby kurzor skákal zleva doprava
+    return indices.sort((a, b) => a - b);
 }
 
 function render() {
@@ -510,25 +528,26 @@ window.addEventListener('keydown', (e) => {
     if (e.key === '.') {
         if (startScreen.style.display !== 'none') {
             startApp();
-        } else if (isBusy) {
-            // Tečka v náhledu = OKAMŽITÝ START DRILLU
+        } else if (isBusy && resolveExposition) {
+            // Tečka v náhledu (isBusy=true) přeskočí zbytek prezentace
             skipExposition = true;
             if (resolveExposition) resolveExposition();
         }
     }
     if (e.key === 'Enter' && isBusy && resolveExposition) {
-        resolveExposition(); // Zrychlí aktuální větu
+        resolveExposition(); // Zrychlí jen aktuální větu
     }
 });
 
 function startApp() {
     startScreen.style.display = 'none';
-    monitor.style.display = 'block';
+    monitor.style.display = 'inline-block';
     audioCtx.resume();
     runExposition();
 }
 
 mobileInput.addEventListener('input', async (e) => {
+    document.body.parentElement.scrollLeft=0;
     if (isBusy) return;
     const char = e.data;
     mobileInput.value = "";
@@ -543,10 +562,18 @@ mobileInput.addEventListener('input', async (e) => {
 
     if (isBusy) return;
 
-    const target = BIBLE_DATA[currentIdx].en[holeIndices[currentPointer]];
-    if (!target) return;
+    let prevTarget = holeIndices[currentPointer];
+    let currentTarget = BIBLE_DATA[currentIdx].en[prevTarget].toLowerCase();
+    let nextTarget = prevTarget;
+    let arround = currentTarget;
+    if (prevTarget--)
+        arround = BIBLE_DATA[currentIdx].en[prevTarget];
+    prevTarget = arround.toLowerCase();
+    if (++nextTarget < BIBLE_DATA[currentIdx].en.length)
+        nextTarget = BIBLE_DATA[currentIdx].en[nextTarget].toLowerCase();
 
-    if (char === target) {
+    //console.log(prevTarget, currentTarget, nextTarget);
+    if (char.toLocaleLowerCase() === currentTarget.toLocaleLowerCase()) {
         playTone(900, 'square', 0.05);
         currentPointer++;
         render(); // Překreslíme, aby bylo vidět poslední bílé písmeno
@@ -559,12 +586,17 @@ mobileInput.addEventListener('input', async (e) => {
                 currentIdx = 0; 
                 level++;
                 holeIndices = [];
-                pickVerses((level-1)*3);
+                pickVerses();
                 runExposition();
             } else {
+                BIBLE_DATA = BIBLE_DATA.slice(currentIdx);
+                currentIdx = 0; 
+                await runExposition();
                 startDrill();
             }
         }
+    } else if (char == prevTarget || char == nextTarget) {
+        playTone(400, 'triangle', 1);
     } else {
         stats[1]++;
         playTone(100, 'sawtooth', 0.4);
@@ -583,19 +615,6 @@ mobileInput.addEventListener('input', async (e) => {
 
 startBtn.addEventListener('click', startApp);
 document.addEventListener('touchstart', () => { if (!isBusy) mobileInput.focus(); });
-function PrepareBook(bookName, book, chptr) {
-    let res = [];
-    const ref = `${bookName} `;
-    let czechRef = Book2czech[bookName];
-    if (czechRef === undefined) {
-        czechRef = bookName;
-    }
-    chptr--;
-    for(var cntr=1;cntr<=3;cntr++) {
-        res.push({ref:ref + cntr, en:book[chptr + cntr][0], cs:Ekumenka[czechRef][chptr + cntr][0], lit:""});
-    }
-    return res;
-}
 function sayEn(w) {
 	let m = new SpeechSynthesisUtterance(w);
 	m.lang='en';
@@ -604,6 +623,26 @@ function sayEn(w) {
   	});
 	speechSynthesis.speak(m)
 	return p;
+}
+function showKeyboard()
+{
+    let input = document.getElementById("mobile-input");
+    input.value = "";
+    input.focus();
+}
+function adjustMonitorSize() {
+const monitor = document.getElementById('monitor');
+    const screenWidth = window.innerWidth;
+    
+    const isMobile = screenWidth <= 768 || ('ontouchstart' in window);
+
+    if (isMobile) {
+        const idealWidth = screenWidth * 0.95;
+        monitor.style.width = idealWidth + "px";
+    } else {
+        const idealWidth = Math.min(768, screenWidth * 0.95);
+        monitor.style.width = idealWidth + "px";
+    }
 }
     </script>
 </body>
