@@ -383,8 +383,11 @@ function pickVerses() {
     for(var cntr=1;cntr<=3;cntr++) {
         do {
             pos = parseInt(Math.random() * books.length);
-        } while (learned.includes(pos));
+        } while (learned.includes(pos) && pos < books.length);
+        learned.push(pos);
         res.push({en:books[pos][0], cs:Ekumenka[pos][0], ref:pos});
+        if (books.length <= learned.length)
+            break;
     }
     BIBLE_DATA = res;
 }
