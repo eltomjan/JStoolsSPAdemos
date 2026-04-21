@@ -11,20 +11,6 @@ body {
     background: #001830
 }
 
-@font-face {
-    font-family: TV Sans Screen;
-    src: url(font/tv_sans_screen_regular-webfont.woff?14ef2ead51d48c11df91b65783002c60) format("woff"),url(font/tv_sans_screen_regular-webfont.ttf?3ea2776c349a8c43eeae972eef85e23e) format("truetype");
-    font-weight: 400;
-    font-style: normal
-}
-
-@font-face {
-    font-family: Source Sans Pro;
-    src: url(font/soruce-sans-pro.ttf?aaa655ec16da31f0bbf517b363c28843) format("truetype");
-    font-weight: 400;
-    font-style: normal
-}
-
 button {
     touch-action: manipulation
 }
@@ -507,8 +493,7 @@ var settings = {
     pages: {}
 }
 async function loadPage(pg, sub) {
-    const response = await fetch(`https://api.allorigins.win/get?url=${
-     encodeURIComponent('https://api-teletext.ceskatelevize.cz/services-old/teletext/picture.php?channel=CT2&page=')}${pg}${sub}`);
+    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent("https://api-teletext.ceskatelevize.cz/pages/"+pg+sub+"/image.webp")}`);
     if (response.ok) {
       const data = await response.json();
       settings.obj.text[pg + sub] = await OCR(data.contents)
@@ -566,7 +551,7 @@ function btn(no)
 }
 function init()
 {
-    readTextFile("https://api-teletext.ceskatelevize.cz/teletext-api/?t=" + new Date().getTime().toString().slice(0,-3),
+    readTextFile("https://corsproxy.io/?"+encodeURIComponent("https://api-teletext.ceskatelevize.cz/pages?t=" + new Date().getTime().toString().slice(0,-3)),
         function(text) {
             settings.pages = JSON.parse(text).data;
             setPage();

@@ -469,18 +469,8 @@ button {
     }
 }
 </style>
+<script src="txt.js"></script>
 <script>
-function readTextFile(file, callback) {
-    var rawFile = new XMLHttpRequest();
-    rawFile.overrideMimeType("application/json");
-    rawFile.open("GET", file, true);
-    rawFile.onreadystatechange = function() {
-        if (rawFile.readyState === 4 && rawFile.status == "200") {
-            callback(rawFile.responseText);
-        }
-    }
-    rawFile.send(null);
-}
 var settings = {
     data: {},
     page: "100",
@@ -538,12 +528,8 @@ function btn(no)
 }
 function init()
 {
-    readTextFile("https://corsproxy.io/?"+encodeURIComponent("https://api-teletext.ceskatelevize.cz/pages/text?t=" + new Date().getTime().toString().slice(0,-3)),
-        function(text) {
-            settings.data = JSON.parse(text).data;
-            setPage();
-        }
-    );
+    settings.data = CTtxt.data;
+    setPage();
 }
 function shortcut()
 {
