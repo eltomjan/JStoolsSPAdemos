@@ -493,10 +493,24 @@ var settings = {
     pages: {}
 }
 async function loadPage(pg, sub) {
-    const response = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent("https://api-teletext.ceskatelevize.cz/pages/"+pg+sub+"/image.webp")}`);
+    let response = await fetch(`https://images.weserv.nl/?url=api-teletext.ceskatelevize.cz/pages/${pg+sub}/image.webp&output=png`);
+    if (!response.ok) {
+        if (sub.toUpperCase() === 'A') sub = "";
+        else if (sub.length === 0) sub = 'A';
+        else sub = String.fromCharCode(sub.charCodeAt(0) - 1);
+        settings.sub = sub;
+        response = await fetch(`https://images.weserv.nl/?url=api-teletext.ceskatelevize.cz/pages/${pg+sub}/image.webp&output=png`);
+    }
     if (response.ok) {
-      const data = await response.json();
-      settings.obj.text[pg + sub] = await OCR(data.contents)
+        const blob = await response.blob();
+        
+        const base64data = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        });
+        settings.obj.text[pg + sub] = await OCR(base64data);
+        console.log("Stránka " + pg + sub + " byla přečtena.");
     }
 }
 async function setPage(pg, sub)
@@ -505,12 +519,10 @@ async function setPage(pg, sub)
     else pg = settings.page;
     if (sub) settings.sub = sub;
     else sub = settings.sub;
-    if (settings.pages[pg].subpages.length) {
-        if (!isNaN(sub)) sub = settings.pages[pg].subpages[sub];
-    } else sub = "";
     var text = settings.obj.text[pg + sub];
     if (text === undefined) {
         await loadPage(pg, sub);
+        sub = settings.sub;
     }
     var text = settings.obj.text[sub] || settings.obj.text[pg + sub];
     document.getElementsByClassName("t__text-version")[0].innerText = text;
@@ -521,51 +533,71 @@ function updatePage(el)
     var decode = el.value.match(/(\d+)([a-z]){0,1}/i);
     setPage(decode[1], decode[2]);
 }
-function btn(no)
-{
-    var pages = Object.keys(settings.pages);
+function updatePage2(el) {
+    if (el.value.length >= 3) {
+        document.body.focus();
+        updatePage(el);
+    }
+}
+function btn(no) {
+    // Převod aktuální stránky na číslo
+    var currentPage = parseInt(settings.page);
+    var currentSub = settings.sub.toUpperCase();
+
     if (no == -2) {
-        var current = pages.indexOf(settings.page.toString())
-        if (current > 0) {
-            current = pages[--current];
-            settings.page = current;
-            settings.sub = 'A';
+        // Předchozí stránka (100 -> 99)
+        currentPage--;
+        if (currentPage < 100) currentPage = 899; // Zarážka nebo koloběh
+        settings.page = currentPage.toString();
+        settings.sub = '';
+    } 
+    else if (no == 2) {
+        // Následující stránka (100 -> 101)
+        currentPage++;
+        if (currentPage > 899) currentPage = 100;
+        settings.page = currentPage.toString();
+        settings.sub = '';
+    } 
+    else if (no == -1) {
+        // Předchozí podstránka (B -> A)
+        var charCode = currentSub.charCodeAt(0);
+        if (charCode > 65) { // 65 je 'A'
+            settings.sub = String.fromCharCode(charCode - 1);
         }
-     } else if (no == -1) {
-        var current = settings.pages[settings.page].subpages.indexOf(settings.sub.toString());
-        if (current > 0) settings.sub = settings.pages[settings.page].subpages[--current];
-     } else if (no == 1) {
-        var current = settings.pages[settings.page].subpages.indexOf(settings.sub.toString());
-        current++;
-        if (current < settings.pages[settings.page].subpages.length)
-            settings.sub = settings.pages[settings.page].subpages[current];
-     } else {
-        var current = pages.indexOf(settings.page);
-        if (++current < pages.length) {
-            current = pages[current];
-            settings.page = current;
-            settings.sub = 'A';
+    } 
+    else if (no == 1) {
+        // Následující podstránka (A -> B)
+        var charCode = currentSub.charCodeAt(0);
+        if (charCode < 90) { // 90 je 'Z'
+            settings.sub = String.fromCharCode(charCode + 1);
         }
-     }
-     setPage();
+    }
+
+    setPage();
 }
 function init()
 {
-    readTextFile("https://corsproxy.io/?"+encodeURIComponent("https://api-teletext.ceskatelevize.cz/pages?t=" + new Date().getTime().toString().slice(0,-3)),
-        function(text) {
-            settings.pages = JSON.parse(text).data;
-            setPage();
-        }
-    );
+    setPage();
 }
 function shortcut()
 {
+    var key = event.key;
+    var input = document.getElementsByClassName("t__keyboard-result")[0];
+    
+    if (key.match(/[0-9]/) && document.activeElement !== input) {
+        input.focus();
+        input.value = "";
+        // Volitelně: pokud chceš, aby se první stisknuté číslo hned napsalo, 
+        // nemusíš nic dělat, focus ho tam v IE/HTA většinou propustí.
+        return; 
+    }
+
     let shortCut = {
         PageUp:-2,
         '-':-1,
         '+':1,
         PageDown:2
-    }[event.key];
+    }[key];
     if (!isNaN(shortCut)) btn(shortCut);
 }
 </script>
@@ -742,7 +774,7 @@ var font = [
     }
 </script>
 </head>
-<body onload="init()" onkeydown="shortcut()">
+<body onload="init()" onkeydown="shortcut()" tabindex="-1">
     <div class="t__main-image-wrap relative "><div class="t__text-version" tabindex="0">
 
     </div></div>
@@ -754,7 +786,7 @@ var font = [
             <path d="M.4 7.2L7.2.4a1.2 1.2 0 011.6 0l1.2 1a1.2 1.2 0 010 1.8L5.2 8l4.8 4.8a1.2 1.2 0 010 1.7l-1.2 1.1a1.2 1.2 0 01-1.6 0L.4 8.8a1.2 1.2 0 010-1.7z" fill="#efefef"></path>
             </svg>
         </button>
-            <input class="t__keyboard-result" onchange="updatePage(this)">
+            <input class="t__keyboard-result" onchange="updatePage(this)" onkeyup="updatePage2(this)">
         <button onclick="btn(1)" class="t__arrow t__arrow--right t__arrow--spacing " title="Následující podstránka" aria-disabled="false" tabindex="0"><svg xmlns="http://www.w3.org/2000/svg" width="10.3" height="16" viewBox="0 0 10.3 16">
             <path d="M10 8.9l-6.8 6.8a1.2 1.2 0 01-1.7 0L.4 14.5a1.2 1.2 0 010-1.7L5.2 8 .4 3.2a1.2 1.2 0 010-1.7l1-1.1a1.2 1.2 0 011.8 0L10 7.2a1.2 1.2 0 010 1.7z" fill="#efefef"></path></svg>
         </button>
